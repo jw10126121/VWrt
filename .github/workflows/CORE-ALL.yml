@@ -316,6 +316,13 @@ jobs:
         fi
         echo "SOURCE_TYPE=$SOURCE_TYPE" >> $GITHUB_ENV
         echo "【Lin】源码类型：${SOURCE_TYPE}"
+        # 包管理器和防火墙：若 resolve job 已传入具体值则直接写入 GITHUB_ENV
+        if [ "${WRT_USE_APK}" != "auto" ]; then
+          echo "WRT_USE_APK=$WRT_USE_APK" >> $GITHUB_ENV
+        fi
+        if [ "${WRT_FIREWALL}" != "auto" ]; then
+          echo "WRT_FIREWALL=$WRT_FIREWALL" >> $GITHUB_ENV
+        fi
         echo "【Lin】防火墙：${WRT_FIREWALL}，包管理器：${WRT_USE_APK}"
         # 临时导入config，为了获取设备信息
         [ -f ./.config ] && rm -rf ./.config
