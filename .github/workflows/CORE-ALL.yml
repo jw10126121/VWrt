@@ -341,7 +341,6 @@ jobs:
       working-directory: ${{ env.OPENWRT_PATH }}
       run: |
         bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/ci_collect_source_metadata.sh" >> "$GITHUB_ENV"
-        echo "【Lin】源码元数据：平台=${DEVICE_TARGET}-${DEVICE_SUBTARGET}，设备=${DEVICE_PROFILE}，内核=${VERSION_KERNEL}"
 
     - name: Restore Toolchain Cache
       id: restore_toolchain_cache

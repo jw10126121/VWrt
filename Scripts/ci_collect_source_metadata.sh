@@ -100,3 +100,5 @@ DEVICE_NAME_LIST=${device_name_list_joined}
 DEVICE_NAME_LIST_LIAN=${device_name_list_lian}
 VERSION_KERNEL=${version_kernel}
 EOF
+
+echo "【Lin】源码元数据：平台=${device_target}-${device_subtarget}，设备=${device_profile}，内核=${version_kernel}"
