@@ -325,6 +325,7 @@ jobs:
       working-directory: ${{ env.OPENWRT_PATH }}
       run: |
         bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/ci_collect_source_metadata.sh" >> "$GITHUB_ENV"
+        echo "【Lin】源码元数据：平台=${DEVICE_TARGET}-${DEVICE_SUBTARGET}，设备=${DEVICE_PROFILE}，内核=${VERSION_KERNEL}"
 
     - name: Restore Toolchain Cache
       id: restore_toolchain_cache
@@ -442,7 +443,8 @@ jobs:
       working-directory: ${{ env.OPENWRT_PATH }}
       run: |
         bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/ci_collect_final_metadata.sh" >> "$GITHUB_ENV"
-        echo "【Lin】已刷新 defconfig 后元数据"
+        echo "【Lin】构建元数据：架构=${DEVICE_ARCH}，OP=${OP_VERSION}，LuCI=${LUCI_VERSION}"
+        echo "【Lin】输出前缀：${OUTPUT_NAME_PREFIX}"
 
     - name: Prepare Start Notification (准备开始推送内容)
       working-directory: ${{ env.OPENWRT_PATH }}
