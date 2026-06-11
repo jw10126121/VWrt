@@ -8,6 +8,10 @@ on:
       WRT_DEVICE:
         required: true
         type: string
+      SOURCE_TYPE:
+        required: false
+        type: string
+        default: 'vwrt'
       WRT_FIREWALL:
         required: false
         type: string
@@ -61,6 +65,14 @@ on:
           - JD-AX6600-WIFI
           - GL-MT6000-WIFI
         default: 'CMIOT-AX18-NOWIFI'
+      SOURCE_TYPE:
+        description: '源码类型（vwrt=immortalwrt，lean=coolsnowwolf/lede）'
+        required: false
+        type: choice
+        options:
+          - vwrt
+          - lean
+        default: 'vwrt'
       WRT_FIREWALL:
         description: '防火墙栈（auto=按源码类型自动选择，lean→fw3，vwrt→fw4）'
         required: false
@@ -125,7 +137,7 @@ permissions: write-all
 
 #CI任务
 jobs:
-  # 预解析：根据设备名推断源码类型，解析 auto 为实际值
+  # 预解析：根据 SOURCE_TYPE 解析 auto 为实际值
   resolve:
     name: 解析配置
     runs-on: ubuntu-latest
@@ -136,22 +148,29 @@ jobs:
       - name: Resolve auto values
         id: resolve
         run: |
-          device="${{ inputs.WRT_DEVICE }}"
+          source_type="${{ inputs.SOURCE_TYPE }}"
           firewall="${{ inputs.WRT_FIREWALL }}"
           use_apk="${{ inputs.WRT_USE_APK }}"
 
-          # 当前所有设备均使用 VIKINGYFY/immortalwrt（vwrt），auto → fw4 / apk
-          # 若后续有 lean 设备，在此处按设备名判断即可
+          # vwrt → fw4 / apk，lean → fw3 / ipk
           if [ "$firewall" = "auto" ]; then
-            firewall="fw4"
+            if [ "$source_type" = "vwrt" ]; then
+              firewall="fw4"
+            else
+              firewall="fw3"
+            fi
           fi
           if [ "$use_apk" = "auto" ]; then
-            use_apk="true"
+            if [ "$source_type" = "vwrt" ]; then
+              use_apk="true"
+            else
+              use_apk="false"
+            fi
           fi
 
           echo "firewall=$firewall" >> $GITHUB_OUTPUT
           echo "use_apk=$use_apk" >> $GITHUB_OUTPUT
-          echo "【Lin】解析结果：fw=$firewall, apk=$use_apk"
+          echo "【Lin】源码类型：${source_type}，解析结果：fw=${firewall}, apk=${use_apk}"
 
   config:
     needs: resolve
@@ -163,6 +182,7 @@ jobs:
       WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
       # 参数化配置
       WRT_DEVICE: ${{ inputs.WRT_DEVICE }}
+      SOURCE_TYPE: ${{ inputs.SOURCE_TYPE }}
       WRT_FIREWALL: ${{ needs.resolve.outputs.firewall }}
       WRT_OVERLAYS: ${{ inputs.WRT_OVERLAYS }}
       WRT_LUCI_BRANCH: ${{ inputs.WRT_LUCI_BRANCH }}

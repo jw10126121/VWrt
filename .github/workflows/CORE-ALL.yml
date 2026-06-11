@@ -23,6 +23,10 @@ on:
       WRT_DEVICE:
         required: true
         type: string
+      SOURCE_TYPE:
+        required: false
+        type: string
+        default: 'auto'
       WRT_FIREWALL:
         required: false
         type: string
@@ -75,6 +79,7 @@ env:
   DINGDING_TOKEN: ${{ secrets.DINGDING_TOKEN }}
   WRT_SOURCE_HASH_INFO: ${{inputs.WRT_SOURCE_HASH_INFO}}
   WRT_DEVICE: ${{inputs.WRT_DEVICE}}                          # 设备名
+  SOURCE_TYPE: ${{inputs.SOURCE_TYPE || 'auto'}}               # 源码类型 vwrt/lean/auto
   WRT_FIREWALL: ${{inputs.WRT_FIREWALL}}                      # fw3 / fw4
   WRT_OVERLAYS: ${{inputs.WRT_OVERLAYS || '' }}               # 可选 overlays
   WRT_LUCI_BRANCH: ${{inputs.WRT_LUCI_BRANCH || '' }}         # 可选 LuCI feed 分支
@@ -285,42 +290,17 @@ jobs:
         echo "【Lin】GIT HASH：${REPO_GIT_HASH}，hash: ${REPO_GIT_hash_simple}"
         VERSION_INFO=$(git show -s --date=short --format="作者: %an<br/>时间: %cd<br/>内容: %s<br/>hash: %H")
         echo "VERSION_INFO=$VERSION_INFO" >> $GITHUB_ENV
-        # 根据源码目录结构自动检测源码类型
-        if [ -d "$OPENWRT_PATH/package/lean" ]; then
-          SOURCE_TYPE="lean"
-        else
-          SOURCE_TYPE="vwrt"
+        # 源码类型：优先使用传入值，auto 时从源码目录检测
+        if [ "${SOURCE_TYPE}" = "auto" ]; then
+          if [ -d "$OPENWRT_PATH/package/lean" ]; then
+            SOURCE_TYPE="lean"
+          else
+            SOURCE_TYPE="vwrt"
+          fi
         fi
         echo "SOURCE_TYPE=$SOURCE_TYPE" >> $GITHUB_ENV
         echo "【Lin】源码类型：${SOURCE_TYPE}"
-        # 包管理器：auto=按源码类型自动选择，true=强制apk，false=强制ipk
-        if [ "${WRT_USE_APK}" = "auto" ]; then
-          if [ "$SOURCE_TYPE" = "vwrt" ]; then
-            WRT_USE_APK=true
-            echo "WRT_USE_APK=true" >> $GITHUB_ENV
-            echo "【Lin】vwrt 源码默认启用 apk 包管理器"
-          else
-            WRT_USE_APK=false
-            echo "WRT_USE_APK=false" >> $GITHUB_ENV
-            echo "【Lin】lean 源码默认使用 ipk 包管理器"
-          fi
-        else
-          echo "【Lin】手动指定包管理器：WRT_USE_APK=${WRT_USE_APK}"
-        fi
-        # 防火墙版本：auto=按源码类型自动选择，fw3/fw4=手动指定
-        if [ "${WRT_FIREWALL}" = "auto" ]; then
-          if [ "$SOURCE_TYPE" = "vwrt" ]; then
-            WRT_FIREWALL=fw4
-            echo "WRT_FIREWALL=fw4" >> $GITHUB_ENV
-            echo "【Lin】vwrt 源码默认使用 fw4 防火墙"
-          else
-            WRT_FIREWALL=fw3
-            echo "WRT_FIREWALL=fw3" >> $GITHUB_ENV
-            echo "【Lin】lean 源码默认使用 fw3 防火墙"
-          fi
-        else
-          echo "【Lin】手动指定防火墙：WRT_FIREWALL=${WRT_FIREWALL}"
-        fi
+        echo "【Lin】防火墙：${WRT_FIREWALL}，包管理器：${WRT_USE_APK}"
         # 临时导入config，为了获取设备信息
         [ -f ./.config ] && rm -rf ./.config
         EXPORT_ARGS=(
