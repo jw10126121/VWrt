@@ -1,6 +1,6 @@
 #CI项目
 name: DEFAULT
-run-name: ${{ inputs.WRT_DEVICE }}-${{ inputs.WRT_FIREWALL }}-${{ inputs.WRT_OVERLAYS != '' && inputs.WRT_OVERLAYS || 'base' }}
+run-name: ${{ inputs.WRT_DEVICE }}-${{ inputs.WRT_FIREWALL == 'auto' && (contains(inputs.WRT_DEVICE, 'GL-') && 'fw4' || 'fw3') || inputs.WRT_FIREWALL }}-${{ inputs.WRT_OVERLAYS != '' && inputs.WRT_OVERLAYS || 'base' }}
 
 on:
   workflow_call:
@@ -126,7 +126,7 @@ permissions: write-all
 #CI任务
 jobs:
   config:
-    name: ${{ inputs.WRT_DEVICE }}-${{ inputs.WRT_FIREWALL }}-${{ inputs.WRT_OVERLAYS != '' && inputs.WRT_OVERLAYS || 'base' }}
+    name: ${{ inputs.WRT_DEVICE }}-${{ inputs.WRT_FIREWALL == 'auto' && (contains(inputs.WRT_DEVICE, 'GL-') && 'fw4' || 'fw3') || inputs.WRT_FIREWALL }}-${{ inputs.WRT_OVERLAYS != '' && inputs.WRT_OVERLAYS || 'base' }}
     strategy:
       fail-fast: false
       #max-parallel: 2

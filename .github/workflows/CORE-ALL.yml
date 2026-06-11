@@ -296,9 +296,11 @@ jobs:
         # 包管理器：auto=按源码类型自动选择，true=强制apk，false=强制ipk
         if [ "${WRT_USE_APK}" = "auto" ]; then
           if [ "$SOURCE_TYPE" = "vwrt" ]; then
+            WRT_USE_APK=true
             echo "WRT_USE_APK=true" >> $GITHUB_ENV
             echo "【Lin】vwrt 源码默认启用 apk 包管理器"
           else
+            WRT_USE_APK=false
             echo "WRT_USE_APK=false" >> $GITHUB_ENV
             echo "【Lin】lean 源码默认使用 ipk 包管理器"
           fi
@@ -308,9 +310,11 @@ jobs:
         # 防火墙版本：auto=按源码类型自动选择，fw3/fw4=手动指定
         if [ "${WRT_FIREWALL}" = "auto" ]; then
           if [ "$SOURCE_TYPE" = "vwrt" ]; then
+            WRT_FIREWALL=fw4
             echo "WRT_FIREWALL=fw4" >> $GITHUB_ENV
             echo "【Lin】vwrt 源码默认使用 fw4 防火墙"
           else
+            WRT_FIREWALL=fw3
             echo "WRT_FIREWALL=fw3" >> $GITHUB_ENV
             echo "【Lin】lean 源码默认使用 fw3 防火墙"
           fi
