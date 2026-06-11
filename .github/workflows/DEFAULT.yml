@@ -140,7 +140,7 @@ jobs:
   # 预解析：根据 SOURCE_TYPE 解析 auto 为实际值
   resolve:
     name: 解析配置
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     outputs:
       firewall: ${{ steps.resolve.outputs.firewall }}
       use_apk: ${{ steps.resolve.outputs.use_apk }}
