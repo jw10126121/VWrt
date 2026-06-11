@@ -316,7 +316,9 @@ jobs:
         fi
         echo "SOURCE_TYPE=$SOURCE_TYPE" >> $GITHUB_ENV
         echo "【Lin】源码类型：${SOURCE_TYPE}"
-        # 包管理器和防火墙：若 resolve job 已传入具体值则直接写入 GITHUB_ENV
+        # 包管理器和防火墙：用 input 值（resolve job 传入）写入 GITHUB_ENV
+        WRT_USE_APK="${{ inputs.WRT_USE_APK }}"
+        WRT_FIREWALL="${{ inputs.WRT_FIREWALL }}"
         if [ "${WRT_USE_APK}" != "auto" ]; then
           echo "WRT_USE_APK=$WRT_USE_APK" >> $GITHUB_ENV
         fi
