@@ -353,14 +353,6 @@ if [ -f "$config_dir/$device_overlay_config" ]; then
 	cat "$config_dir/$device_overlay_config" >> "$output_config"
 fi
 
-# --fw fw4 时追加 FW4 overlay 覆盖文件
-if [ "${fw}" = "fw4" ] || [ "${fw}" = "FW4" ]; then
-	fw4_overlay="${device}-FW4.txt"
-	if [ -f "$config_dir/$fw4_overlay" ]; then
-		cat "$config_dir/$fw4_overlay" >> "$output_config"
-	fi
-fi
-
 if [ -n "$overlay_list" ]; then
 	OLD_IFS=$IFS
 	IFS=','
