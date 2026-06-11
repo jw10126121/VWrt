@@ -23,23 +23,36 @@ cleanup_files=''
 resolve_device_config() {
 	local config_root=$1
 	local device_name=$2
+	local source_type="${SOURCE_TYPE:-lean}"
+	local source_type_suffix="${source_type^^}"
 
-	# 优先查找无后缀的基线文件
+	# 1. 源码类型专用配置（如 CMIOT-AX18-NOWIFI-VWRT.txt）
+	if [ -f "$config_root/${device_name}-${source_type_suffix}.txt" ]; then
+		printf '%s\n' "${device_name}-${source_type_suffix}.txt"
+		return 0
+	fi
+
+	# 2. 基线配置（如 CMIOT-AX18-NOWIFI.txt）
 	if [ -f "$config_root/${device_name}.txt" ]; then
 		printf '%s\n' "${device_name}.txt"
 		return 0
 	fi
 
-	# 兼容旧文件名（过渡期，迁移完成后可移除）
+	# 3. 兼容旧文件名（过渡期，迁移完成后可移除）
 	if [ -f "$config_root/${device_name}-FW3.txt" ]; then
 		printf '%s\n' "${device_name}-FW3.txt"
 		return 0
 	fi
 
-	# NOWIFI 设备回退到基础设备配置（NOWIFI 语义由 overlay 处理）
+	# 4. NOWIFI 设备回退到基础设备配置（NOWIFI 语义由 overlay 处理）
 	case "$device_name" in
 		*-NOWIFI)
 			local short_name=${device_name%-NOWIFI}
+			# 先尝试源码类型专用
+			if [ -f "$config_root/${short_name}-${source_type_suffix}.txt" ]; then
+				printf '%s\n' "${short_name}-${source_type_suffix}.txt"
+				return 0
+			fi
 			if [ -f "$config_root/${short_name}.txt" ]; then
 				printf '%s\n' "${short_name}.txt"
 				return 0
@@ -58,7 +71,11 @@ resolve_general_configs() {
 	local config_root=$1
 	local device_name=$2
 	local short_device_name=''
+	local source_type="${SOURCE_TYPE:-lean}"
+	local general_file='GENERAL.txt'
+	local source_type_file="GENERAL-${source_type^^}.txt"
 
+	# 1. 设备专用配置（最高优先）
 	if [ -f "$config_root/GENERAL-${device_name}.txt" ]; then
 		printf '%s\n' "GENERAL-${device_name}.txt"
 		return 0
@@ -78,7 +95,14 @@ resolve_general_configs() {
 		return 0
 	fi
 
-	printf '%s\n' 'GENERAL.txt'
+	# 2. 源码类型专用配置（独立使用，不加载通用基线）
+	if [ -f "$config_root/$source_type_file" ]; then
+		printf '%s\n' "$source_type_file"
+		return 0
+	fi
+
+	# 3. 通用基线（兜底）
+	printf '%s\n' "$general_file"
 }
 
 cleanup() {
