@@ -144,6 +144,7 @@ jobs:
     outputs:
       firewall: ${{ steps.resolve.outputs.firewall }}
       use_apk: ${{ steps.resolve.outputs.use_apk }}
+      pkg_mgr: ${{ steps.resolve.outputs.pkg_mgr }}
       repo_url: ${{ steps.resolve.outputs.repo_url }}
       repo_branch: ${{ steps.resolve.outputs.repo_branch }}
     steps:
@@ -188,12 +189,17 @@ jobs:
           echo "repo_branch=$repo_branch" >> $GITHUB_OUTPUT
           echo "firewall=$firewall" >> $GITHUB_OUTPUT
           echo "use_apk=$use_apk" >> $GITHUB_OUTPUT
+          if [ "$use_apk" = "true" ]; then
+            echo "pkg_mgr=apk" >> $GITHUB_OUTPUT
+          else
+            echo "pkg_mgr=ipk" >> $GITHUB_OUTPUT
+          fi
           echo "【Lin】源码类型：${source_type}，仓库：[${repo_branch}] ${repo_url}"
           echo "【Lin】解析结果：fw=${firewall}, apk=${use_apk}"
 
   config:
     needs: resolve
-    name: ${{ inputs.WRT_DEVICE }}-${{ needs.resolve.outputs.firewall }}-${{ inputs.WRT_OVERLAYS != '' && inputs.WRT_OVERLAYS || 'base' }}
+    name: ${{ inputs.WRT_DEVICE }}-${{ needs.resolve.outputs.firewall }}-${{ needs.resolve.outputs.pkg_mgr }}-${{ inputs.WRT_OVERLAYS != '' && inputs.WRT_OVERLAYS || 'base' }}
     # 调用公用编译核心ALL-CORE.yml
     uses: ./.github/workflows/CORE-ALL.yml
     with:
