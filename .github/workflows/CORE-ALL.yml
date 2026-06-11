@@ -57,7 +57,8 @@ on:
         type: string
       WRT_USE_APK:
         required: false
-        type: boolean
+        type: string
+        default: 'auto'
     secrets:
       DINGDING_TOKEN: 
         required: false
@@ -97,7 +98,7 @@ env:
   CLASH_KERNEL: amd64
   UPLOAD_BIN_DIR_FORCE: true                                 # 强制上传bin
   WRT_HAS_WIFI: true
-  WRT_USE_APK: false
+  WRT_USE_APK: auto
   INSTALL_LLVM: false                                        # 是否安装 LLVM/Clang 工具链，默认关闭
   OPENWRT_PATH: '/builder/openwrt'
   DEVICE_TARGET: ''
@@ -209,9 +210,10 @@ jobs:
 
         if printf '%s' ",${WRT_OVERLAYS}," | grep -qi ',apk,'; then
             echo "WRT_USE_APK=true" >> $GITHUB_ENV
-        else
+        elif printf '%s' ",${WRT_OVERLAYS}," | grep -qi ',ipk,'; then
             echo "WRT_USE_APK=false" >> $GITHUB_ENV
         fi
+        # 若 overlay 未指定，保持 WRT_USE_APK 原值（auto/手动选择）
 
         if [ -n "${{inputs.WRT_TOKEN_DINGDING}}" ]; then
             echo "DINGDING_TOKEN=${{inputs.WRT_TOKEN_DINGDING}}" >> $GITHUB_ENV
@@ -290,6 +292,18 @@ jobs:
         fi
         echo "SOURCE_TYPE=$SOURCE_TYPE" >> $GITHUB_ENV
         echo "【Lin】源码类型：${SOURCE_TYPE}"
+        # 包管理器：auto=按源码类型自动选择，true=强制apk，false=强制ipk
+        if [ "${WRT_USE_APK}" = "auto" ]; then
+          if [ "$SOURCE_TYPE" = "vwrt" ]; then
+            echo "WRT_USE_APK=true" >> $GITHUB_ENV
+            echo "【Lin】vwrt 源码默认启用 apk 包管理器"
+          else
+            echo "WRT_USE_APK=false" >> $GITHUB_ENV
+            echo "【Lin】lean 源码默认使用 ipk 包管理器"
+          fi
+        else
+          echo "【Lin】手动指定包管理器：WRT_USE_APK=${WRT_USE_APK}"
+        fi
         # 临时导入config，为了获取设备信息
         [ -f ./.config ] && rm -rf ./.config
         EXPORT_ARGS=(
