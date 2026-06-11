@@ -24,41 +24,45 @@ resolve_device_config() {
 	local config_root=$1
 	local device_name=$2
 	local source_type="${SOURCE_TYPE:-lean}"
-	local source_type_suffix="${source_type^^}"
 
-	# 1. 源码类型专用配置（如 CMIOT-AX18-NOWIFI-VWRT.txt）
-	if [ -f "$config_root/${device_name}-${source_type_suffix}.txt" ]; then
-		printf '%s\n' "${device_name}-${source_type_suffix}.txt"
-		return 0
+	# 1. 源码类型专用配置
+	#    vwrt → DEVICE-FW4-VWRT.txt（vwrt 默认 fw4）
+	#    lean → DEVICE-FW3.txt（lean 默认 fw3）
+	if [ "$source_type" = "vwrt" ]; then
+		if [ -f "$config_root/${device_name}-FW4-VWRT.txt" ]; then
+			printf '%s\n' "${device_name}-FW4-VWRT.txt"
+			return 0
+		fi
+	else
+		if [ -f "$config_root/${device_name}-FW3.txt" ]; then
+			printf '%s\n' "${device_name}-FW3.txt"
+			return 0
+		fi
 	fi
 
-	# 2. 基线配置（如 CMIOT-AX18-NOWIFI.txt）
+	# 2. 兼容旧文件名（过渡期，迁移完成后可移除）
 	if [ -f "$config_root/${device_name}.txt" ]; then
 		printf '%s\n' "${device_name}.txt"
 		return 0
 	fi
 
-	# 3. 兼容旧文件名（过渡期，迁移完成后可移除）
-	if [ -f "$config_root/${device_name}-FW3.txt" ]; then
-		printf '%s\n' "${device_name}-FW3.txt"
-		return 0
-	fi
-
-	# 4. NOWIFI 设备回退到基础设备配置（NOWIFI 语义由 overlay 处理）
+	# 3. NOWIFI 设备回退到基础设备配置（NOWIFI 语义由 overlay 处理）
 	case "$device_name" in
 		*-NOWIFI)
 			local short_name=${device_name%-NOWIFI}
-			# 先尝试源码类型专用
-			if [ -f "$config_root/${short_name}-${source_type_suffix}.txt" ]; then
-				printf '%s\n' "${short_name}-${source_type_suffix}.txt"
-				return 0
+			if [ "$source_type" = "vwrt" ]; then
+				if [ -f "$config_root/${short_name}-FW4-VWRT.txt" ]; then
+					printf '%s\n' "${short_name}-FW4-VWRT.txt"
+					return 0
+				fi
+			else
+				if [ -f "$config_root/${short_name}-FW3.txt" ]; then
+					printf '%s\n' "${short_name}-FW3.txt"
+					return 0
+				fi
 			fi
 			if [ -f "$config_root/${short_name}.txt" ]; then
 				printf '%s\n' "${short_name}.txt"
-				return 0
-			fi
-			if [ -f "$config_root/${short_name}-FW3.txt" ]; then
-				printf '%s\n' "${short_name}-FW3.txt"
 				return 0
 			fi
 			;;

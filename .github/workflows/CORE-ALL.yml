@@ -24,8 +24,9 @@ on:
         required: true
         type: string
       WRT_FIREWALL:
-        required: true
+        required: false
         type: string
+        default: 'auto'
       WRT_OVERLAYS:
         required: false
         type: string
@@ -303,6 +304,18 @@ jobs:
           fi
         else
           echo "【Lin】手动指定包管理器：WRT_USE_APK=${WRT_USE_APK}"
+        fi
+        # 防火墙版本：auto=按源码类型自动选择，fw3/fw4=手动指定
+        if [ "${WRT_FIREWALL}" = "auto" ]; then
+          if [ "$SOURCE_TYPE" = "vwrt" ]; then
+            echo "WRT_FIREWALL=fw4" >> $GITHUB_ENV
+            echo "【Lin】vwrt 源码默认使用 fw4 防火墙"
+          else
+            echo "WRT_FIREWALL=fw3" >> $GITHUB_ENV
+            echo "【Lin】lean 源码默认使用 fw3 防火墙"
+          fi
+        else
+          echo "【Lin】手动指定防火墙：WRT_FIREWALL=${WRT_FIREWALL}"
         fi
         # 临时导入config，为了获取设备信息
         [ -f ./.config ] && rm -rf ./.config

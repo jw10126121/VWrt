@@ -9,8 +9,9 @@ on:
         required: true
         type: string
       WRT_FIREWALL:
-        required: true
+        required: false
         type: string
+        default: 'auto'
       WRT_OVERLAYS:
         required: false
         type: string
@@ -61,13 +62,14 @@ on:
           - GL-MT6000-WIFI
         default: 'CMIOT-AX18-NOWIFI'
       WRT_FIREWALL:
-        description: '防火墙栈'
-        required: true
+        description: '防火墙栈（auto=按源码类型自动选择，lean→fw3，vwrt→fw4）'
+        required: false
         type: choice
         options:
+          - auto
           - fw3
           - fw4
-        default: 'fw3'
+        default: 'auto'
       WRT_OVERLAYS:
         description: '可选 overlays，逗号分隔，例如 frps'
         required: false

@@ -74,6 +74,11 @@ else
     device_name_list_lian="$(IFS=$'_and_'; echo "${device_name_list[*]}")"
 fi
 
+# 优先使用 WRT_DEVICE（逻辑设备名），.config 解析结果作为后备
+if [ -n "${WRT_DEVICE:-}" ]; then
+    device_profile="${WRT_DEVICE}"
+fi
+
 dir_linux_version="${openwrt_path}/target/linux"
 dir_linux_device_target="$(find "${dir_linux_version}" -type d -name "${device_target}" -print -prune)"
 makefile_path="${dir_linux_device_target}/Makefile"

@@ -175,6 +175,10 @@ include_version="$(extract_include_version "${openwrt_path}/include/version.mk")
 op_version="$(choose_preferred_version "${config_version}" "${include_version}")"
 luci_version="$(extract_luci_version "${openwrt_path}/feeds.conf.default" "${op_version}" || true)"
 device_profile="$(extract_device_profile_from_config "${openwrt_path}/.config")"
+# 优先使用 WRT_DEVICE（逻辑设备名），.config 解析结果作为后备
+if [ -n "${WRT_DEVICE:-}" ]; then
+    device_profile="${WRT_DEVICE}"
+fi
 wrt_has_lite_text='[常规版]'
 wrt_has_wifi_text='有WIFI'
 package_manager='ipk'
