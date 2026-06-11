@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# 说明：CUSTOM-APK 应作为固定预设入口，并行调用 4 个 DEFAULT 工作流，
+# 仅在 CUSTOM 的 4 个组合上追加 apk overlay。
+
+set -euo pipefail
+
+default_workflow=".github/workflows/DEFAULT.yml"
+custom_apk_workflow=".github/workflows/CUSTOM-APK.yml"
+
+assert_contains() {
+	local file_path="$1"
+	local pattern="$2"
+	local message="$3"
+
+	if ! grep -Fq "$pattern" "$file_path"; then
+		echo "ASSERT FAILED: ${message}" >&2
+		echo "Missing pattern: ${pattern}" >&2
+		exit 1
+	fi
+}
+
+assert_not_contains_before_jobs() {
+	local file_path="$1"
+	local pattern="$2"
+	local message="$3"
+
+	if awk '/^jobs:/{exit} {print}' "$file_path" | grep -Fq "$pattern"; then
+		echo "ASSERT FAILED: ${message}" >&2
+		echo "Unexpected pattern before jobs: ${pattern}" >&2
+		exit 1
+	fi
+}
+
+assert_contains "$default_workflow" "workflow_call:" "DEFAULT should be reusable from CUSTOM-APK"
+assert_contains "$default_workflow" "WRT_OVERLAYS:" "DEFAULT reusable workflow should expose overlays input"
+assert_contains "$default_workflow" "WRT_LUCI_BRANCH:" "DEFAULT reusable workflow should expose LuCI branch input"
+assert_contains "$default_workflow" "CMIOT-AX18-NOWIFI" "DEFAULT should expose AX18 entry in manual choices"
+assert_contains "$default_workflow" "JD-AX1800PRO-WIFI" "DEFAULT should expose JD AX1800 Pro entry in manual choices"
+assert_contains "$default_workflow" "GL-MT6000-WIFI" "DEFAULT should expose MT6000 in manual choices"
+
+assert_not_contains_before_jobs "$custom_apk_workflow" "WRT_DEVICE:" "CUSTOM-APK should not expose per-run device input"
+assert_not_contains_before_jobs "$custom_apk_workflow" "WRT_SOURCE_FLAVOR:" "CUSTOM-APK should not expose per-run source flavor input"
+
+assert_contains "$custom_apk_workflow" "run-name:" "CUSTOM-APK should expose a dynamic run name"
+assert_contains "$custom_apk_workflow" "CUSTOM-APK-static-apk" "CUSTOM-APK run name should show its fixed preset nature"
+assert_contains "$custom_apk_workflow" "uses: ./.github/workflows/DEFAULT.yml" "CUSTOM-APK should call DEFAULT reusable workflow"
+assert_contains "$custom_apk_workflow" "secrets: inherit" "CUSTOM-APK should inherit secrets when calling DEFAULT"
+
+assert_contains "$custom_apk_workflow" "cmiot_ax18_nowifi_fw3_apk:" "CUSTOM-APK should include AX18 fw3 apk preset"
+assert_contains "$custom_apk_workflow" "name: lean-CMIOT-AX18-NOWIFI-fw3-apk" "AX18 apk preset should have a stable display name"
+assert_contains "$custom_apk_workflow" "WRT_OVERLAYS: apk" "base apk preset should pass apk overlay"
+
+assert_contains "$custom_apk_workflow" "cmiot_ax18_nowifi_fw3_frps_apk:" "CUSTOM-APK should include AX18 frps apk preset"
+assert_contains "$custom_apk_workflow" "name: lean-CMIOT-AX18-NOWIFI-fw3-frps-apk" "AX18 frps apk preset should have a stable display name"
+assert_contains "$custom_apk_workflow" "WRT_OVERLAYS: frps,apk" "frps apk preset should pass both overlays"
+
+assert_contains "$custom_apk_workflow" "gl_mt6000_wifi_fw3_apk:" "CUSTOM-APK should include GL-MT6000 fw3 apk preset"
+assert_contains "$custom_apk_workflow" "name: lean-GL-MT6000-WIFI-fw3-apk" "MT6000 fw3 apk preset should have a stable display name"
+
+echo "test_workflow_custom_apk_presets: ok"

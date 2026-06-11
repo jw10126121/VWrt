@@ -1,0 +1,537 @@
+#!/bin/bash
+#=================================================
+# Description: DIY script
+# Lisence: MIT
+# Author: Linjw
+# 通用的diy配置脚本
+# 该脚本在config确认前于openwrt目录下执行
+# 主要职责：改默认网络参数、修补 LuCI/插件行为、补充编译选项与首次启动脚本。
+#=================================================
+
+work_dir=$(pwd)
+# 运行在openwrt目录下
+current_script_dir=$(cd $(dirname $0) && pwd)
+echo "【Lin】脚本目录：${current_script_dir}"
+
+if [ $(basename "$(pwd)") != 'openwrt' ]; then
+    if [ -n "${OPENWRT_PATH:-}" ] && [ -d "${OPENWRT_PATH}" ]; then
+        cd "${OPENWRT_PATH}"
+    elif [ -d "./openwrt" ]; then
+        cd ./openwrt
+    else
+        echo "【Lin】请在openwrt目录下执行，当前工作目录：$(pwd)，OPENWRT_PATH：${OPENWRT_PATH:-未设置}" 
+        exit 0;
+    fi
+fi
+
+package_workdir="$(pwd)/package"
+
+# 显示帮助信息的函数
+show_help() {
+    echo "Usage: $0 [options]"
+    echo "Options:"
+    echo "  -h, --help            显示帮助信息"
+    echo "  -i default_ip         设置默认IP，默认192.168.0.1"
+    echo "  -n default_name       设置主机名，默认Linjw"
+    echo "  -p is_reset_password  是否重置密码，默认true"
+    echo "  -t default_theme_name 默认主题，默认不修改"
+    echo "  -m package_manager    包管理器类型，默认ipk，可选apk"
+    echo "  -c config_name        配置名，如IPQ60XX-NOWIFI-LEAN"
+}
+
+# 检查是否需要显示帮助信息
+[[ "$1" == "-h" || "$1" == "--help" ]] && show_help && exit 0
+
+default_name="Linjw"
+default_ip="192.168.0.1"
+is_reset_password=true
+default_theme_name=''
+package_manager='ipk'
+config_name=''
+
+# 解析外部传入的定制参数，后续所有修改都围绕这些参数展开。
+while getopts "hi:n:p:t:m:c:" opt; do
+    case $opt in
+        h)
+            show_help
+            exit 0
+            ;;
+        n)
+            default_name=$OPTARG
+            ;;
+        i)
+            default_ip=$OPTARG
+            ;;
+        m)
+            package_manager=$OPTARG
+            ;;
+        p)
+            is_reset_password=$OPTARG
+            if [[ "$OPTARG" =~ ^[1-9][0-9]*$ ]] || [ "$OPTARG" = "true" ]; then
+                is_reset_password=true
+            else
+                is_reset_password=false
+            fi
+            ;;
+        t)
+            default_theme_name=$OPTARG
+            ;;
+        c)
+            config_name=$OPTARG
+            ;;
+        \?)
+            echo "无效选项: -$OPTARG" >&2
+            show_help >&2
+            exit 1
+            ;;
+    esac
+done
+
+
+WRT_IP=$default_ip
+WRT_NAME=$default_name
+WRT_THEME=$default_theme_name
+
+# op配置文件
+op_config="./.config"
+# op.config_generate
+CFG_FILE_OP="./package/base-files/files/bin/config_generate"
+# lean.config_generate
+CFG_FILE_LEDE="./package/base-files/luci2/bin/config_generate"
+# lean.默认配置文件，固件首次刷入后运行
+file_default_settings="./package/lean/default-settings/files/zzz-default-settings"
+# 通用首次开机脚本，落到 /etc/uci-defaults/99-setup_config
+file_setup_config="./package/base-files/files/etc/uci-defaults/99-setup_config"
+setup_config_template="${current_script_dir}/patch/99-setup_config.txt"
+target_label_marker_file="./.linjw-target-label"
+
+set_kconfig_value() {
+    # 统一维护 .config 里的开关，避免多次追加出互相冲突的同名配置。
+    local key=$1
+    local value=$2
+
+    if grep -q "^${key}=" "${op_config}" 2>/dev/null; then
+        sed -i "s#^${key}=.*#${key}=${value}#g" "${op_config}"
+    else
+        echo "${key}=${value}" >> "${op_config}"
+    fi
+}
+
+append_file_snippet() {
+    # 通用“安全插入片段”工具：
+    # 1. 先检查目标文件是否存在；
+    # 2. 再用 marker 判断相同内容是否已经插入过，避免重复追加；
+    # 3. 最后把 content 写进临时文件，并在 anchor_pattern 命中的那一行后面插入。
+    #
+    # 参数约定：
+    # $1 target_file：要修改的目标文件
+    # $2 anchor_pattern：sed 用来定位插入点的锚点模式
+    # $3 marker：用于幂等判断的固定字符串
+    # $4 content：要插入的实际文本块
+    local target_file=$1
+    local anchor_pattern=$2
+    local marker=$3
+    local content=$4
+    local temp_file
+
+    [ -f "$target_file" ] || return 0
+    grep -qF "$marker" "$target_file" && return 0
+
+    temp_file=$(mktemp)
+    printf '\n%s\n' "$content" > "$temp_file"
+    # sed 的 r 命令表示“把文件内容读到当前匹配行后面”，不是 replace。
+    sed -i "/${anchor_pattern}/r $temp_file" "$target_file"
+    rm -f "$temp_file"
+}
+
+ensure_setup_config_script() {
+    local setup_dir
+
+    setup_dir=$(dirname "$file_setup_config")
+    mkdir -p "$setup_dir"
+    [ -f "$setup_config_template" ] || return 0
+
+    if [ ! -f "$file_setup_config" ]; then
+        cp "$setup_config_template" "$file_setup_config"
+    fi
+
+    chmod +x "$file_setup_config"
+}
+
+append_default_settings_snippet() {
+    # 首次开机自定义逻辑统一写入 /etc/uci-defaults/99-setup_config，
+    # 避免继续把运行时初始化片段塞进 lean 的 zzz-default-settings。
+    ensure_setup_config_script
+    append_file_snippet "$file_setup_config" "# setup_config hooks" "$2" "$3"
+}
+
+configure_package_manager_mode() {
+    if [ "${package_manager}" = 'apk' ]; then
+        set_kconfig_value "CONFIG_PKG_FORMAT" "apk"
+        set_kconfig_value "CONFIG_USE_APK" "y"
+        set_kconfig_value "CONFIG_PACKAGE_luci-app-package-manager" "y"
+        set_kconfig_value "CONFIG_PACKAGE_luci-i18n-package-manager-zh-cn" "y"
+        set_kconfig_value "CONFIG_PACKAGE_luci-app-opkg" "n"
+        set_kconfig_value "CONFIG_PACKAGE_luci-lib-ipkg" "n"
+        set_kconfig_value "CONFIG_PACKAGE_luci-i18n-opkg-zh-cn" "n"
+        echo "【Lin】包管理器模式：apk（启用新版 LuCI 包管理器）"
+    else
+        set_kconfig_value "CONFIG_PKG_FORMAT" "ipk"
+        set_kconfig_value "CONFIG_USE_APK" "n"
+        set_kconfig_value "CONFIG_PACKAGE_luci-app-package-manager" "n"
+        set_kconfig_value "CONFIG_PACKAGE_luci-i18n-package-manager-zh-cn" "n"
+        set_kconfig_value "CONFIG_PACKAGE_luci-app-opkg" "y"
+        set_kconfig_value "CONFIG_PACKAGE_luci-lib-ipkg" "y"
+        set_kconfig_value "CONFIG_PACKAGE_luci-i18n-opkg-zh-cn" "y"
+        echo "【Lin】包管理器模式：ipk（保留旧版 LuCI 包管理器）"
+    fi
+}
+
+configure_source_default_settings_package() {
+    local emortal_default_settings="./package/emortal/default-settings/Makefile"
+
+    if [ -f "${emortal_default_settings}" ] && [ "${package_manager}" = 'apk' ]; then
+        set_kconfig_value "CONFIG_PACKAGE_default-settings-chn" "y"
+        echo "【Lin】检测到 emortal default-settings，APK 模式启用 default-settings-chn"
+    else
+        set_kconfig_value "CONFIG_PACKAGE_default-settings-chn" "n"
+        echo "【Lin】当前源码/包管理器组合不启用 default-settings-chn"
+    fi
+}
+
+configure_default_system() {
+    local timezone_snippet
+
+    if find ./package/lean/autocore/files -type f -name 'index.htm' 2>/dev/null | grep -q .; then
+        sed -i 's/os.date()/os.date("%Y-%m-%d %H:%M:%S")/g' ./package/lean/autocore/files/*/index.htm
+        echo "【Lin】修改默认时间格式如：$(date "+%Y-%m-%d %H:%M:%S")"
+    fi
+
+    if [ -f "$CFG_FILE_OP" ]; then
+        sed -i "s/192\.168\.[0-9]*\.[0-9]*/$WRT_IP/g" "$CFG_FILE_OP"
+        sed -i "s/hostname='.*'/hostname='$WRT_NAME'/g" "$CFG_FILE_OP"
+        sed -i "s/timezone='[^']*'/timezone='CST-8'/g" "$CFG_FILE_OP"
+        sed -i "s/zonename='[^']*'/zonename='Asia\\/Shanghai'/g" "$CFG_FILE_OP"
+        echo "【Lin】OP默认：IP: ${WRT_IP}，主机名：$WRT_NAME"
+    fi
+
+    if [ -d "./feeds/luci/modules/luci-mod-system/" ]; then
+        sed -i "s/192\.168\.[0-9]*\.[0-9]*/$WRT_IP/g" $(find ./feeds/luci/modules/luci-mod-system/ -type f -name "flash.js")
+    fi
+
+    if [ -d "./feeds/luci/modules/luci-mod-status/" ]; then
+        sed -i "s/(\(luciversion || ''\))/(\1) + (' \/ ${default_name}-$(date +%Y%m%d)')/g" $(find ./feeds/luci/modules/luci-mod-status/ -type f -name "10_system.js")
+        echo "【Lin】添加编译日期标识成功：${default_name}-$(date +%Y%m%d)"
+    fi
+
+    if [ -f "$CFG_FILE_LEDE" ]; then
+        sed -i "s/192\.168\.[0-9]*\.[0-9]*/$WRT_IP/g" "$CFG_FILE_LEDE"
+        sed -i "s/hostname='.*'/hostname='$WRT_NAME'/g" "$CFG_FILE_LEDE"
+        sed -i "s/timezone='[^']*'/timezone='CST-8'/g" "$CFG_FILE_LEDE"
+        sed -i "s/zonename='[^']*'/zonename='Asia\\/Shanghai'/g" "$CFG_FILE_LEDE"
+        echo "【Lin】LEDE默认：IP: ${WRT_IP}，主机名：$WRT_NAME"
+    fi
+
+    timezone_snippet=$(cat <<'EOF'
+uci set system.@system[0].timezone='CST-8'
+uci set system.@system[0].zonename='Asia/Shanghai'
+uci commit system
+EOF
+)
+    append_default_settings_snippet "uci commit system" "uci set system.@system[0].zonename='Asia/Shanghai'" "$timezone_snippet"
+    if [ -f "$file_setup_config" ] && grep -qF "uci set system.@system[0].zonename='Asia/Shanghai'" "$file_setup_config"; then
+        echo "【Lin】默认时区已设置为 Asia/Shanghai"
+    fi
+}
+
+configure_common_system_defaults() {
+    configure_default_system
+    configure_theme
+    clear_passwords
+    adjust_luci_menu_positions
+    configure_openvpn_defaults
+    configure_base_package_options
+    configure_source_default_settings_package
+    # patch_apk_empty_feed_indexing
+}
+
+configure_theme() {
+    local theme_dir
+
+    [ -n "$WRT_THEME" ] || {
+        echo "【Lin】使用源码默认主题"
+        return 0
+    }
+
+    theme_dir=$(find ./package ./feeds/luci/ ./feeds/packages/ -maxdepth 3 -type d -iname "luci-theme-${WRT_THEME}" -prune)
+    if [ -n "$theme_dir" ]; then
+        sed -i "s/luci-theme-bootstrap/luci-theme-$WRT_THEME/g" $(find ./feeds/luci/collections/ -type f -name "Makefile")
+        set_kconfig_value "CONFIG_PACKAGE_luci-theme-$WRT_THEME" "y"
+        echo "【Lin】默认主题：${WRT_THEME}，主题目录：${theme_dir}"
+    else
+        echo "【Lin】不存在主题【$WRT_THEME】，使用默认主题"
+    fi
+}
+
+apply_lean_runtime_customizations() {
+    local dhcp_ip_start=10
+    local dhcp_ip_end=254
+    local dhcp_ip_limit=$((dhcp_ip_end - dhcp_ip_start + 1))
+    local holdoff_snippet dhcp_snippet
+
+    [ -f "$file_default_settings" ] || return 0
+
+    holdoff_snippet=$(cat <<'EOF'
+uci set luci.apply.holdoff=3
+uci commit luci
+EOF
+)
+    append_default_settings_snippet "uci commit system" "uci set luci.apply.holdoff" "$holdoff_snippet"
+    if grep -qF "uci set luci.apply.holdoff" "$file_setup_config"; then
+        echo "【Lin】修改luci提交等待时间成功！"
+    fi
+
+    dhcp_snippet=$(cat <<EOF
+uci set dhcp.@dnsmasq[0].sequential_ip=1
+uci set dhcp.lan.start=${dhcp_ip_start}
+uci set dhcp.lan.limit=${dhcp_ip_limit}
+uci commit dhcp
+EOF
+)
+    append_default_settings_snippet "uci commit system" "uci set dhcp.@dnsmasq[0].sequential_ip=" "$dhcp_snippet"
+    if grep -qF 'uci set dhcp.@dnsmasq[0].sequential_ip=' "$file_setup_config"; then
+        echo "【Lin】设置DHCP顺序分配${dhcp_ip_start}~${dhcp_ip_end}的IP。"
+    fi
+}
+
+write_build_target_marker() {
+    local marker_file="${target_label_marker_file:-./.linjw-target-label}"
+
+    [ -n "${config_name}" ] || return 0
+    printf '%s\n' "${config_name}" > "${marker_file}"
+}
+
+patch_apk_empty_feed_indexing() {
+    local package_makefile="${1:-./package/Makefile}"
+    local temp_file
+
+    [ "${package_manager}" = 'apk' ] || return 0
+    [ -f "$package_makefile" ] || return 0
+    grep -qF 'set -- *.apk; \' "$package_makefile" && return 0
+
+    temp_file=$(mktemp)
+    if ! awk '
+        BEGIN { in_block=0; patched=0 }
+        {
+            if (!in_block && !patched && $0 ~ /mkndx[[:space:]]*\\$/) {
+                match($0, /^[[:space:]]*/)
+                indent = substr($0, RSTART, RLENGTH)
+                print indent "set -- *.apk; \\"
+                print indent "if [ \"$$1\" = '\''*.apk'\'' ]; then \\"
+                print indent ":; \\"
+                print indent "else \\"
+                print
+                in_block = 1
+                patched = 1
+                next
+            }
+            if (in_block && $0 ~ /^[[:space:]]*\*\.apk; \\$/) {
+                sub(/\*\.apk; \\$/, "$$@; \\")
+                print
+                next
+            }
+            if (in_block && $0 ~ /^[[:space:]]*\)[[:space:]]*(;[[:space:]]*\\)?[[:space:]]*$/) {
+                if ($0 ~ /;[[:space:]]*\\[[:space:]]*$/) {
+                    print
+                } else {
+                    print indent "); \\"
+                }
+                print indent "fi"
+                in_block = 0
+                next
+            }
+            print
+        }
+        END {
+            if (in_block) {
+                exit 2
+            }
+            if (!patched) {
+                exit 3
+            }
+        }
+    ' "$package_makefile" > "$temp_file"; then
+        rm -f "$temp_file"
+        echo "【Lin】未找到可修补的 APK 索引块：${package_makefile}"
+        return 0
+    fi
+
+    mv "$temp_file" "$package_makefile"
+    echo "【Lin】已修补空 APK feed 索引：${package_makefile}"
+}
+
+# theme_argon_dir=$(find ./package ./feeds/luci/ ./feeds/packages/ -maxdepth 3 -type d -iname "luci-theme-argon" -prune)
+# # 修改argon主题颜色
+# if [ -n "$theme_argon_dir" ] && ! grep -q "uci commit argon" $file_default_settings; then
+#     temp_file=$(mktemp)
+# cat <<EOF > "$temp_file"
+
+# if [ ! -f /etc/config/argon ]; then
+#     touch /etc/config/argon
+#     uci add argon global
+# fi
+# uci set argon.@global[0].primary='#31A1A1'
+# uci set argon.@global[0].transparency='0.5'
+# uci commit argon
+# EOF
+#     sed -i "/uci commit system/r $temp_file" "${file_default_settings}"
+#     rm "$temp_file"
+# fi
+
+# if grep -q "uci commit argon" $file_default_settings; then
+#     echo "【Lin】修改argon主题色成功"
+# fi
+
+# 修复 armv8 设备 xfsprogs 报错
+# sed -i 's/TARGET_CFLAGS.*/TARGET_CFLAGS += -DHAVE_MAP_SYNC -D_LARGEFILE64_SOURCE/g' feeds/packages/utils/xfsprogs/Makefile
+
+
+clear_passwords() {
+    if [[ -f "./package/base-files/files/etc/shadow" && "$is_reset_password" == "true" ]]; then
+        sed -i 's/^root:.*:/root:::0:99999:7:::/' "./package/base-files/files/etc/shadow"
+        echo "【Lin】密码已清空：./package/base-files/files/etc/shadow"
+    fi
+
+    if [[ -f "${file_default_settings}" && "$is_reset_password" == "true" ]]; then
+        sed -i '/\/etc\/shadow$/{/root::0:0:99999:7:::/d;/root:::0:99999:7:::/d}' "${file_default_settings}"
+        echo "【Lin】LEAN配置密码已清空：${file_default_settings}"
+    fi
+}
+
+# WIFI_NAME=LEDE
+# WIFI_PASSWORD=88888888
+
+# # 修改wifi国家
+# sed -i 's/set wireless.radio\${devidx}.type=mac80211/set wireless.radio\${devidx}.type=mac80211 \n\t\t\t set wireless.radio\${devidx}.country=\"CN\"/g' ./kernel/mac80211/files/lib/wifi/mac80211.sh
+# # 修改wifi名
+# sed -i "s/set wireless.default_radio\\${devidx}.ssid=OpenWrt/set wireless.default_radio\\${devidx}.ssid=${WIFI_NAME}/g" ./kernel/mac80211/files/lib/wifi/mac80211.sh
+# # 修改wifi密码
+# sed -i "s/set wireless.default_radio\\${devidx}.encryption=none/set wireless.default_radio\\${devidx}.encryption=psk-mixed \\n\\t\\t\\t set wireless.default_radio\\${devidx}.key=${WIFI_PASSWORD}/g" ./kernel/mac80211/files/lib/wifi/mac80211.sh
+# 修改2.4G wifi信道
+# sed -i 's/channel=\"11\"/channel=\"1\"/g' $package_root/kernel/mac80211/files/lib/wifi/mac80211.sh
+# 修改5G wifi信道
+# sed -i 's/channel=\"36\"/channel=\"153\"/g' $package_root/kernel/mac80211/files/lib/wifi/mac80211.sh
+
+
+adjust_luci_menu_positions() {
+    sed -i 's/services/system/g' $(find ./feeds/luci/applications/luci-app-ttyd/root/usr/share/luci/menu.d/ -type f -name "luci-app-ttyd.json")
+    sed -i '3 a\\t\t"order": 10,' $(find ./feeds/luci/applications/luci-app-ttyd/root/usr/share/luci/menu.d/ -type f -name "luci-app-ttyd.json")
+    sed -i 's/services/network/g' $(find ./feeds/luci/applications/luci-app-upnp/root/usr/share/luci/menu.d/ -type f -name "luci-app-upnp.json")
+    sed -i 's/services/network/g' $(find ./feeds/luci/applications/luci-app-nlbwmon/root/usr/share/luci/menu.d/ -type f -name "luci-app-nlbwmon.json")
+    sed -i 's/services/nas/g' $(find ./feeds/luci/applications/luci-app-hd-idle/root/usr/share/luci/menu.d/ -type f -name "luci-app-hd-idle.json")
+    if [ -d "./feeds/luci/applications/luci-app-alist/root/usr/share/luci/menu.d" ]; then
+        sed -i 's/services/nas/g' $(find ./feeds/luci/applications/luci-app-alist/root/usr/share/luci/menu.d/ -type f -name "luci-app-alist.json")
+    fi
+
+    if [ -f "$CFG_FILE_LEDE" ]; then
+        sed -i 's/services/nas/g' $(find ./feeds/luci/applications/luci-app-samba4/root/usr/share/luci/menu.d/ -type f -name "luci-app-samba4.json")
+    fi
+}
+
+update_build_revision() {
+    local openwrt_workdir="."
+    local config_version include_version op_version distrib_revision date_version show_version_text to_distrib_revision
+
+    [ -f "${file_default_settings}" ] || return 0
+
+    config_version=$(grep CONFIG_VERSION_NUMBER "${openwrt_workdir}/.config" | cut -d '=' -f 2 | tr -d '"' | awk '{print $2}')
+    include_version=$(grep -oP '^VERSION_NUMBER:=.*,\s*\K[0-9]+\.[0-9]+\.[0-9]+(-*)?' "${openwrt_workdir}/include/version.mk" | tail -n 1 | sed -E 's/([0-9]+\.[0-9]+)\..*/\1/')
+    op_version="${config_version:-${include_version}}"
+    distrib_revision=$(grep "DISTRIB_REVISION=" "${file_default_settings}" | awk -F "'" '{print $2}')
+
+    if [[ -n $distrib_revision ]]; then
+        date_version=$(date +"%y%m%d")
+        if [ -n "${op_version}" ]; then
+            show_version_text="v${op_version}"
+            # show_version_text="v${op_version} by Lin on ${date_version}"
+            to_distrib_revision="${show_version_text}"
+        else
+            to_distrib_revision="R${date_version} by Lin"
+        fi
+        sed -i "/DISTRIB_REVISION=/s/${distrib_revision}/${to_distrib_revision}/" "${file_default_settings}"
+        echo "【Lin】编译信息修改为：${to_distrib_revision}"
+    fi
+}
+
+configure_nss_usage_display() {
+    local usage_file="./package/lean/autocore/files/arm/sbin/usage"
+
+    if [[ -f "${usage_file}" ]]; then
+        sed -i '/echo -n "CPU: ${cpu_usage}, NPU: ${npu_usage}"/c\
+            if [ -r "/sys/kernel/debug/ecm/ecm_db/connection_count_simple" ]; then\
+                connection_count=$(cat /sys/kernel/debug/ecm/ecm_db/connection_count_simple)\
+                echo -n "CPU: ${cpu_usage}, NPU: ${npu_usage}, ECM: ${connection_count}"\
+            else\
+                echo -n "CPU: ${cpu_usage}, NPU: ${npu_usage}"\
+            fi' "$usage_file"
+        echo "【Lin】配置NSS显示执行完成"
+    fi
+}
+
+configure_openvpn_defaults() {
+    local wrt_ippart
+    local firewall_user_path="./package/network/config/firewall/files/firewall.user"
+    local fw4_openvpn_nat_dir="./package/base-files/files/usr/share/nftables.d/chain-post/srcnat"
+    local fw4_openvpn_nat_file="${fw4_openvpn_nat_dir}/99-openvpn-masq.nft"
+    local fw3_openvpn_nat_rule="iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o br-lan -j MASQUERADE"
+
+    wrt_ippart=$(echo "$WRT_IP" | cut -d'.' -f1-3)
+
+    if grep -q '^CONFIG_PACKAGE_firewall=y$' "${op_config}" 2>/dev/null; then
+        rm -f "${fw4_openvpn_nat_file}"
+        if [ -f "${firewall_user_path}" ] && ! grep -Fq "${fw3_openvpn_nat_rule}" "${firewall_user_path}"; then
+            echo "${fw3_openvpn_nat_rule}" >> "${firewall_user_path}"
+            echo "【Lin】OpenVPN Server 已追加 FW3 iptables NAT 规则"
+        fi
+    elif grep -q '^CONFIG_PACKAGE_firewall4=y$' "${op_config}" 2>/dev/null; then
+        if [ -f "${firewall_user_path}" ]; then
+            sed -i "\|${fw3_openvpn_nat_rule}|d" "${firewall_user_path}"
+        fi
+
+        mkdir -p "${fw4_openvpn_nat_dir}"
+        cat > "${fw4_openvpn_nat_file}" <<'EOF'
+ip saddr 10.8.0.0/24 oifname "br-lan" masquerade comment "OpenVPN server LAN NAT"
+EOF
+        echo "【Lin】OpenVPN Server 已生成 FW4 nftables NAT 规则"
+    fi
+
+    if [ -f "./package/feeds/luci/luci-app-openvpn-server/root/etc/config/openvpn" ]; then
+        echo "  option duplicate_cn '1'" >> ./package/feeds/luci/luci-app-openvpn-server/root/etc/config/openvpn
+        echo "【Lin】OpenVPN Server has been fixed to resolve the issue of duplicate connecting!"
+        sed -i "s/192.168.1.1/$wrt_ippart.1/g" ./package/feeds/luci/luci-app-openvpn-server/root/etc/config/openvpn
+        sed -i "s/192.168.1.0/$wrt_ippart.0/g" ./package/feeds/luci/luci-app-openvpn-server/root/etc/config/openvpn
+        echo "【Lin】OpenVPN Server has been fixed the default gateway address!"
+    fi
+}
+
+configure_base_package_options() {
+    # 编译后，软件源里，去掉helloworld在线源
+    set_kconfig_value "CONFIG_FEED_helloworld" "n"
+    set_kconfig_value "CONFIG_PACKAGE_luci" "y"
+    set_kconfig_value "CONFIG_LUCI_LANG_zh_Hans" "y"
+    configure_package_manager_mode
+}
+
+main() {
+    WRT_TARGET="${config_name}"
+    echo "【Lin】源码风味：lean"
+
+    configure_common_system_defaults
+    update_build_revision
+
+    apply_lean_runtime_customizations
+    write_build_target_marker
+    configure_nss_usage_display
+}
+
+main

@@ -1,0 +1,678 @@
+#=================================================
+# Description: Build OpenWrt using GitHub Actions
+# Lisence: MIT
+#=================================================
+
+name:  CORE-ALL
+
+on:
+  workflow_call:
+    inputs:
+      # WRT_REPO_INFO:
+      #   required: true
+      #   type: string
+      # WRT_REPO_URL:
+      #   required: true
+      #   type: string
+      # WRT_REPO_BRANCH:
+      #   required: true
+      #   type: string
+      WRT_SOURCE_HASH_INFO:
+        required: true
+        type: string
+      WRT_DEVICE:
+        required: true
+        type: string
+      WRT_FIREWALL:
+        required: true
+        type: string
+      WRT_OVERLAYS:
+        required: false
+        type: string
+      WRT_LUCI_BRANCH:
+        required: false
+        type: string
+      WRT_DIY_SETTING:
+        required: true
+        type: string
+        default: 'diy_config.sh'
+      WRT_DIY_FEEDS:
+        required: true
+        type: string
+        default: diy_feeds.sh
+      WRT_DIYPackages:
+        required: true
+        type: string
+      WRT_RELEASE_FIRMWARE:
+        required: true
+        type: boolean
+      WRT_DEFAULT_LANIP:
+        required: true
+        type: string
+      WRT_MINE_SAY:
+        required: true
+        type: string
+      WRT_TOKEN_DINGDING:
+        required: false
+        type: string
+      WRT_USE_APK:
+        required: false
+        type: boolean
+    secrets:
+      DINGDING_TOKEN: 
+        required: false
+      # UPLOAD_FIRMWARE_DIR:
+      #   required: false
+      #   type: boolean
+      #   default: true
+        
+#环境变量配置
+env:
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  DINGDING_TOKEN: ${{ secrets.DINGDING_TOKEN }}
+  WRT_SOURCE_HASH_INFO: ${{inputs.WRT_SOURCE_HASH_INFO}}
+  WRT_DEVICE: ${{inputs.WRT_DEVICE}}                          # 设备名
+  WRT_FIREWALL: ${{inputs.WRT_FIREWALL}}                      # fw3 / fw4
+  WRT_OVERLAYS: ${{inputs.WRT_OVERLAYS || '' }}               # 可选 overlays
+  WRT_LUCI_BRANCH: ${{inputs.WRT_LUCI_BRANCH || '' }}         # 可选 LuCI feed 分支
+  WRT_CONFIG_LABEL: ''                                        # 组合标签
+  WRT_DIY_SETTING: ${{ inputs.WRT_DIY_SETTING }}              # 自定义配置
+  WRT_DIY_FEEDS: ${{ inputs.WRT_DIY_FEEDS || 'diy_feeds.sh' }} # 主要用于更新Feeds
+  WRT_DIYPackages: ${{inputs.WRT_DIYPackages}}                # 自定义包配置
+  WRT_RELEASE_FIRMWARE: ${{inputs.WRT_RELEASE_FIRMWARE}}      # 发布固件
+  WRT_DEFAULT_LANIP: ${{inputs.WRT_DEFAULT_LANIP}}            # 默认lanIP
+  WRT_MINE_SAY: ${{inputs.WRT_MINE_SAY}} 
+  WRT_DIR_CONFIGS: Config                                     # 自定义配置文件夹
+  WRT_DIR_SCRIPTS: Scripts                                    # 脚本文件夹
+  WRT_diy_after_defconfig: 'diy_after_defconfig.sh'
+  WRT_THEME_NAME: 'argon'
+  UPLOAD_FIRMWARE_DIR: true
+  SPLIT_ARTIFACTS: true                                       # 是否将固件和Packages包分开上传到Artifact
+  IS_RESET_PASSWORD: true                                     # 是否把密码重置为空
+  UPLOAD_ALL_BIN_DIR: false                                   # 是否上传编译后的bin目录，因整理编译后的文件设置了UPLOAD_FIRMWARE_DIR，所以不上传整个bin目录
+  IS_RESIZE_SPACE: true                                      # 是否扩容空间，一般编译内容不多，可以不扩容，减少资源浪费
+  FREE_UP_DISK: true                                          # 是否清理磁盘
+  CACHE_TOOLCHAIN: true
+  CLASH_KERNEL: amd64
+  UPLOAD_BIN_DIR_FORCE: true                                 # 强制上传bin
+  WRT_HAS_WIFI: true
+  WRT_USE_APK: false
+  INSTALL_LLVM: false                                        # 是否安装 LLVM/Clang 工具链，默认关闭
+  OPENWRT_PATH: '/builder/openwrt'
+  DEVICE_TARGET: ''
+  DEVICE_SUBTARGET: ''
+  DEVICE_PROFILE: ''
+  DEVICE_NAME_LIST: ''
+  DEVICE_NAME_LIST_LIAN: ''
+  DEVICE_ARCH: ''
+  REPO_GIT_HASH: ''
+  REPO_GIT_hash_simple: ''
+  system_content: ''
+  release_desc_file: ''
+  
+#CI权限
+permissions: write-all
+
+jobs:
+  build:
+    name: ${{ inputs.WRT_DEVICE }}-${{ inputs.WRT_FIREWALL }}-${{ inputs.WRT_OVERLAYS != '' && inputs.WRT_OVERLAYS || 'base' }}
+    runs-on: ubuntu-24.04
+    if: github.event.repository.owner.id == github.event.sender.id
+    steps:
+
+    - name: Check Server Performance (检查服务器性能)
+      run: |
+        echo "警告⚠"
+        echo "分配的服务器性能有限，若选择的插件过多，务必注意CPU性能！"
+        echo -e "已知CPU型号（降序）：7763，8370C，8272CL，8171M，E5-2673 \n"
+        echo "--------------------------CPU信息--------------------------"
+        echo "CPU物理数量：$(cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l)"
+        echo -e "CPU核心信息：$(cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c) \n"
+        echo "--------------------------内存信息--------------------------"
+        echo "已安装内存详细信息："
+        echo -e "$(sudo lshw -short -C memory | grep GiB) \n"
+        echo "--------------------------硬盘信息--------------------------"
+        echo "硬盘数量：$(ls /dev/sd* | grep -v [1-9] | wc -l)" && df -hT
+
+    - name: Prepare Build Disk Space (清理并合并磁盘)
+      if: env.FREE_UP_DISK == true || env.FREE_UP_DISK == 'true' || env.IS_RESIZE_SPACE == true || env.IS_RESIZE_SPACE == 'true' || env.WRT_HAS_WIFI == 'true'
+      uses: sbwml/actions@free-disk
+      with:
+        build-mount-path: /builder
+        root-reserve-gb: '1'
+        swap-size-gb: '1'
+        
+    - name: Check Disk (磁盘信息)
+      run: |
+        df -hT $GITHUB_WORKSPACE /builder
+
+    - name: Build System Setup (初始化编译环境)
+      uses: sbwml/actions@openwrt-build-setup
+
+    - name: Install Workflow Extras (安装补充工具)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y dos2unix
+        sudo timedatectl set-timezone 'Asia/Shanghai'
+
+    - name: Install LLVM
+      if: env.INSTALL_LLVM == 'true'
+      uses: sbwml/actions@install-llvm
+
+    # - name: Initialization Environment (初始化环境)
+    #   env:
+    #     DEBIAN_FRONTEND: noninteractive
+    #   run: |
+    #     docker rmi $(docker images -q)
+    #     sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android $AGENT_TOOLSDIRECTORY
+    #     sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
+    #     sudo -E apt-get -y update
+    #     sudo -E apt -yqq install dos2unix libfuse-dev
+    #     sudo -E apt-get -y install $(curl -fsSL is.gd/depends_ubuntu_2204)
+    #     sudo -E systemctl daemon-reload
+    #     sudo -E apt-get -y autoremove --purge
+    #     sudo -E apt-get -y clean
+    #     sudo timedatectl set-timezone 'Asia/Shanghai'
+
+    - name: Checkout (下载当前源码)
+      uses: actions/checkout@v6.0.1
+
+    - name: Check Disk (磁盘信息)
+      run: |
+        df -hT $GITHUB_WORKSPACE
+
+    - name: Check Scripts (搜索脚本并配置权限)
+      run: |
+        echo "【Lin】配置脚本执行权限..."
+        find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
+
+    - name: Check Config Values (检查配置变量)
+      run: |
+        . "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/lib/overlay_utils.sh"
+
+        WRT_HAS_WIFI=true
+        [[ "$WRT_DEVICE" =~ NOWIFI|WIFINO|NO-WIFI|WIFI-NO ]] && { WRT_HAS_WIFI=false; }
+        echo "WRT_HAS_WIFI=$WRT_HAS_WIFI" >> $GITHUB_ENV
+
+        WRT_HAS_LITE=false
+        [[ "${WRT_DEVICE,,}" =~ lite|mini ]] && { WRT_HAS_LITE=true; }
+        echo "WRT_HAS_LITE=$WRT_HAS_LITE" >> $GITHUB_ENV
+
+        WRT_CONFIG_LABEL="${WRT_DEVICE}-${WRT_FIREWALL^^}"
+        echo "WRT_CONFIG_LABEL=$WRT_CONFIG_LABEL" >> $GITHUB_ENV
+
+        if [ -n "$WRT_OVERLAYS" ]; then
+            WRT_OVERLAYS=$(normalize_overlay_list "$GITHUB_WORKSPACE/$WRT_DIR_CONFIGS" "$WRT_OVERLAYS")
+        fi
+        echo "WRT_OVERLAYS=$WRT_OVERLAYS" >> $GITHUB_ENV
+
+        if printf '%s' ",${WRT_OVERLAYS}," | grep -qi ',apk,'; then
+            echo "WRT_USE_APK=true" >> $GITHUB_ENV
+        else
+            echo "WRT_USE_APK=false" >> $GITHUB_ENV
+        fi
+
+        if [ -n "${{inputs.WRT_TOKEN_DINGDING}}" ]; then
+            echo "DINGDING_TOKEN=${{inputs.WRT_TOKEN_DINGDING}}" >> $GITHUB_ENV
+            echo "【Lin】配置TOKEN_DINGDING：${{inputs.WRT_TOKEN_DINGDING}}"
+        fi
+
+        echo "【Lin】读取文件名配置：$(if [ "$WRT_HAS_WIFI" == 'true' ]; then echo '有WIFI'; else echo '无WIFI'; fi)"
+        echo "【Lin】读取文件名配置：$(if [ "$WRT_HAS_LITE" == 'true' ]; then echo '[精简版]'; else echo '[常规版]'; fi)"
+        echo "【Lin】编译说明内容：${{ env.WRT_MINE_SAY != '' && env.WRT_MINE_SAY || '无' }}"
+        if [ -n "${{ env.WRT_MINE_SAY }}" ]; then
+            echo "${{ env.WRT_MINE_SAY }}"
+        fi
+
+        echo "【Lin】读取设备参数：${{env.WRT_DEVICE}}"
+        echo "【Lin】读取防火墙参数：${WRT_FIREWALL}"
+        echo "【Lin】读取 overlays：${{env.WRT_OVERLAYS != '' && env.WRT_OVERLAYS || '无' }}"
+        echo "【Lin】读取 LuCI 分支：${{env.WRT_LUCI_BRANCH != '' && env.WRT_LUCI_BRANCH || '源码默认' }}"
+        START_DATE=$(date +"D%y%m%d")
+        START_TIME=$(date +"D%y%m%d_T%H%M%S")
+        echo "START_DATE=$START_DATE" >> $GITHUB_ENV
+        echo "START_TIME=$START_TIME" >> $GITHUB_ENV
+        echo "【Lin】编译日期：$START_DATE；编译时间：$START_TIME；"
+        WRT_REPO_URL="https://github.com/coolsnowwolf/lede"
+        WRT_REPO_BRANCH="master"
+        echo "WRT_REPO_URL=${WRT_REPO_URL}" >> $GITHUB_ENV
+        echo "WRT_REPO_BRANCH=${WRT_REPO_BRANCH}" >> $GITHUB_ENV
+        if [ -n "${WRT_SOURCE_HASH_INFO}" ]; then
+          echo "【Lin】源码HASH值：${WRT_SOURCE_HASH_INFO}"
+        fi
+        echo "【Lin】源码信息：[${WRT_REPO_BRANCH}] ${WRT_REPO_URL}"
+        echo "【Lin】源码风味：lean"
+
+    - name: config git (修改git下载缓冲大小)
+      run: |
+        git config --global http.postBuffer 524288000
+        git config --global http.lowSpeedLimit 0
+        git config --global http.lowSpeedTime 999999
+        git config --global advice.detachedHead false
+
+    - name: Clone Source Code (克隆源代码)
+      id: clone_source
+      run: |
+        WRT_REPO_URL="https://github.com/coolsnowwolf/lede"
+        WRT_REPO_BRANCH="master"
+        echo "WRT_REPO_URL=$WRT_REPO_URL" >> $GITHUB_ENV
+        echo "WRT_REPO_BRANCH=$WRT_REPO_BRANCH" >> $GITHUB_ENV
+        echo "【Lin】源码风味：lean"
+        echo "【Lin】克隆源代码：【$WRT_REPO_BRANCH】$WRT_REPO_URL"
+        rm -rf "$OPENWRT_PATH"
+        mkdir -p "$(dirname "$OPENWRT_PATH")"
+        git clone --depth=1 --single-branch --branch $WRT_REPO_BRANCH $WRT_REPO_URL $OPENWRT_PATH
+        if [ ! -d "$OPENWRT_PATH" ]; then
+          change_branceh=''
+          if [ "$WRT_REPO_BRANCH" = 'master' ]; then
+            change_branceh='main'
+          elif [ "$WRT_REPO_BRANCH" = 'main' ]; then
+            change_branceh='master'
+          fi
+          echo "【Lin】修改克隆源代码分支：【$change_branceh】$WRT_REPO_URL"
+          if [ -n "${change_branceh}" ]; then
+            git clone --depth=1 --single-branch --branch $change_branceh $WRT_REPO_URL $OPENWRT_PATH
+          fi
+        fi
+        cd "$OPENWRT_PATH"
+        echo "OPENWRT_PATH=$PWD" >> $GITHUB_ENV
+        if [ -n "${WRT_SOURCE_HASH_INFO}" ]; then
+          echo "【Lin】GIT检出到指定版本：${WRT_SOURCE_HASH_INFO}"
+          git fetch --depth=1 origin "${WRT_SOURCE_HASH_INFO}"
+          git checkout "${WRT_SOURCE_HASH_INFO}"
+        fi
+        REPO_GIT_HASH=$(git log -1 --pretty=format:'%H')
+        REPO_GIT_hash_simple=$(git log -1 --pretty=format:'%h')
+        echo "REPO_GIT_HASH=$REPO_GIT_HASH" >> $GITHUB_ENV
+        echo "REPO_GIT_hash_simple=$REPO_GIT_hash_simple" >> $GITHUB_ENV
+        echo "【Lin】GIT HASH：${REPO_GIT_HASH}，hash: ${REPO_GIT_hash_simple}"
+        VERSION_INFO=$(git show -s --date=short --format="作者: %an<br/>时间: %cd<br/>内容: %s<br/>hash: %H")
+        echo "VERSION_INFO=$VERSION_INFO" >> $GITHUB_ENV
+        # 临时导入config，为了获取设备信息
+        [ -f ./.config ] && rm -rf ./.config
+        EXPORT_ARGS=(
+          --config-dir "$GITHUB_WORKSPACE/$WRT_DIR_CONFIGS"
+          --device "$WRT_DEVICE"
+          --fw "$WRT_FIREWALL"
+          --output ".config"
+        )
+        if [ -n "$WRT_OVERLAYS" ]; then
+          EXPORT_ARGS+=(--overlay "$WRT_OVERLAYS")
+        fi
+        bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/export_config.sh" "${EXPORT_ARGS[@]}"
+
+    # - name: ln mnt (合并磁盘mnt)
+    #   if: env.IS_RESIZE_SPACE == true || env.IS_RESIZE_SPACE == 'true'
+    #   run: |
+    #     sudo mkdir -p /mnt/build_wrt
+    #     sudo chown $USER:$USER /mnt/build_wrt
+    #     sudo ln -s /mnt/build_wrt $GITHUB_WORKSPACE/openwrt
+
+    - name: Read Variables (读取变量)
+      working-directory: ${{ env.OPENWRT_PATH }}
+      run: |
+        bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/ci_collect_source_metadata.sh" >> "$GITHUB_ENV"
+
+    - name: Restore Toolchain Cache
+      id: restore_toolchain_cache
+      if: env.CACHE_TOOLCHAIN == 'true'
+      uses: actions/cache/restore@v5
+      with:
+        key: toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.REPO_GIT_hash_simple }}
+        restore-keys: |
+          toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.REPO_GIT_hash_simple }}-
+          toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-
+        path: |
+          ${{ env.OPENWRT_PATH }}/staging_dir/host*
+          ${{ env.OPENWRT_PATH }}/staging_dir/tool*
+
+    - name: Restore ccache Cache
+      id: restore_ccache_cache
+      if: env.CACHE_TOOLCHAIN == 'true'
+      uses: actions/cache/restore@v5
+      with:
+        key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.REPO_GIT_hash_simple }}-${{ env.START_DATE }}
+        restore-keys: |
+          ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.REPO_GIT_hash_simple }}-
+          ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-
+        path: |
+          ${{ env.OPENWRT_PATH }}/.ccache
+
+    - name: Refresh Cache Metadata
+      if: env.CACHE_TOOLCHAIN == 'true'
+      run: |
+        if [ -d "${{ env.OPENWRT_PATH }}/staging_dir" ]; then
+          find "${{ env.OPENWRT_PATH }}/staging_dir" -type d -name "stamp" -not -path "*target*" | while read -r DIR; do
+            find "$DIR" -type f -exec touch {} +
+          done
+          mkdir -p ${{ env.OPENWRT_PATH }}/tmp && echo "1" > ${{ env.OPENWRT_PATH }}/tmp/.build
+          echo "【Lin】toolchain skiped done!"
+        else
+          echo "【Lin】caches missed!"
+        fi
+
+    - name: Initialize Build Observability
+      run: |
+        echo "PREP_STAGE_START_TS=$(date +%s)" >> "$GITHUB_ENV"
+        
+    - name: diy Feeds (自定义feeds)
+      working-directory: ${{ env.OPENWRT_PATH }}
+      run: |
+        bash $GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/$WRT_DIY_FEEDS
+        echo "【Lin】feeds内容：$(cat ./feeds.conf.default)"
+
+    - name: Update Feeds (更新并安装feeds)
+      working-directory: ${{ env.OPENWRT_PATH }}
+      run: |
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+
+    - name: diy Packages (自定义包)
+      working-directory: ${{ env.OPENWRT_PATH }}
+      run: |
+        cd ./package
+        WRT_RESOLVED_DIY_PACKAGES=$(
+          bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/resolve_device_script.sh" \
+            "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS" \
+            "$WRT_DIYPackages" \
+            "$WRT_DEVICE"
+        )
+        echo "【Lin】执行DIY包脚本：$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/$WRT_RESOLVED_DIY_PACKAGES"
+        bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/$WRT_RESOLVED_DIY_PACKAGES"
+
+    - name: diy config (自定义配置)
+      working-directory: ${{ env.OPENWRT_PATH }}
+      run: |
+        echo '【Lin】移除所有.config并添加新的.config'
+        [ -f ./.config ] && rm -rf ./.config
+        EXPORT_ARGS=(
+          --config-dir "$GITHUB_WORKSPACE/$WRT_DIR_CONFIGS"
+          --device "$WRT_DEVICE"
+          --fw "$WRT_FIREWALL"
+          --output ".config"
+        )
+        if [ -n "$WRT_OVERLAYS" ]; then
+          EXPORT_ARGS+=(--overlay "$WRT_OVERLAYS")
+        fi
+        bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/export_config.sh" "${EXPORT_ARGS[@]}"
+        
+    - name: diy settings (加载自定义设置) 
+      working-directory: ${{ env.OPENWRT_PATH }}
+      run: |
+        cp $GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/patch/custom_usage.txt $OPENWRT_PATH/custom_usage.txt
+        if [ -e "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/$WRT_DIY_SETTING" ]; then
+          echo "【Lin】加载自定义配置成功：$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/$WRT_DIY_SETTING"
+          bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/$WRT_DIY_SETTING" -n "Linjw" -i "${{env.WRT_DEFAULT_LANIP}}" -p "${{env.IS_RESET_PASSWORD}}" -t "${{env.WRT_THEME_NAME}}" -m "${{ env.WRT_USE_APK == 'true' && 'apk' || 'ipk' }}" -c "${{ env.WRT_CONFIG_LABEL }}"
+        else
+          echo "【Lin】未找到DIY设置：$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/$WRT_DIY_SETTING"
+        fi
+        cp -f .config my_config.txt
+
+    - name: defconfig (确认配置)
+      working-directory: ${{ env.OPENWRT_PATH }}
+      run: |
+        make defconfig > /dev/null 2>&1
+        ./scripts/diffconfig.sh > seed.config
+        # 从配置文件中获取架构, 一般是defconfig后获取
+        DEVICE_ARCH=$(grep -oP '^CONFIG_TARGET_ARCH_PACKAGES="\K[^"]*' $OPENWRT_PATH/.config)
+        echo "DEVICE_ARCH=$DEVICE_ARCH" >> $GITHUB_ENV
+        echo "【Lin】make defconfig后配置文件为："
+        echo "$(cat seed.config)"
+
+    - name: DIY after defconfig (确认config后执行脚本)
+      working-directory: ${{ env.OPENWRT_PATH }}
+      run: |
+        file_diy="$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/diy_after_defconfig.sh"
+        [ -f "${file_diy}" ] && chmod +x "${file_diy}" && bash "${file_diy}"
+
+    - name: Read Variables (读取变量)
+      working-directory: ${{ env.OPENWRT_PATH }}
+      run: |
+        bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/ci_collect_final_metadata.sh" >> "$GITHUB_ENV"
+        echo "【Lin】已刷新 defconfig 后元数据"
+
+    - name: Prepare Start Notification (准备开始推送内容)
+      working-directory: ${{ env.OPENWRT_PATH }}
+      run: |
+        bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/ci_create_start_notification.sh"
+        echo "【Lin】已生成编译开始通知内容"
+        sleep 1
+
+    - name: Send dingding notify
+      continue-on-error: true
+      if: env.DINGDING_TOKEN != ''
+      env:
+        DINGDING_MESSAGE: |
+          ${{ env.start_notify_content }}
+      run: |
+        payload=$(python3 -c 'import json, os; print(json.dumps({"msgtype":"text","text":{"content": os.environ["DINGDING_MESSAGE"]}}, ensure_ascii=False))')
+        curl --fail --silent --show-error \
+          -H 'Content-Type: application/json' \
+          -d "$payload" \
+          "https://oapi.dingtalk.com/robot/send?access_token=${DINGDING_TOKEN}"
+
+    # - name: Cache Toolchain (缓存工具链)
+    #   if: env.CACHE_TOOLCHAIN == 'true'
+    #   uses: HiGarfield/cachewrtbuild@main
+    #   with:
+    #     ccache: false
+    #     mixkey: ${{ env.DEVICE_TARGET }}-${{ env.WRT_VER }}-${{ env.DEVICE_SUBTARGET }}
+    #     prefix: ${{ env.OPENWRT_PATH }}
+
+    - name: Download tools (下载工具包) 
+      working-directory: ${{ env.OPENWRT_PATH }}
+      run: |
+        prep_end_ts=$(date +%s)
+        if [ -n "${PREP_STAGE_START_TS:-}" ]; then
+          prep_stage_duration_sec=$((prep_end_ts - PREP_STAGE_START_TS))
+          echo "PREP_STAGE_DURATION_SEC=${prep_stage_duration_sec}" >> "$GITHUB_ENV"
+        else
+          echo "PREP_STAGE_DURATION_SEC=" >> "$GITHUB_ENV"
+        fi
+        download_start_ts=$(date +%s)
+        echo "【Lin】下载工具，DEVICE：${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}-${{ env.DEVICE_PROFILE }}"
+        make download -j$(nproc)
+        download_end_ts=$(date +%s)
+        download_stage_duration_sec=$((download_end_ts - download_start_ts))
+        echo "DOWNLOAD_STAGE_DURATION_SEC=${download_stage_duration_sec}" >> "$GITHUB_ENV"
+        # find dl -size -1024c -exec ls -l {} \;
+        # find dl -size -1024c -exec rm -f {} \;
+    
+    - name: Check Disk (磁盘信息)
+      run: |
+        df -hT $GITHUB_WORKSPACE /builder
+
+    - name: 编译固件 Build firmware
+      id: compile
+      continue-on-error: true
+      working-directory: ${{ env.OPENWRT_PATH }}
+      run: |
+        compile_start_ts=$(date +%s)
+        echo -e "$(nproc) thread build."
+        # make -j$(nproc) V=s || make -j1 V=s
+        make -j"$(nproc)" || make -j1 V=s
+        compile_end_ts=$(date +%s)
+        compile_stage_duration_sec=$((compile_end_ts - compile_start_ts))
+        echo "COMPILE_STAGE_DURATION_SEC=${compile_stage_duration_sec}" >> "$GITHUB_ENV"
+
+    - name: Finalize Compile Status
+      id: finalize_compile
+      if: always()
+      run: |
+        END_DATE=$(date +"D%y%m%d")
+        END_TIME=$(date +"D%y%m%d_T%H%M%S")
+        echo "END_DATE=$END_DATE" >> $GITHUB_ENV
+        echo "END_TIME=$END_TIME" >> $GITHUB_ENV
+        echo "status=${{ steps.compile.outcome }}" >> $GITHUB_OUTPUT
+        echo "COMPILE_STATUS=${{ steps.compile.outcome }}" >> $GITHUB_ENV
+        echo "【Lin】${{ env.DEVICE_SUBTARGET }}-${{ env.DEVICE_PROFILE }}编译状态：${{ steps.compile.outcome }}，结束时间：$END_TIME"
+
+    - name: Machine Information
+      continue-on-error: true
+      working-directory: ${{ env.OPENWRT_PATH }}
+      run: |
+        echo "======================="
+        lscpu | grep -E "name|Core|Thread"
+        echo "======================="
+        df -h
+        echo "======================="
+        du -h --max-depth=1
+        echo "======================="
+        
+
+    - name: Organize Files(整理编译后的文件)
+      id: organize
+      if: steps.finalize_compile.outputs.status == 'success'
+      working-directory: ${{ env.OPENWRT_PATH }}
+      run: |
+        bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/ci_organize_outputs.sh"
+
+    - name: Supplement Versions From Manifest(从 manifest 补充插件版本号)
+      if: steps.organize.outputs.status == 'success'
+      working-directory: ${{ env.OPENWRT_PATH }}
+      run: |
+        bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/ci_supplement_versions_from_manifest.sh"
+
+    - name: Check Disk (查询磁盘信息)
+      run: |
+        df -hT $GITHUB_WORKSPACE
+
+    - name: Upload Firmware To Artifact(将固件上传到Artifact)
+      id: upload_artifact
+      timeout-minutes: 30
+      continue-on-error: true
+      if: steps.finalize_compile.outputs.status == 'success' && env.UPLOAD_FIRMWARE_DIR == 'true'
+      uses: actions/upload-artifact@v6.0.0
+      with:
+        name: ${{ env.OUTPUT_NAME_PREFIX }}
+        path: |
+          ${{ env.OPENWRT_PATH }}/upload/*
+          !${{ env.OPENWRT_PATH }}/upload/Packages_*.tar.gz
+
+    - name: Upload Packages To Artifact(将Packages包单独上传到Artifact)
+      id: upload_packages_artifact
+      timeout-minutes: 30
+      continue-on-error: true
+      if: steps.finalize_compile.outputs.status == 'success' && env.UPLOAD_FIRMWARE_DIR == 'true' && env.SPLIT_ARTIFACTS == 'true'
+      uses: actions/upload-artifact@v6.0.0
+      with:
+        name: ${{ env.OUTPUT_NAME_PREFIX }}-packages
+        path: ${{ env.OPENWRT_PATH }}/upload/Packages_*.tar.gz
+        if-no-files-found: ignore
+
+    - name: Create Notification Content (创建推送结果内容)
+      id: notification_content
+      if: always() && steps.finalize_compile.outputs.status != 'cancelled'
+      continue-on-error: true
+      run: |
+        bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/ci_create_notifications.sh"
+
+    - name: Send dingding notify (推送编译结果消息)
+      continue-on-error: true
+      if: always() && env.DINGDING_TOKEN != '' && steps.finalize_compile.outputs.status != 'cancelled'
+      env:
+        DINGDING_MESSAGE: |
+          ${{ env.notify_content }}
+      run: |
+        payload=$(python3 -c 'import json, os; print(json.dumps({"msgtype":"text","text":{"content": os.environ["DINGDING_MESSAGE"]}}, ensure_ascii=False))')
+        curl --fail --silent --show-error \
+          -H 'Content-Type: application/json' \
+          -d "$payload" \
+          "https://oapi.dingtalk.com/robot/send?access_token=${DINGDING_TOKEN}"
+
+    - name: Prepare Release Body (读取发布内容)
+      run: |
+        echo "【Lin】发布内容: ${{ env.release_desc_file }}"
+        the_release_content=$(cat ${{ env.release_desc_file }})
+        echo "${the_release_content}"
+
+    - name: Upload Firmware To Release (发布固件)
+      id: release
+      if: steps.finalize_compile.outputs.status == 'success' && env.WRT_RELEASE_FIRMWARE == 'true'
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        release_name="${{ env.OUTPUT_NAME_PREFIX }}"
+        release_tag="${{ env.OUTPUT_NAME_PREFIX }}"
+        shopt -s nullglob
+        release_files=( "${{ env.OPENWRT_PATH }}"/upload/*.* )
+
+        if [ ${#release_files[@]} -eq 0 ]; then
+          echo "【Lin】错误：未找到可上传的固件文件"
+          exit 1
+        fi
+
+        if gh release view "${release_tag}" >/dev/null 2>&1; then
+          echo "【Lin】更新已有 Release：${release_tag}"
+          gh release edit "${release_tag}" --title "${release_name}" --notes-file "${{ env.release_desc_file }}"
+          gh release upload "${release_tag}" "${release_files[@]}" --clobber
+        else
+          echo "【Lin】创建新的 Release：${release_tag}"
+          gh release create "${release_tag}" "${release_files[@]}" --title "${release_name}" --notes-file "${{ env.release_desc_file }}"
+        fi
+        # body: |
+        #   **This is OpenWrt Firmware for ${{ env.DEVICE_PROFILE }}**
+        #   ### 📒 固件信息(${{ env.WRT_HAS_WIFI_TEXT }})
+        #   - ${{ env.WRT_HAS_WIFI_TEXT }}带有线NSS的${{ env.VERSION_KERNEL }}内核固件
+        #   - 💻 这是 ${{ env.DEVICE_SUBTARGET }} 平台使用的 OpenWrt ${{ env.WRT_HAS_LITE_TEXT }}固件
+        #   - 💻 适配设备: ${{ env.DEVICE_PROFILE }}
+        #   - 💻 设备架构：${{ env.DEVICE_ARCH }}
+        #   - ⚽ 固件源码: ${{ env.WRT_REPO_URL }}
+        #   - 💝 源码分支: ${{ env.WRT_REPO_BRANCH }}
+        #   - 🌐 默认地址: ${{ env.WRT_DEFAULT_LANIP }}
+        #   - 🔑 默认密码: 无 | password
+        #   ### 🧊 固件版本
+        #   - 固件内核：${{ env.VERSION_KERNEL }}
+        #   - 固件编译前最后一次➦[主源码](${{ env.WRT_REPO_URL }})更新记录
+        #   - ${{ env.VERSION_INFO }}
+
+    - name: Cleanup Workspace Before Cache Save
+      if: always()
+      working-directory: ${{ env.OPENWRT_PATH }}
+      run: |
+        echo "【Lin】为缓存保存释放磁盘空间..."
+        rm -rf build_dir bin tmp logs upload
+        if [ -d staging_dir ]; then
+          find staging_dir -maxdepth 1 -mindepth 1 -type d \( -name 'target-*' -o -name 'packages' -o -name 'pkginfo' \) -exec rm -rf {} +
+        fi
+        df -hT "$GITHUB_WORKSPACE" /builder
+
+    - name: Evaluate Cache Save Inputs
+      id: evaluate_cache_save_inputs
+      if: always() && env.CACHE_TOOLCHAIN == 'true'
+      run: |
+        toolchain_present=false
+        ccache_present=false
+
+        [ -d "${{ env.OPENWRT_PATH }}/.ccache" ] && ccache_present=true
+        compgen -G "${{ env.OPENWRT_PATH }}/staging_dir/host*" > /dev/null && toolchain_present=true
+        compgen -G "${{ env.OPENWRT_PATH }}/staging_dir/tool*" > /dev/null && toolchain_present=true
+
+        echo "toolchain_present=${toolchain_present}" >> "$GITHUB_OUTPUT"
+        echo "ccache_present=${ccache_present}" >> "$GITHUB_OUTPUT"
+
+    - name: Save Toolchain Cache
+      if: always() && env.CACHE_TOOLCHAIN == 'true' && steps.restore_toolchain_cache.outputs.cache-hit != 'true' && steps.evaluate_cache_save_inputs.outputs.toolchain_present == 'true'
+      continue-on-error: true
+      uses: actions/cache/save@v5
+      with:
+        key: toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.REPO_GIT_hash_simple }}
+        path: |
+          ${{ env.OPENWRT_PATH }}/staging_dir/host*
+          ${{ env.OPENWRT_PATH }}/staging_dir/tool*
+
+    - name: Save ccache Cache
+      if: always() && env.CACHE_TOOLCHAIN == 'true' && steps.evaluate_cache_save_inputs.outputs.ccache_present == 'true'
+      continue-on-error: true
+      uses: actions/cache/save@v5
+      with:
+        key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.REPO_GIT_hash_simple }}-${{ env.START_DATE }}
+        path: |
+          ${{ env.OPENWRT_PATH }}/.ccache
+
+    - name: Fail Workflow If Compile Failed
+      if: always() && steps.finalize_compile.outputs.status != 'success'
+      run: |
+        echo "【Lin】编译失败，通知已发送"
+        exit 1

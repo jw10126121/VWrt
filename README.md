@@ -1,0 +1,89 @@
+# OpenWrt-CI
+
+lean-only 的 OpenWrt 云编译仓库，源码固定为 [coolsnowwolf/lede](https://github.com/coolsnowwolf/lede)，默认分支 `master`。
+
+## 支持目标
+
+- `CMIOT-AX18-NOWIFI`
+- `IPQ60XX-NOWIFI`
+- `JD-AX1800PRO-WIFI`
+- `JD-AX6600-WIFI`
+- `GL-MT6000-WIFI`
+
+如需调整具体机型勾选项，直接修改对应配置文件中的 `CONFIG_TARGET_DEVICE_*`。
+
+## GitHub Actions
+
+[![CUSTOM](https://github.com/jw10126121/LjwOpenWrt/actions/workflows/CUSTOM.yml/badge.svg)](https://github.com/jw10126121/LjwOpenWrt/actions/workflows/CUSTOM.yml)
+[![DEFAULT](https://github.com/jw10126121/LjwOpenWrt/actions/workflows/DEFAULT.yml/badge.svg)](https://github.com/jw10126121/LjwOpenWrt/actions/workflows/DEFAULT.yml)
+
+手动运行 `DEFAULT` 时，主要输入项如下：
+
+- `WRT_DEVICE`：设备型号
+- `WRT_FIREWALL`：防火墙栈，`fw3` 或 `fw4`
+- `WRT_OVERLAYS`：可选差异层，逗号分隔，例如 `frps,apk`
+- `WRT_LUCI_BRANCH`：可选 LuCI feed 分支，例如 `openwrt-23.05`、`23.05`、`2305`
+- `WRT_DIYPackages`：默认 `auto`，优先使用 `Scripts/Packages-<设备名>.sh` 或短名脚本；显式填 `Packages.sh` 可强制使用通用包脚本
+- `WRT_SOURCE_HASH_INFO`：可选 commit hash，用于固定到指定 lean 提交
+
+说明：
+
+- 源码仓库固定为 `https://github.com/coolsnowwolf/lede`
+- 源码分支固定为 `master`
+- `WRT_LUCI_BRANCH` 留空时使用源码默认 LuCI feed
+- overlay 文件可用 `# OVERLAY_GROUP=<组名>` 声明互斥组；同组内按 `WRT_OVERLAYS` 顺序以最后一个为准
+
+常用预设示例：
+
+- `AX18 无 Wi-Fi`：`WRT_DEVICE=CMIOT-AX18-NOWIFI`
+- `京东云亚瑟 AX1800 Pro 带 Wi-Fi`：`WRT_DEVICE=JD-AX1800PRO-WIFI`
+- `京东云雅典娜 AX6600 带 Wi-Fi`：`WRT_DEVICE=JD-AX6600-WIFI`
+
+## 配置组织
+
+当前配置按以下顺序叠加：
+
+- `Config/GENERAL-<设备名>.txt` 或 `Config/GENERAL-<设备短名>.txt`（若存在），否则使用 `Config/GENERAL.txt`
+- `Config/<设备名>-FW3.txt` 或 `Config/<设备名>.txt`
+- `Config/device-overlays/<设备名>-<FW>.txt`（若存在）
+- `Config/overlays/<overlay>.txt`（按 `WRT_OVERLAYS` 顺序叠加）
+
+主维护文件：
+
+- `CMIOT-AX18-NOWIFI`：`Config/CMIOT-AX18-NOWIFI-FW3.txt`
+- `IPQ60XX-NOWIFI`：`Config/IPQ60XX-NOWIFI-FW3.txt`
+- `JD-AX1800PRO-WIFI`：`Config/JD-AX1800PRO-WIFI-FW3.txt`
+- `JD-AX6600-WIFI`：`Config/JD-AX6600-WIFI-FW3.txt`
+- `GL-MT6000-WIFI`：`Config/GL-MT6000-WIFI-FW3.txt`
+
+## Overlay 约定
+
+- 自定义 overlay 放到 `Config/overlays/`，例如 `Config/overlays/MYVPN.txt`
+- `WRT_OVERLAYS=myvpn` 会映射到 `Config/overlays/MYVPN.txt`
+- 后面的 overlay 会覆盖前面的同名配置
+- 若 overlay 文件里声明了 `# OVERLAY_GROUP=<组名>`，则同组只保留最后出现的那个 overlay
+- 当前不再使用设备 alias 做隐式基线切换；`CMIOT-AX18-*` 与 `JD-AX1800PRO-WIFI` 都是显式配置入口
+
+## 固件默认值
+
+- 默认主题：Argon
+- 默认 LAN：`192.168.0.1`
+- 默认用户：`root`
+- 默认密码：空密码
+
+## 下载与源码
+
+- 固件发布页：[LjwOpenWrt Releases](https://github.com/jw10126121/LjwOpenWrt/releases)
+- 上游源码：[coolsnowwolf/lede](https://github.com/coolsnowwolf/lede)
+
+## 刷机说明
+
+适用于当前 lean 固件：
+
+- Hugo U-Boot + 原厂 CDT + 双分区 GPT
+- U-Boot 刷 `squashfs-recovery.bin`
+- LuCI 刷 `squashfs-sysupgrade.bin`
+
+## 提示
+
+本仓库仅供学习与交流使用，请自行评估刷机风险并遵守相关法律法规。

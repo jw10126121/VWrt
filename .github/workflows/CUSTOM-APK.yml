@@ -1,0 +1,60 @@
+#CI项目
+name: CUSTOM-APK
+run-name: CUSTOM-APK-static-apk
+
+#CI计划
+on:
+  workflow_dispatch:
+    inputs:
+      WHAT_MY_SAY:
+        description: '编译说明'
+        required: false
+        type: string
+        default: ''
+
+#CI权限
+permissions: write-all
+
+#CI任务
+jobs:
+  cmiot_ax18_nowifi_fw3_apk:
+    name: lean-CMIOT-AX18-NOWIFI-fw3-apk
+    uses: ./.github/workflows/DEFAULT.yml
+    with:
+      WRT_DEVICE: CMIOT-AX18-NOWIFI
+      WRT_FIREWALL: fw3
+      WRT_OVERLAYS: apk
+      WRT_DIY_SETTING: diy_config.sh
+      WRT_DIYPackages: Packages.sh
+      WRT_DEFAULT_LANIP: 192.168.0.1
+      WRT_RELEASE_FIRMWARE: false
+      WHAT_MY_SAY: ${{ inputs.WHAT_MY_SAY }}
+    secrets: inherit
+
+  cmiot_ax18_nowifi_fw3_frps_apk:
+    name: lean-CMIOT-AX18-NOWIFI-fw3-frps-apk
+    uses: ./.github/workflows/DEFAULT.yml
+    with:
+      WRT_DEVICE: CMIOT-AX18-NOWIFI
+      WRT_FIREWALL: fw3
+      WRT_OVERLAYS: frps,apk
+      WRT_DIY_SETTING: diy_config.sh
+      WRT_DIYPackages: Packages.sh
+      WRT_DEFAULT_LANIP: 192.168.0.1
+      WRT_RELEASE_FIRMWARE: false
+      WHAT_MY_SAY: ${{ inputs.WHAT_MY_SAY }}
+    secrets: inherit
+
+  gl_mt6000_wifi_fw3_apk:
+    name: lean-GL-MT6000-WIFI-fw3-apk
+    uses: ./.github/workflows/DEFAULT.yml
+    with:
+      WRT_DEVICE: GL-MT6000-WIFI
+      WRT_FIREWALL: fw3
+      WRT_OVERLAYS: apk
+      WRT_DIY_SETTING: diy_config.sh
+      WRT_DIYPackages: Packages.sh
+      WRT_DEFAULT_LANIP: 192.168.0.1
+      WRT_RELEASE_FIRMWARE: false
+      WHAT_MY_SAY: ${{ inputs.WHAT_MY_SAY }}
+    secrets: inherit
