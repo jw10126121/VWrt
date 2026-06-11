@@ -63,7 +63,7 @@ find ./bin/targets/ -iregex ".*\(-imagebuilder-\).*" -exec rm -rf {} +
 # 按手工维护的包分组规则整理安装包目录，再打成一个压缩包给用户下载。
 # 这里保留压缩包而不是原始目录，是为了减少 artifact / release 中文件数量。
 bash "${scripts_dir}/Organize_Packages.sh" "${tmp_dir}" "./.config"
-tar -zcf "./upload/Packages_${output_name_prefix}.tar.gz" -C "${tmp_dir}" --transform 's,^./,,' .
+tar -zcf "./upload/${output_name_prefix}_Packages.tar.gz" -C "${tmp_dir}" --transform 's,^./,,' .
 rm -rf "${tmp_dir}"
 rm -rf ./upload/packages
 
