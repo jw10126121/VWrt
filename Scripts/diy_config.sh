@@ -330,6 +330,8 @@ configure_argon_theme_color() {
     local theme_argon_dir
     local temp_file
 
+    [ -f "${file_default_settings}" ] || return 0
+
     theme_argon_dir=$(find ./package ./feeds/luci/ ./feeds/packages/ -maxdepth 3 -type d -iname "luci-theme-argon" -prune)
     if [ -n "$theme_argon_dir" ] && ! grep -q "uci commit argon" "${file_default_settings}"; then
         temp_file=$(mktemp)
