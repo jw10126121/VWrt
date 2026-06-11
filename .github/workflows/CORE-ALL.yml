@@ -27,6 +27,14 @@ on:
         required: false
         type: string
         default: 'auto'
+      WRT_REPO_URL:
+        required: false
+        type: string
+        default: ''
+      WRT_REPO_BRANCH:
+        required: false
+        type: string
+        default: ''
       WRT_FIREWALL:
         required: false
         type: string
@@ -242,11 +250,19 @@ jobs:
         echo "START_DATE=$START_DATE" >> $GITHUB_ENV
         echo "START_TIME=$START_TIME" >> $GITHUB_ENV
         echo "【Lin】编译日期：$START_DATE；编译时间：$START_TIME；"
-        WRT_REPO_URL="https://github.com/VIKINGYFY/immortalwrt"
-        if [[ "$WRT_DEVICE" =~ GL-MT6000 ]]; then
-          WRT_REPO_BRANCH="owrt"
+        # 源码仓库：优先使用传入值，否则按 SOURCE_TYPE 自动推断
+        if [ -n "${WRT_REPO_URL}" ]; then
+          echo "【Lin】使用传入源码：[${WRT_REPO_BRANCH}] ${WRT_REPO_URL}"
+        elif [ "${SOURCE_TYPE}" = "lean" ]; then
+          WRT_REPO_URL="https://github.com/coolsnowwolf/lede"
+          WRT_REPO_BRANCH="master"
         else
-          WRT_REPO_BRANCH="main"
+          WRT_REPO_URL="https://github.com/VIKINGYFY/immortalwrt"
+          if [[ "$WRT_DEVICE" =~ GL-MT6000 ]]; then
+            WRT_REPO_BRANCH="owrt"
+          else
+            WRT_REPO_BRANCH="main"
+          fi
         fi
         echo "WRT_REPO_URL=${WRT_REPO_URL}" >> $GITHUB_ENV
         echo "WRT_REPO_BRANCH=${WRT_REPO_BRANCH}" >> $GITHUB_ENV
@@ -254,7 +270,7 @@ jobs:
           echo "【Lin】源码HASH值：${WRT_SOURCE_HASH_INFO}"
         fi
         echo "【Lin】源码信息：[${WRT_REPO_BRANCH}] ${WRT_REPO_URL}"
-        echo "【Lin】源码风味：immortalwrt"
+        echo "【Lin】源码类型：${SOURCE_TYPE}"
 
     - name: config git (修改git下载缓冲大小)
       run: |
@@ -266,7 +282,7 @@ jobs:
     - name: Clone Source Code (克隆源代码)
       id: clone_source
       run: |
-        echo "【Lin】源码风味：immortalwrt"
+        echo "【Lin】源码类型：${SOURCE_TYPE}"
         echo "【Lin】克隆源代码：【$WRT_REPO_BRANCH】$WRT_REPO_URL"
         rm -rf "$OPENWRT_PATH"
         mkdir -p "$(dirname "$OPENWRT_PATH")"

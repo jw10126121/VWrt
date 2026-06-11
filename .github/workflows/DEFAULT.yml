@@ -144,13 +144,29 @@ jobs:
     outputs:
       firewall: ${{ steps.resolve.outputs.firewall }}
       use_apk: ${{ steps.resolve.outputs.use_apk }}
+      repo_url: ${{ steps.resolve.outputs.repo_url }}
+      repo_branch: ${{ steps.resolve.outputs.repo_branch }}
     steps:
       - name: Resolve auto values
         id: resolve
         run: |
           source_type="${{ inputs.SOURCE_TYPE }}"
+          device="${{ inputs.WRT_DEVICE }}"
           firewall="${{ inputs.WRT_FIREWALL }}"
           use_apk="${{ inputs.WRT_USE_APK }}"
+
+          # 源码仓库和分支
+          if [ "$source_type" = "vwrt" ]; then
+            repo_url="https://github.com/VIKINGYFY/immortalwrt"
+            if [[ "$device" =~ GL-MT6000 ]]; then
+              repo_branch="owrt"
+            else
+              repo_branch="main"
+            fi
+          else
+            repo_url="https://github.com/coolsnowwolf/lede"
+            repo_branch="master"
+          fi
 
           # vwrt → fw4 / apk，lean → fw3 / ipk
           if [ "$firewall" = "auto" ]; then
@@ -168,9 +184,12 @@ jobs:
             fi
           fi
 
+          echo "repo_url=$repo_url" >> $GITHUB_OUTPUT
+          echo "repo_branch=$repo_branch" >> $GITHUB_OUTPUT
           echo "firewall=$firewall" >> $GITHUB_OUTPUT
           echo "use_apk=$use_apk" >> $GITHUB_OUTPUT
-          echo "【Lin】源码类型：${source_type}，解析结果：fw=${firewall}, apk=${use_apk}"
+          echo "【Lin】源码类型：${source_type}，仓库：[${repo_branch}] ${repo_url}"
+          echo "【Lin】解析结果：fw=${firewall}, apk=${use_apk}"
 
   config:
     needs: resolve
@@ -180,6 +199,8 @@ jobs:
     with:
       # 源码
       WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
+      WRT_REPO_URL: ${{ needs.resolve.outputs.repo_url }}
+      WRT_REPO_BRANCH: ${{ needs.resolve.outputs.repo_branch }}
       # 参数化配置
       WRT_DEVICE: ${{ inputs.WRT_DEVICE }}
       SOURCE_TYPE: ${{ inputs.SOURCE_TYPE }}
