@@ -316,15 +316,25 @@ jobs:
         fi
         echo "SOURCE_TYPE=$SOURCE_TYPE" >> $GITHUB_ENV
         echo "【Lin】源码类型：${SOURCE_TYPE}"
-        # 包管理器和防火墙：用 input 值（resolve job 传入）写入 GITHUB_ENV
+        # 包管理器和防火墙：auto 时根据源码类型自动选择
         WRT_USE_APK="${{ inputs.WRT_USE_APK }}"
         WRT_FIREWALL="${{ inputs.WRT_FIREWALL }}"
-        if [ "${WRT_USE_APK}" != "auto" ]; then
-          echo "WRT_USE_APK=$WRT_USE_APK" >> $GITHUB_ENV
+        if [ "${WRT_USE_APK}" = "auto" ]; then
+          if [ "$SOURCE_TYPE" = "vwrt" ]; then
+            WRT_USE_APK="true"
+          else
+            WRT_USE_APK="false"
+          fi
         fi
-        if [ "${WRT_FIREWALL}" != "auto" ]; then
-          echo "WRT_FIREWALL=$WRT_FIREWALL" >> $GITHUB_ENV
+        if [ "${WRT_FIREWALL}" = "auto" ]; then
+          if [ "$SOURCE_TYPE" = "vwrt" ]; then
+            WRT_FIREWALL="fw4"
+          else
+            WRT_FIREWALL="fw3"
+          fi
         fi
+        echo "WRT_USE_APK=$WRT_USE_APK" >> $GITHUB_ENV
+        echo "WRT_FIREWALL=$WRT_FIREWALL" >> $GITHUB_ENV
         echo "【Lin】防火墙：${WRT_FIREWALL}，包管理器：${WRT_USE_APK}"
         # 临时导入config，为了获取设备信息
         [ -f ./.config ] && rm -rf ./.config
