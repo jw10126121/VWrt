@@ -147,3 +147,4 @@ Overlay 用于在不修改设备主配置的前提下叠加功能差异。
 - [VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt) — VIKINGYFY大佬的 ImmortalWrt 源码
 - [OpenWrt](https://github.com/openwrt/openwrt) — OpenWrt 官方项目
 - 感谢所有上游贡献者和社区用户的支持与反馈
+- 本项目大部分功能由AI实现
