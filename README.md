@@ -1,6 +1,6 @@
 # VWrt — OpenWrt 云编译仓库
 
-基于 [coolsnowwolf/lede](https://github.com/coolsnowwolf/lede) 源码的 OpenWrt 云编译仓库，通过 GitHub Actions 自动构建多设备、多防火墙栈的固件。
+基于 [coolsnowwolf/lede](https://github.com/coolsnowwolf/lede)（Lean源码）和 [VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt)（VIKINGYFY源码）的 OpenWrt 云编译仓库，通过 GitHub Actions 自动构建多设备、多防火墙栈的固件。
 
 ## 目录
 
@@ -15,12 +15,14 @@
 
 ## 固件风味
 
-| 风味 | 源码 | 防火墙 | 说明 |
-|------|------|--------|------|
-| **LWRT** | `coolsnowwolf/lede` master | fw3 | 常规版，兼容性好 |
-| **VWRT** | `coolsnowwolf/lede` master | fw4 (nftables) | 新版防火墙，功能更新 |
+| 风味 | 源码 | 分支 | 防火墙 | 说明 |
+|------|------|------|--------|------|
+| **LWRT** | [coolsnowwolf/lede](https://github.com/coolsnowwolf/lede) | `master` | fw3 | Lean源码，兼容性好 |
+| **VWRT** | [VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt) | `main` / `owrt` | fw4 (nftables) | VIKINGYFY源码，功能更新 |
 
-两种风味共用同一套设备配置和构建脚本，通过 `SOURCE_TYPE` 和 `WRT_FIREWALL` 参数区分。
+**VWRT 分支说明：** GL-MT6000-WIFI 使用 `owrt` 分支，其余设备使用 `main` 分支。
+
+两种风味共用同一套设备配置和构建脚本，通过 `SOURCE_TYPE`（`lean` / `vwrt`）和 `WRT_FIREWALL` 参数区分。
 
 ## 支持设备
 
@@ -56,6 +58,7 @@
 | 参数 | 说明 | 示例 |
 |------|------|------|
 | `WRT_DEVICE` | 设备型号 | `CMIOT-AX18-NOWIFI` |
+| `SOURCE_TYPE` | 源码类型 | `lean` / `vwrt` |
 | `WRT_FIREWALL` | 防火墙栈 | `fw3` / `fw4` |
 | `WRT_OVERLAYS` | 差异层，逗号分隔 | `frps,apk` |
 | `WRT_LUCI_BRANCH` | LuCI feed 分支 | `openwrt-23.05` |
@@ -123,7 +126,7 @@ Overlay 用于在不修改设备主配置的前提下叠加功能差异。
 ## 下载固件
 
 - **发布页**：[LjwOpenWrt Releases](https://github.com/jw10126121/LjwOpenWrt/releases)
-- **上游源码**：[coolsnowwolf/lede](https://github.com/coolsnowwolf/lede)
+- **上游源码**：[coolsnowwolf/lede](https://github.com/coolsnowwolf/lede)（Lean）| [VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt)（VIKINGYFY）
 
 ## 刷机说明
 
@@ -137,3 +140,10 @@ Overlay 用于在不修改设备主配置的前提下叠加功能差异。
 ---
 
 > ⚠️ 本仓库仅供学习与交流使用，请自行评估刷机风险并遵守相关法律法规。
+
+## 致谢
+
+- [coolsnowwolf/lede](https://github.com/coolsnowwolf/lede) — Lean大佬的 OpenWrt 源码
+- [VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt) — VIKINGYFY大佬的 ImmortalWrt 源码
+- [OpenWrt](https://github.com/openwrt/openwrt) — OpenWrt 官方项目
+- 感谢所有上游贡献者和社区用户的支持与反馈
