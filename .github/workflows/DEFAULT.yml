@@ -1,6 +1,6 @@
 #CI项目
 name: DEFAULT
-run-name: ${{ inputs.WRT_DEVICE }}-${{ inputs.WRT_FIREWALL == 'auto' && 'fw4' || inputs.WRT_FIREWALL }}-${{ inputs.WRT_OVERLAYS != '' && inputs.WRT_OVERLAYS || 'base' }}
+run-name: ${{ inputs.WRT_DEVICE }}-${{ inputs.WRT_FIREWALL == 'auto' && (inputs.SOURCE_TYPE == 'lean' && 'fw3' || 'fw4') || inputs.WRT_FIREWALL }}-${{ inputs.WRT_OVERLAYS != '' && inputs.WRT_OVERLAYS || 'base' }}
 
 on:
   workflow_call:
