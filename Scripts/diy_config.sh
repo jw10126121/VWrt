@@ -197,6 +197,7 @@ configure_package_manager_mode() {
     if [ "${package_manager}" = 'apk' ]; then
         set_kconfig_value "CONFIG_PKG_FORMAT" "apk"
         set_kconfig_value "CONFIG_USE_APK" "y"
+        set_kconfig_value "CONFIG_PACKAGE_opkg" "n"
         set_kconfig_value "CONFIG_PACKAGE_luci-app-package-manager" "y"
         set_kconfig_value "CONFIG_PACKAGE_luci-i18n-package-manager-zh-cn" "y"
         set_kconfig_value "CONFIG_PACKAGE_luci-app-opkg" "n"
@@ -444,19 +445,25 @@ configure_wifi_vwrt() {
     fi
 }
 
-# WIFI_NAME=LEDE
-# WIFI_PASSWORD=88888888
+# lean 源码 WiFi 配置：修改 mac80211.sh 中的 SSID、密码、国家码
+# 参数：WRT_SSID（WiFi名称）、WRT_WORD（WiFi密码，为空或none时保持开放WiFi）
+configure_wifi_lean() {
+    local wifi_sh
 
-# # 修改wifi国家
-# sed -i 's/set wireless.radio\${devidx}.type=mac80211/set wireless.radio\${devidx}.type=mac80211 \n\t\t\t set wireless.radio\${devidx}.country=\"CN\"/g' ./kernel/mac80211/files/lib/wifi/mac80211.sh
-# # 修改wifi名
-# sed -i "s/set wireless.default_radio\\${devidx}.ssid=OpenWrt/set wireless.default_radio\\${devidx}.ssid=${WIFI_NAME}/g" ./kernel/mac80211/files/lib/wifi/mac80211.sh
-# # 修改wifi密码
-# sed -i "s/set wireless.default_radio\\${devidx}.encryption=none/set wireless.default_radio\\${devidx}.encryption=psk-mixed \\n\\t\\t\\t set wireless.default_radio\\${devidx}.key=${WIFI_PASSWORD}/g" ./kernel/mac80211/files/lib/wifi/mac80211.sh
-# 修改2.4G wifi信道
-# sed -i 's/channel=\"11\"/channel=\"1\"/g' $package_root/kernel/mac80211/files/lib/wifi/mac80211.sh
-# 修改5G wifi信道
-# sed -i 's/channel=\"36\"/channel=\"153\"/g' $package_root/kernel/mac80211/files/lib/wifi/mac80211.sh
+    wifi_sh=$(find ./package/kernel/mac80211/files/lib/wifi/ -type f -name "mac80211.sh" 2>/dev/null | head -1)
+
+    if [ -f "$wifi_sh" ]; then
+        sed -i "s/ssid='.*'/ssid='${WRT_SSID}'/g" "$wifi_sh"
+        sed -i "s/country='.*'/country='CN'/g" "$wifi_sh"
+        if [[ -n "${WRT_WORD}" && "${WRT_WORD}" != "none" ]]; then
+            sed -i "s/encryption='none'/encryption='psk2+ccmp'/g" "$wifi_sh"
+            sed -i "/ssid='${WRT_SSID}'/a\\\\t\\t\\tset wireless.default_radio\${devidx}.key='${WRT_WORD}'" "$wifi_sh"
+        fi
+        echo "【Lin】WiFi 配置已写入：${wifi_sh}"
+    else
+        echo "【Lin】未找到无线配置文件（mac80211.sh）"
+    fi
+}
 
 
 # 调整 LuCI 菜单位置。
@@ -577,10 +584,11 @@ main() {
 
     configure_common_system_defaults
 
-    # lean 源码专用：更新编译版本号
+    # lean 源码专用：更新编译版本号、配置无线参数
     if [ "${SOURCE_TYPE}" = "lean" ]; then
         update_build_revision
         apply_lean_runtime_customizations
+        configure_wifi_lean
     fi
 
     # vwrt 源码专用：配置无线参数
