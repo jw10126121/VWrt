@@ -6,7 +6,18 @@
       "Bash(mkdir -p /Users/shapp/Documents/Git/Linjw/VWrt/.claude/skills)",
       "Bash(cp -r /Users/shapp/Documents/Git/Linjw/VWrt/.trae/skills/* /Users/shapp/Documents/Git/Linjw/VWrt/.claude/skills/)",
       "Bash(grep \"^CONFIG_PACKAGE_luci-app-.*=y$\" /Users/shapp/Documents/Git/Linjw/VWrt/.config)",
-      "Bash(npx superpowers-zh *)"
+      "Bash(npx superpowers-zh *)",
+      "Bash(bash Scripts/export_config.sh --help)",
+      "Bash(bash Scripts/export_config.sh --device CMIOT-AX18-NOWIFI --fw fw4 --output /tmp/test_config.txt)",
+      "Read(//tmp/**)",
+      "Bash(python3 -c \"import yaml; yaml.safe_load\\(open\\('/Users/shapp/Documents/Git/Linjw/VWrt/.github/workflows/CUSTOM-VWRT.yml'\\)\\); print\\('YAML 语法正确'\\)\")",
+      "Bash(python3 -c \"import yaml; yaml.safe_load\\(open\\('/Users/shapp/Documents/Git/Linjw/VWrt/.github/workflows/CORE-ALL.yml'\\)\\); print\\('YAML 语法正确'\\)\")",
+      "Bash(bash Scripts/export_config.sh --device CMIOT-AX18-NOWIFI --fw fw4 --output /tmp/test1.txt)",
+      "Bash(bash Scripts/export_config.sh --device GL-MT6000-WIFI --fw fw4 --output /tmp/test2.txt)",
+      "Bash(bash Scripts/export_config.sh --device JD-AX6600-WIFI --fw fw4 --output /tmp/test3.txt)",
+      "Bash(bash Scripts/export_config.sh --device CMIOT-AX18-NOWIFI --fw fw4 --output /tmp/test_nowifi.txt)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(grep -v \"^--$\")"
     ]
   }
 }
