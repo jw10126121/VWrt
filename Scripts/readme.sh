@@ -155,7 +155,7 @@ if [ -n "$author_note" ]; then
 	echo "$author_note" >> $desc_file
 fi
 
-pkg_list=$(grep "^CONFIG_PACKAGE_luci-app-.*=y$" $config_file | sed 's/^CONFIG_PACKAGE_//' | sed 's/=y$//')
+pkg_list=$(grep "^CONFIG_PACKAGE_luci-app-.*=y$" $config_file | grep -v "_INCLUDE_\|_Iptables_Transparent_Proxy" | sed 's/^CONFIG_PACKAGE_//' | sed 's/=y$//')
 if [ -n "$pkg_list" ]; then
 	echo "" >> $desc_file
     line_end_text=''
@@ -175,7 +175,7 @@ if [ -n "$pkg_list" ]; then
 	fi
 fi
 
-pkg_list_package=$(grep "^CONFIG_PACKAGE_luci-app-.*=m$" $config_file | sed 's/^CONFIG_PACKAGE_//' | sed 's/=m$//')
+pkg_list_package=$(grep "^CONFIG_PACKAGE_luci-app-.*=m$" $config_file | grep -v "_INCLUDE_\|_Iptables_Transparent_Proxy" | sed 's/^CONFIG_PACKAGE_//' | sed 's/=m$//')
 if [ -n "$pkg_list_package" ]; then
 	echo "" >> $desc_file
     line_end_text=''
@@ -194,7 +194,7 @@ if [ -n "$pkg_list_package" ]; then
 	fi
 fi
 
-theme_list=$(grep "^CONFIG_PACKAGE_luci-theme-.*=y$" $config_file | sed 's/^CONFIG_PACKAGE_//' | sed 's/=y$//')
+theme_list=$(grep "^CONFIG_PACKAGE_luci-theme-.*=y$" $config_file | grep -v "_INCLUDE_" | sed 's/^CONFIG_PACKAGE_//' | sed 's/=y$//')
 if [ -n "$theme_list" ]; then
 	echo "" >> $desc_file
     line_end_text=''
@@ -212,7 +212,7 @@ if [ -n "$theme_list" ]; then
 	fi
 fi
 
-theme_list_package=$(grep "^CONFIG_PACKAGE_luci-theme-.*=m$" $config_file | sed 's/^CONFIG_PACKAGE_//' | sed 's/=m$//')
+theme_list_package=$(grep "^CONFIG_PACKAGE_luci-theme-.*=m$" $config_file | grep -v "_INCLUDE_" | sed 's/^CONFIG_PACKAGE_//' | sed 's/=m$//')
 if [ -n "$theme_list_package" ]; then
 	echo "" >> $desc_file
     line_end_text=''

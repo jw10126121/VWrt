@@ -471,9 +471,9 @@ adjust_luci_menu_positions() {
         sed -i 's/services/nas/g' $(find ./feeds/luci/applications/luci-app-alist/root/usr/share/luci/menu.d/ -type f -name "luci-app-alist.json")
     fi
 
-    if [ -f "$CFG_FILE_LEDE" ]; then
-        sed -i 's/services/nas/g' $(find ./feeds/luci/applications/luci-app-samba4/root/usr/share/luci/menu.d/ -type f -name "luci-app-samba4.json")
-    fi
+    #if [ -f "$CFG_FILE_LEDE" ]; then
+    #    sed -i 's/services/nas/g' $(find ./feeds/luci/applications/luci-app-samba4/root/usr/share/luci/menu.d/ -type f -name "luci-app-samba4.json")
+    #fi
 }
 
 # 更新编译版本号。
