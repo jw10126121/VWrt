@@ -29,19 +29,17 @@
 | 设备 | 架构 | 备注 |
 |------|------|------|
 | `CMIOT-AX18-NOWIFI` | qualcommax-ipq60xx / aarch64 | 默认无 Wi-Fi |
-| `IPQ60XX-NOWIFI` | qualcommax-ipq60xx / aarch64 | 默认无 Wi-Fi |
 | `JD-AX1800PRO-WIFI` | qualcommax-ipq60xx / aarch64 | 京东云亚瑟，带 Wi-Fi |
 | `JD-AX6600-WIFI` | qualcommax-ipq60xx / aarch64 | 京东云雅典娜，带 Wi-Fi |
 | `GL-MT6000-WIFI` | mediatek-filogic / aarch64 | GL.iNet MT6000，带 Wi-Fi |
-| `x86` | x86_64 | 通用 x86 平台 |
 
 如需调整具体机型勾选项，修改对应配置文件中的 `CONFIG_TARGET_DEVICE_*`。
 
 ## CI 工作流
 
-[![CUSTOM-LWRT](https://github.com/jw10126121/LjwOpenWrt/actions/workflows/CUSTOM-LWRT.yml/badge.svg)](https://github.com/jw10126121/LjwOpenWrt/actions/workflows/CUSTOM-LWRT.yml)
-[![CUSTOM-VWRT](https://github.com/jw10126121/LjwOpenWrt/actions/workflows/CUSTOM-VWRT.yml/badge.svg)](https://github.com/jw10126121/LjwOpenWrt/actions/workflows/CUSTOM-VWRT.yml)
-[![DEFAULT](https://github.com/jw10126121/LjwOpenWrt/actions/workflows/DEFAULT.yml/badge.svg)](https://github.com/jw10126121/LjwOpenWrt/actions/workflows/DEFAULT.yml)
+[![CUSTOM-LWRT](https://github.com/jw10126121/VWrt/actions/workflows/CUSTOM-LWRT.yml/badge.svg)](https://github.com/jw10126121/VWrt/actions/workflows/CUSTOM-LWRT.yml)
+[![CUSTOM-VWRT](https://github.com/jw10126121/VWrt/actions/workflows/CUSTOM-VWRT.yml/badge.svg)](https://github.com/jw10126121/VWrt/actions/workflows/CUSTOM-VWRT.yml)
+[![DEFAULT](https://github.com/jw10126121/VWrt/actions/workflows/DEFAULT.yml/badge.svg)](https://github.com/jw10126121/VWrt/actions/workflows/DEFAULT.yml)
 
 ### 预设工作流
 
@@ -125,7 +123,7 @@ Overlay 用于在不修改设备主配置的前提下叠加功能差异。
 
 ## 下载固件
 
-- **发布页**：[LjwOpenWrt Releases](https://github.com/jw10126121/LjwOpenWrt/releases)
+- **发布页**：[VWrt Releases](https://github.com/jw10126121/VWrt/releases)
 - **上游源码**：[coolsnowwolf/lede](https://github.com/coolsnowwolf/lede)（Lean）| [VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt)（VIKINGYFY）
 
 ## 刷机说明

@@ -133,7 +133,7 @@ jobs:
   build:
     name: ${{ inputs.WRT_DEVICE }}-${{ inputs.WRT_FIREWALL == 'auto' && (inputs.SOURCE_TYPE == 'lean' && 'fw3' || 'fw4') || inputs.WRT_FIREWALL }}-${{ inputs.WRT_USE_APK == 'auto' && (inputs.SOURCE_TYPE == 'lean' && 'ipk' || 'apk') || (inputs.WRT_USE_APK == 'true' && 'apk' || 'ipk') }}-${{ inputs.WRT_OVERLAYS != '' && inputs.WRT_OVERLAYS || 'base' }}
     runs-on: ubuntu-24.04
-    if: github.event.repository.owner.id == github.event.sender.id
+    if: github.repository_owner == github.event.sender.login || github.event_name == 'schedule'
     steps:
 
     - name: Check Server Performance (检查服务器性能)

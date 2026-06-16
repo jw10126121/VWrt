@@ -206,27 +206,27 @@ fi
 
 if grep -q '^CONFIG_PACKAGE_firewall4=y$' "${openwrt_path}/.config" 2>/dev/null && \
    grep -q '^CONFIG_PACKAGE_firewall=y$' "${openwrt_path}/.config" 2>/dev/null; then
-    fw_stack='FW3+FW4(冲突)'
+    fw_stack='fw3+fw4(冲突)'
     fw_stack_tag='mixed'
 elif grep -q '^CONFIG_PACKAGE_firewall4=y$' "${openwrt_path}/.config" 2>/dev/null; then
-    fw_stack='FW4'
+    fw_stack='fw4'
     fw_stack_tag='fw4'
 elif grep -q '^CONFIG_PACKAGE_firewall=y$' "${openwrt_path}/.config" 2>/dev/null; then
-    fw_stack='FW3'
+    fw_stack='fw3'
     fw_stack_tag='fw3'
 fi
 
 if grep -q '^CONFIG_PACKAGE_frpc=y$' "${openwrt_path}/.config" 2>/dev/null && \
    grep -q '^CONFIG_PACKAGE_frps=m$' "${openwrt_path}/.config" 2>/dev/null; then
-    frp_role='FRPC'
+    frp_role='frpc'
     frp_role_tag='frpc'
 elif grep -q '^CONFIG_PACKAGE_frpc=m$' "${openwrt_path}/.config" 2>/dev/null && \
      grep -q '^CONFIG_PACKAGE_frps=y$' "${openwrt_path}/.config" 2>/dev/null; then
-    frp_role='FRPS'
+    frp_role='frps'
     frp_role_tag='frps'
 elif grep -q '^CONFIG_PACKAGE_frpc=y$' "${openwrt_path}/.config" 2>/dev/null && \
      grep -q '^CONFIG_PACKAGE_frps=y$' "${openwrt_path}/.config" 2>/dev/null; then
-    frp_role='FRPC+FRPS'
+    frp_role='frpc+frps'
     frp_role_tag='frpc-frps'
 elif grep -q '^CONFIG_PACKAGE_frpc=m$' "${openwrt_path}/.config" 2>/dev/null && \
      grep -q '^CONFIG_PACKAGE_frps=m$' "${openwrt_path}/.config" 2>/dev/null; then
