@@ -258,8 +258,10 @@ jobs:
           WRT_REPO_BRANCH="master"
         else
           if [[ "$WRT_DEVICE" =~ GL-MT6000 ]]; then
-            WRT_REPO_URL="https://github.com/immortalwrt/immortalwrt"
-            WRT_REPO_BRANCH="master"
+            # WRT_REPO_URL="https://github.com/immortalwrt/immortalwrt"
+            # WRT_REPO_BRANCH="master"
+            WRT_REPO_URL="https://github.com/VIKINGYFY/immortalwrt"
+            WRT_REPO_BRANCH="owrt"
           else
             WRT_REPO_URL="https://github.com/VIKINGYFY/immortalwrt"
             WRT_REPO_BRANCH="main"
