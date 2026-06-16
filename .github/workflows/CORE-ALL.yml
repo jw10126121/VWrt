@@ -257,10 +257,11 @@ jobs:
           WRT_REPO_URL="https://github.com/coolsnowwolf/lede"
           WRT_REPO_BRANCH="master"
         else
-          WRT_REPO_URL="https://github.com/VIKINGYFY/immortalwrt"
           if [[ "$WRT_DEVICE" =~ GL-MT6000 ]]; then
-            WRT_REPO_BRANCH="owrt"
+            WRT_REPO_URL="https://github.com/immortalwrt/immortalwrt"
+            WRT_REPO_BRANCH="master"
           else
+            WRT_REPO_URL="https://github.com/VIKINGYFY/immortalwrt"
             WRT_REPO_BRANCH="main"
           fi
         fi

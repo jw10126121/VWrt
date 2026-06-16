@@ -144,29 +144,13 @@ jobs:
       firewall: ${{ steps.resolve.outputs.firewall }}
       use_apk: ${{ steps.resolve.outputs.use_apk }}
       pkg_mgr: ${{ steps.resolve.outputs.pkg_mgr }}
-      repo_url: ${{ steps.resolve.outputs.repo_url }}
-      repo_branch: ${{ steps.resolve.outputs.repo_branch }}
     steps:
       - name: Resolve auto values
         id: resolve
         run: |
           source_type="${{ inputs.SOURCE_TYPE }}"
-          device="${{ inputs.WRT_DEVICE }}"
           firewall="${{ inputs.WRT_FIREWALL }}"
           use_apk="${{ inputs.WRT_USE_APK }}"
-
-          # 源码仓库和分支
-          if [ "$source_type" = "vwrt" ]; then
-            repo_url="https://github.com/VIKINGYFY/immortalwrt"
-            if [[ "$device" =~ GL-MT6000 ]]; then
-              repo_branch="owrt"
-            else
-              repo_branch="main"
-            fi
-          else
-            repo_url="https://github.com/coolsnowwolf/lede"
-            repo_branch="master"
-          fi
 
           # vwrt → fw4 / apk，lean → fw3 / ipk
           if [ "$firewall" = "auto" ]; then
@@ -184,8 +168,6 @@ jobs:
             fi
           fi
 
-          echo "repo_url=$repo_url" >> $GITHUB_OUTPUT
-          echo "repo_branch=$repo_branch" >> $GITHUB_OUTPUT
           echo "firewall=$firewall" >> $GITHUB_OUTPUT
           echo "use_apk=$use_apk" >> $GITHUB_OUTPUT
           if [ "$use_apk" = "true" ]; then
@@ -193,7 +175,7 @@ jobs:
           else
             echo "pkg_mgr=ipk" >> $GITHUB_OUTPUT
           fi
-          echo "【Lin】源码类型：${source_type}，仓库：[${repo_branch}] ${repo_url}"
+          echo "【Lin】源码类型：${source_type}"
           echo "【Lin】解析结果：fw=${firewall}, apk=${use_apk}"
 
   config:
@@ -208,10 +190,6 @@ jobs:
       SOURCE_TYPE: ${{ inputs.SOURCE_TYPE }}
       # 指定源码HASH信息，默认空
       WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
-      # 源码，从SOURCE_TYPE获取
-      WRT_REPO_URL: ${{ needs.resolve.outputs.repo_url }}
-      # 源码分支，从SOURCE_TYPE获取
-      WRT_REPO_BRANCH: ${{ needs.resolve.outputs.repo_branch }}
       # 防火墙栈：fw3 或 fw4，从SOURCE_TYPE获取
       WRT_FIREWALL: ${{ needs.resolve.outputs.firewall }}
       # 包管理器：apk 或 ipk，从SOURCE_TYPE获取
