@@ -24,6 +24,7 @@ CONFIG_PACKAGE_kmod-tun=y               # TUN/TAP
 CONFIG_PACKAGE_kmod-wireguard=y         # WireGuard 内核模块
 CONFIG_PACKAGE_kmod-inet-diag=y         # sock_diag，ss 命令依赖
 CONFIG_PACKAGE_kmod-sched-act-ipt=y     # TC iptables 匹配，QoS/流量整形依赖
+CONFIG_PACKAGE_kmod-act-ipt=y           # 补全 act-ipt，sqm用
 
 # ------------------------------------------------------------------------
 #  通用运行时依赖
@@ -144,4 +145,3 @@ CONFIG_PACKAGE_usbutils=y               # lsusb 等工具
 # ------------------------------------------------------------------------
 #  其他
 # ------------------------------------------------------------------------
-CONFIG_PACKAGE_kmod-act-ipt=y         # 补全 act-ipt，sqm用

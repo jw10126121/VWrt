@@ -96,6 +96,17 @@ CONFIG_PACKAGE_luci-i18n-arpbind-zh-cn=m     # ARP 绑定中文语言包
 #  流控 / 中继：SQM、Socat 和 UPnP 放一起，调网络质量或端口转发时优先看这里。
 CONFIG_PACKAGE_luci-app-sqm=y                # SQM QoS
 CONFIG_PACKAGE_luci-i18n-sqm-zh-cn=y         # SQM 中文语言包
+CONFIG_PACKAGE_sqm-scripts=y                 # 默认提供，可不用显示添加
+CONFIG_PACKAGE_kmod-sched-core=y             # 默认提供，可不用显示添加
+CONFIG_PACKAGE_kmod-sched-cake=y             # 默认提供，可不用显示添加
+CONFIG_PACKAGE_tc-tiny=y                     # 默认提供，可不用显示添加
+CONFIG_PACKAGE_kmod-ipt-ipopt=y              # 默认提供，可不用显示添加
+CONFIG_PACKAGE_iptables-mod-ipopt=y          # 默认提供，可不用显示添加
+CONFIG_PACKAGE_kmod-ifb=y                    # 默认提供，可不用显示添加
+CONFIG_PACKAGE_kmod-nss-ifb=y                # 补全 nss-ifb，高通平台专属nss用
+CONFIG_PACKAGE_kmod-qca-nss-drv-qdisc=y      # nss.qos需要
+CONFIG_PACKAGE_kmod-qca-nss-drv-igs=y        # nss.qos需要
+
 CONFIG_PACKAGE_luci-app-3cat=y               # 端口转发 / 中继
 CONFIG_PACKAGE_luci-i18n-3cat-zh-cn=y        # 3Cat 中文语言包
 CONFIG_PACKAGE_luci-app-socat=m              # Socat 端口转发 / 中继
