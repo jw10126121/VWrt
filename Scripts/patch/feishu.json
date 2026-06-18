@@ -5,8 +5,8 @@
 	"url": "\"${feishu_webhook}\"",
 	"data": "@${tempjsonpath}",
 	"content_type": "Content-Type: application/json",
-	"str_title_start": "",
-	"str_title_end": "",
+	"str_title_start": "**",
+	"str_title_end": "**",
 	"str_linefeed": "\\n",
 	"str_splitline": "\\n-----------------------------------\\n",
 	"str_space": " ",
@@ -23,7 +23,18 @@
 			"elements": [
 				{
 					"tag": "\"markdown\"",
-					"content": "\"🕐 ${nowtime}${2}\""
+					"content": "\"🕐 **${nowtime}**\""
+				},
+				{
+					"tag": "\"markdown\"",
+					"content": "\"${2}\""
+				},
+        { "tag": "\"hr\"" },
+				{
+					"tag": "\"note\"",
+					"elements": [
+						{ "tag": "\"plain_text\"", "content": "\"📡 【Lin】wechatpush\"" }
+					]
 				}
 			]
 		}
