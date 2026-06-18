@@ -66,6 +66,8 @@ apply_luci_branch_override() {
 
 # 默认启用 helloworld feed。
 sed -i "s/#src-git helloworld/src-git helloworld/g" "$feed_config_name"
+# 添加istore
+echo 'src-git istore https://github.com/linkease/istore;main' >> "$feed_config_name"
 
 # 仅在 WRT_LUCI_BRANCH 能识别为已知版本线时才覆盖 LuCI feed；
 # 未识别时保留 feeds.conf.default 原始分支不动。
