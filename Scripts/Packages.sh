@@ -633,10 +633,11 @@ fix_wechatpush_runtime() {
     fi
 
     if [ -f "${wechatpush_bin}" ]; then
-        # 将 dingtalk_url 加入 API key 检查，避免只配钉钉时误报空 key（幂等：已含 dingtalk_url 时跳过）
-        sed -i '/Please fill in the correct API key/{/dingtalk_url/!s/\${recipient_email}"/\${recipient_email}\${dingtalk_url}"/;}' "${wechatpush_bin}" && echo "【Lin】微信推送API key检查已添加dingtalk_url"
-         # 将 feishu_webhook 加入 API key 检查，避免只配飞书时误报空 key（幂等：已含 feishu_webhook 时跳过）
-        sed -i '/Please fill in the correct API key/{/feishu_webhook/!s/\${recipient_email}"/\${recipient_email}\${feishu_webhook}"/;}' "${wechatpush_bin}" && echo "【Lin】微信推送API key检查已添加feishu_webhook"
+        # 将 dingtalk_url / dingtalk_webhook / feishu_webhook 加入 API key 检查，避免只配对应渠道时误报空 key
+        # 在 ${sckey} 前插入，幂等：已含对应变量时跳过
+        sed -i '/Please fill in the correct API key/{/jsonpath/{/dingtalk_url/!s/\${sckey}/\${dingtalk_url}\${sckey}/;};}' "${wechatpush_bin}" && echo "【Lin】微信推送API key检查已添加dingtalk_url"
+        sed -i '/Please fill in the correct API key/{/jsonpath/{/dingtalk_webhook/!s/\${sckey}/\${dingtalk_webhook}\${sckey}/;};}' "${wechatpush_bin}" && echo "【Lin】微信推送API key检查已添加dingtalk_webhook"
+        sed -i '/Please fill in the correct API key/{/jsonpath/{/feishu_webhook/!s/\${sckey}/\${feishu_webhook}\${sckey}/;};}' "${wechatpush_bin}" && echo "【Lin】微信推送API key检查已添加feishu_webhook"
     fi
 
     dingtalk_json="${current_script_dir}/patch/dingtalk.json"
