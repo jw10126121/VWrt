@@ -8,15 +8,24 @@
 	"str_title_start": "",
 	"str_title_end": "",
 	"str_linefeed": "\\n",
-	"str_splitline": "\\n------------------------------\\n",
+	"str_splitline": "\\n-----------------------------------\\n",
 	"str_space": " ",
-	"str_tab": "  ",
+	"str_tab": " ",
 	"type": {
 		"timestamp": "\"${feishu_timestamp}\"",
 		"sign": "\"${feishu_sign}\"",
-		"msg_type": "\"text\"",
-		"content": {
-			"text": "\"${1}${str_splitline}${nowtime}${2}\""
+		"msg_type": "\"interactive\"",
+		"card": {
+			"header": {
+				"title": { "tag": "\"plain_text\"", "content": "\"${1}\"" },
+				"template": "\"blue\""
+			},
+			"elements": [
+				{
+					"tag": "\"markdown\"",
+					"content": "\"🕐 ${nowtime}${2}\""
+				}
+			]
 		}
 	}
 }
