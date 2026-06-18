@@ -404,8 +404,9 @@ apply_common_package_overrides() {
     # 如果后续重新启用，需要同时确认设备侧是否改成 luci-nginx 路线。
     # update_package_list "luci-app-quickfile quickfile" "sbwml/luci-app-quickfile" "main"
 
+    # luci-app-easymesh未测试 @linjw 20260618
     # lean源码树中 luci-app-adguardhome 版本较旧且缺中文，这里直接从 kenzok8/openwrt-packages 下载
-    update_package_list "luci-app-adguardhome" "kenzok8/openwrt-packages" "master"
+    update_package_list "luci-app-adguardhome luci-app-easymesh" "kenzok8/openwrt-packages" "master"
 
     update_package_list "luci-app-wolplus" "sundaqiang/openwrt-packages" "master"
 }
