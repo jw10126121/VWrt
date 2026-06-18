@@ -1,6 +1,5 @@
 {
-  "_api": "Feishu custom bot",
-  "_api": "【Feishu】",
+  "_api": "【Feishu推送】",
   "url": "\"${feishu_webhook}\"",
   "data": "@${tempjsonpath}",
   "content_type": "Content-Type:application/json",

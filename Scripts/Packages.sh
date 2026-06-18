@@ -631,6 +631,14 @@ fix_wechatpush_runtime() {
         [ -f "${wechatpush_config}" ] && cp -p "${wechatpush_config}" "${wechatpush_dir}/root/usr/share/wechatpush/api/diy.json" && \
             echo "【Lin】wechatpush的diy.json成功！"
     fi
+
+    if [ -f "${wechatpush_bin}" ]; then
+        # 将 dingtalk_url 加入 API key 检查，避免只配钉钉时误报空 key（幂等：已含 dingtalk_url 时跳过）
+        sed -i '/Please fill in the correct API key/{/dingtalk_url/!s/\${recipient_email}"/\${recipient_email}\${dingtalk_url}"/;}' "${wechatpush_bin}" && echo "【Lin】微信推送API key检查已添加dingtalk_url"
+         # 将 feishu_webhook 加入 API key 检查，避免只配飞书时误报空 key（幂等：已含 feishu_webhook 时跳过）
+        sed -i '/Please fill in the correct API key/{/feishu_webhook/!s/\${recipient_email}"/\${recipient_email}\${feishu_webhook}"/;}' "${wechatpush_bin}" && echo "【Lin】微信推送API key检查已添加feishu_webhook"
+    fi
+
     dingtalk_json="${current_script_dir}/patch/dingtalk.json"
     to_dingtalk_json="${wechatpush_dir}/root/usr/share/wechatpush/api/dingtalk.json"
     if [ -f "${dingtalk_json}" ]; then
