@@ -631,6 +631,18 @@ fix_wechatpush_runtime() {
         [ -f "${wechatpush_config}" ] && cp -p "${wechatpush_config}" "${wechatpush_dir}/root/usr/share/wechatpush/api/diy.json" && \
             echo "【Lin】wechatpush的diy.json成功！"
     fi
+    dingtalk_json="${current_script_dir}/patch/dingtalk.json"
+    to_dingtalk_json="${wechatpush_dir}/root/usr/share/api/dingtalk.json"
+    if [ -f "${dingtalk_json}" ]; then
+        cp -p "${dingtalk_json}" "${to_dingtalk_json}" && echo "【Lin】dingtalk.json已更新"
+    fi
+
+    feishu_json="${current_script_dir}/patch/feishu.json"
+    to_feishu_json="${wechatpush_dir}/root/usr/share/api/feishu.json"
+    if [ -f "${feishu_json}" ]; then
+        cp -p "${feishu_json}" "${to_feishu_json}" && echo "【Lin】feishu.json已更新"
+    fi
+    
 }
 
 # 修复 athena-led：@TARGET_ 放在 LUCI_DEPENDS 里不能正确约束包的可见性，
