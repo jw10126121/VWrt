@@ -48,9 +48,6 @@ on:
         required: false
         type: string
         default: ''
-    secrets:
-      DINGDING_TOKEN:
-        required: false
   #手动编译
   workflow_dispatch:
     inputs:
@@ -208,10 +205,9 @@ jobs:
       WRT_RELEASE_FIRMWARE: ${{ inputs.WRT_RELEASE_FIRMWARE }}
       # 默认LAN-IP
       WRT_DEFAULT_LANIP: ${{ inputs.WRT_DEFAULT_LANIP }}
-      # 钉钉TOKEN，用于推送下载文件
-      WRT_TOKEN_DINGDING: ${{ inputs.iTOKEN_DINGDING }}
       # 编译说明
       WRT_MINE_SAY: ${{ inputs.WHAT_MY_SAY }}
     secrets:
-      DINGDING_TOKEN: ${{ secrets.DINGDING_TOKEN }}
+      WEBHOOK_DINGDING: ${{ secrets.WEBHOOK_DINGDING }}
+      WEBHOOK_FEISHU: ${{ secrets.WEBHOOK_FEISHU }}
 

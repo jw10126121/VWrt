@@ -65,15 +65,14 @@ on:
       WRT_MINE_SAY:
         required: true
         type: string
-      WRT_TOKEN_DINGDING:
-        required: false
-        type: string
       WRT_USE_APK:
         required: false
         type: string
         default: 'auto'
     secrets:
-      DINGDING_TOKEN: 
+      WEBHOOK_DINGDING:
+        required: false
+      WEBHOOK_FEISHU:
         required: false
       # UPLOAD_FIRMWARE_DIR:
       #   required: false
@@ -84,7 +83,8 @@ on:
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  DINGDING_TOKEN: ${{ secrets.DINGDING_TOKEN }}
+  WEBHOOK_DINGDING: ${{ secrets.WEBHOOK_DINGDING }}
+  WEBHOOK_FEISHU: ${{ secrets.WEBHOOK_FEISHU }}
   WRT_SOURCE_HASH_INFO: ${{inputs.WRT_SOURCE_HASH_INFO}}
   WRT_DEVICE: ${{inputs.WRT_DEVICE}}                          # 设备名
   SOURCE_TYPE: ${{inputs.SOURCE_TYPE || 'auto'}}               # 源码类型 vwrt/lean/auto
@@ -228,11 +228,6 @@ jobs:
             echo "WRT_USE_APK=false" >> $GITHUB_ENV
         fi
         # 若 overlay 未指定，保持 WRT_USE_APK 原值（auto/手动选择）
-
-        if [ -n "${{inputs.WRT_TOKEN_DINGDING}}" ]; then
-            echo "DINGDING_TOKEN=${{inputs.WRT_TOKEN_DINGDING}}" >> $GITHUB_ENV
-            echo "【Lin】配置TOKEN_DINGDING：${{inputs.WRT_TOKEN_DINGDING}}"
-        fi
 
         echo "【Lin】读取文件名配置：$(if [ "$WRT_HAS_WIFI" == 'true' ]; then echo '有WIFI'; else echo '无WIFI'; fi)"
         echo "【Lin】读取文件名配置：$(if [ "$WRT_HAS_LITE" == 'true' ]; then echo '[精简版]'; else echo '[常规版]'; fi)"
@@ -492,7 +487,7 @@ jobs:
 
     - name: Send dingding notify
       continue-on-error: true
-      if: env.DINGDING_TOKEN != ''
+      if: env.WEBHOOK_DINGDING != ''
       env:
         DINGDING_MESSAGE: |
           ${{ env.start_notify_content }}
@@ -501,7 +496,38 @@ jobs:
         curl --fail --silent --show-error \
           -H 'Content-Type: application/json' \
           -d "$payload" \
-          "https://oapi.dingtalk.com/robot/send?access_token=${DINGDING_TOKEN}"
+          "${WEBHOOK_DINGDING}"
+
+    - name: Send feishu notify (飞书开始推送)
+      continue-on-error: true
+      if: env.WEBHOOK_FEISHU != ''
+      run: |
+        payload=$(python3 -c '
+        import json, os
+        content = os.environ["FEISHU_MESSAGE"]
+        card = {
+          "msg_type": "interactive",
+          "card": {
+            "header": {
+              "title": {"tag": "plain_text", "content": "【Lin】固件编译通知"},
+              "template": "blue"
+            },
+            "elements": [
+              {"tag": "markdown", "content": content},
+              {"tag": "hr"},
+              {"tag": "note", "elements": [{"tag": "plain_text", "content": "📡 wechatpush"}]}
+            ]
+          }
+        }
+        print(json.dumps(card, ensure_ascii=False))
+        ')
+        curl --fail --silent --show-error \
+          -H 'Content-Type: application/json' \
+          -d "$payload" \
+          "${WEBHOOK_FEISHU}"
+      env:
+        FEISHU_MESSAGE: |
+          ${{ env.start_notify_content }}
 
     # - name: Cache Toolchain (缓存工具链)
     #   if: env.CACHE_TOOLCHAIN == 'true'
@@ -621,7 +647,7 @@ jobs:
 
     - name: Send dingding notify (推送编译结果消息)
       continue-on-error: true
-      if: always() && env.DINGDING_TOKEN != '' && steps.finalize_compile.outputs.status != 'cancelled'
+      if: always() && env.WEBHOOK_DINGDING != '' && steps.finalize_compile.outputs.status != 'cancelled'
       env:
         DINGDING_MESSAGE: |
           ${{ env.notify_content }}
@@ -630,7 +656,38 @@ jobs:
         curl --fail --silent --show-error \
           -H 'Content-Type: application/json' \
           -d "$payload" \
-          "https://oapi.dingtalk.com/robot/send?access_token=${DINGDING_TOKEN}"
+          "${WEBHOOK_DINGDING}"
+
+    - name: Send feishu notify (推送编译结果消息)
+      continue-on-error: true
+      if: always() && env.WEBHOOK_FEISHU != '' && steps.finalize_compile.outputs.status != 'cancelled'
+      run: |
+        payload=$(python3 -c '
+        import json, os
+        content = os.environ["FEISHU_MESSAGE"]
+        card = {
+          "msg_type": "interactive",
+          "card": {
+            "header": {
+              "title": {"tag": "plain_text", "content": "【Lin】固件编译通知"},
+              "template": "blue"
+            },
+            "elements": [
+              {"tag": "markdown", "content": content},
+              {"tag": "hr"},
+              {"tag": "note", "elements": [{"tag": "plain_text", "content": "📡 wechatpush"}]}
+            ]
+          }
+        }
+        print(json.dumps(card, ensure_ascii=False))
+        ')
+        curl --fail --silent --show-error \
+          -H 'Content-Type: application/json' \
+          -d "$payload" \
+          "${WEBHOOK_FEISHU}"
+      env:
+        FEISHU_MESSAGE: |
+          ${{ env.notify_content }}
 
     - name: Prepare Release Body (读取发布内容)
       run: |
