@@ -11,7 +11,7 @@ on:
       SOURCE_TYPE:
         required: false
         type: string
-        default: 'vwrt'
+        default: 'lean'
       WRT_FIREWALL:
         required: false
         type: string
@@ -71,7 +71,7 @@ on:
         options:
           - vwrt
           - lean
-        default: 'vwrt'
+        default: 'lean'
       WRT_FIREWALL:
         description: '防火墙栈（auto=按源码类型自动选择，lean→fw3，vwrt→fw4）'
         required: false
