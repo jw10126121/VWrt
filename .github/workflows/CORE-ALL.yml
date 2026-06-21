@@ -333,7 +333,7 @@ jobs:
         fi
         echo "WRT_USE_APK=$WRT_USE_APK" >> $GITHUB_ENV
         echo "WRT_FIREWALL=$WRT_FIREWALL" >> $GITHUB_ENV
-        echo "【Lin】防火墙：${WRT_FIREWALL}，包管理器：${WRT_USE_APK}"
+        echo "【Lin】防火墙：${WRT_FIREWALL}，apk包管理器：${WRT_USE_APK}"
         # 临时导入config，为了获取设备信息
         [ -f ./.config ] && rm -rf ./.config
         EXPORT_ARGS=(

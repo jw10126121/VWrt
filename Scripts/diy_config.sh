@@ -516,12 +516,13 @@ configure_nss_usage_display() {
     local usage_file="./package/lean/autocore/files/arm/sbin/usage"
 
     if [[ -f "${usage_file}" ]]; then
-        sed -i '/echo -n "CPU: ${cpu_usage}, NPU: ${npu_usage}"/c\
+        # 匹配 lean 新版含 WiFi NSS 的 echo 行，插入 ECM 连接数
+        sed -i '/echo -n "CPU: ${cpu_usage}, NPU: ${npu_usage}${wifi_nss}"/c\
             if [ -r "/sys/kernel/debug/ecm/ecm_db/connection_count_simple" ]; then\
                 connection_count=$(cat /sys/kernel/debug/ecm/ecm_db/connection_count_simple)\
-                echo -n "CPU: ${cpu_usage}, NPU: ${npu_usage}, ECM: ${connection_count}"\
+                echo -n "CPU: ${cpu_usage}, NPU: ${npu_usage}${wifi_nss}, ECM: ${connection_count}"\
             else\
-                echo -n "CPU: ${cpu_usage}, NPU: ${npu_usage}"\
+                echo -n "CPU: ${cpu_usage}, NPU: ${npu_usage}${wifi_nss}"\
             fi' "$usage_file"
         echo "【Lin】配置NSS显示执行完成"
     fi

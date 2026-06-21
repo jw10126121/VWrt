@@ -17,7 +17,14 @@
       "Bash(bash Scripts/export_config.sh --device JD-AX6600-WIFI --fw fw4 --output /tmp/test3.txt)",
       "Bash(bash Scripts/export_config.sh --device CMIOT-AX18-NOWIFI --fw fw4 --output /tmp/test_nowifi.txt)",
       "Bash(echo \"exit: $?\")",
-      "Bash(grep -v \"^--$\")"
+      "Bash(grep -v \"^--$\")",
+      "Bash(git add *)",
+      "Bash(git commit -m '添加飞书推送通知，钉钉改为webhook形式 *)",
+      "Bash(git push *)",
+      "Bash(gh run *)",
+      "Bash(gh secret *)",
+      "Bash(python3 -c ' *)",
+      "Bash(git commit -m '修复飞书/钉钉推送：恢复顶层env secrets配置 *)"
     ]
   }
 }
