@@ -41,6 +41,8 @@ write_start_notify_content() {
 
     {
         echo "start_notify_content<<EOF"
+        echo "编译状态：⏳ 编译中..."
+        echo ""
         printf '%s\n' "${notify_body}"
         echo "EOF"
     } >> "${target_file}"

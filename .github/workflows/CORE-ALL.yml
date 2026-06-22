@@ -509,7 +509,7 @@ jobs:
           "msg_type": "interactive",
           "card": {
             "header": {
-              "title": {"tag": "plain_text", "content": "【Lin】固件编译通知"},
+              "title": {"tag": "plain_text", "content": "【Lin】固件编译开始"},
               "template": "blue"
             },
             "elements": [
@@ -669,7 +669,7 @@ jobs:
           "msg_type": "interactive",
           "card": {
             "header": {
-              "title": {"tag": "plain_text", "content": "【Lin】固件编译通知"},
+              "title": {"tag": "plain_text", "content": "【Lin】固件编译结束"},
               "template": "blue"
             },
             "elements": [

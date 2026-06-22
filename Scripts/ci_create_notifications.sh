@@ -36,6 +36,12 @@ write_notify_content() {
     # GitHub Actions 多行变量需要 <<EOF 语法，这里统一封装，避免两处逻辑漂移。
     {
         echo "notify_content<<EOF"
+        if [ "${COMPILE_STATUS:-unknown}" = "success" ]; then
+            echo "编译状态：✅ 编译成功"
+        else
+            echo "编译状态：❌ 编译失败"
+        fi
+        echo ""
         if [ "${COMPILE_STATUS:-unknown}" = "success" ] && [ "${WRT_RELEASE_FIRMWARE:-false}" = "true" ]; then
             echo "Release下载地址：https://github.com/${GITHUB_REPOSITORY}/releases/tag/${release_tag}"
         fi
@@ -45,7 +51,6 @@ write_notify_content() {
         fi
         printf '%s\n' "${notify_body}"
         echo ""
-        echo "编译状态：${COMPILE_STATUS:-unknown}"
         echo "编译结束：${END_TIME:-}"
         echo "EOF"
     } >> "${target_file}"
