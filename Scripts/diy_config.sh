@@ -588,7 +588,7 @@ main() {
     if [ "${SOURCE_TYPE}" = "lean" ]; then
         update_build_revision
         apply_lean_runtime_customizations
-        configure_wifi_lean
+        # configure_wifi_lean
     fi
 
     # vwrt 源码专用：配置无线参数
