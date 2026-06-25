@@ -28,7 +28,9 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(git commit -m 'feat: 添加 libwrt 源码类型支持 *)",
       "Bash(git commit -m 'feat: 启用 OpenClash 代理插件 *)",
-      "Bash(git commit -m 'refactor: 调整定时重启和推送机器人配置 *)"
+      "Bash(git commit -m 'refactor: 调整定时重启和推送机器人配置 *)",
+      "Bash(git commit -m 'chore: 注释掉 CMIOT frps 编译任务 *)",
+      "Bash(git commit *)"
     ]
   }
 }
