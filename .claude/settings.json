@@ -26,7 +26,8 @@
       "Bash(python3 -c ' *)",
       "Bash(git commit -m '修复飞书/钉钉推送：恢复顶层env secrets配置 *)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(git commit -m 'feat: 添加 libwrt 源码类型支持 *)"
+      "Bash(git commit -m 'feat: 添加 libwrt 源码类型支持 *)",
+      "Bash(git commit -m 'feat: 启用 OpenClash 代理插件 *)"
     ]
   }
 }
