@@ -117,7 +117,10 @@ target_label_marker_file="./.linjw-target-label"
 
 # 源码类型：根据 lean 特有文件自动判断
 # 如果存在 ./package/lean/default-settings/files/zzz-default-settings 则为 lean，否则为 vwrt
-if [ -f "${file_default_settings}" ]; then
+# 支持通过环境变量 SOURCE_TYPE 显式指定（如 libwrt）
+if [ -n "${SOURCE_TYPE:-}" ] && [ "${SOURCE_TYPE}" != "auto" ]; then
+    echo "【Lin】使用指定源码类型：${SOURCE_TYPE}"
+elif [ -f "${file_default_settings}" ]; then
     SOURCE_TYPE="lean"
 else
     SOURCE_TYPE="vwrt"
@@ -592,8 +595,8 @@ main() {
         # configure_wifi_lean
     fi
 
-    # vwrt 源码专用：配置无线参数
-    if [ "${SOURCE_TYPE}" = "vwrt" ]; then
+    # vwrt/libwrt 源码专用：配置无线参数
+    if [ "${SOURCE_TYPE}" = "vwrt" ] || [ "${SOURCE_TYPE}" = "libwrt" ]; then
         configure_wifi_vwrt
     fi
 

@@ -251,6 +251,9 @@ jobs:
         elif [ "${SOURCE_TYPE}" = "lean" ]; then
           WRT_REPO_URL="https://github.com/coolsnowwolf/lede"
           WRT_REPO_BRANCH="master"
+        elif [ "${SOURCE_TYPE}" = "libwrt" ]; then
+          WRT_REPO_URL="https://github.com/LiBwrt/LibWrt"
+          WRT_REPO_BRANCH="main-nss"
         else
           if [[ "$WRT_DEVICE" =~ GL-MT6000 ]]; then
             # WRT_REPO_URL="https://github.com/immortalwrt/immortalwrt"
@@ -318,14 +321,14 @@ jobs:
         WRT_USE_APK="${{ inputs.WRT_USE_APK }}"
         WRT_FIREWALL="${{ inputs.WRT_FIREWALL }}"
         if [ "${WRT_USE_APK}" = "auto" ]; then
-          if [ "$SOURCE_TYPE" = "vwrt" ]; then
+          if [ "$SOURCE_TYPE" = "vwrt" ] || [ "$SOURCE_TYPE" = "libwrt" ]; then
             WRT_USE_APK="true"
           else
             WRT_USE_APK="false"
           fi
         fi
         if [ "${WRT_FIREWALL}" = "auto" ]; then
-          if [ "$SOURCE_TYPE" = "vwrt" ]; then
+          if [ "$SOURCE_TYPE" = "vwrt" ] || [ "$SOURCE_TYPE" = "libwrt" ]; then
             WRT_FIREWALL="fw4"
           else
             WRT_FIREWALL="fw3"

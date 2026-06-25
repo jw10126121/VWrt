@@ -62,12 +62,13 @@ on:
           - GL-MT6000-WIFI
         default: 'CMIOT-AX18-NOWIFI'
       SOURCE_TYPE:
-        description: '源码类型（vwrt=immortalwrt，lean=coolsnowwolf/lede）'
+        description: '源码类型（vwrt=immortalwrt，lean=coolsnowwolf/lede，libwrt=LiBwrt/LibWrt）'
         required: false
         type: choice
         options:
           - vwrt
           - lean
+          - libwrt
         default: 'lean'
       WRT_FIREWALL:
         description: '防火墙栈（auto=按源码类型自动选择，lean→fw3，vwrt→fw4）'
