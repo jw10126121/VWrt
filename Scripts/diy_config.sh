@@ -320,6 +320,18 @@ configure_default_theme() {
         sed -i "s/luci-theme-bootstrap/luci-theme-$WRT_THEME/g" $(find ./feeds/luci/collections/ -type f -name "Makefile")
         set_kconfig_value "CONFIG_PACKAGE_luci-theme-$WRT_THEME" "y"
         echo "【Lin】默认主题：${WRT_THEME}，主题目录：${theme_dir}"
+
+        # 设置默认主题为指定主题
+        local theme_snippet
+        theme_snippet=$(cat <<EOF
+uci set luci.main.media='$WRT_THEME'
+uci commit luci
+EOF
+)
+        append_default_settings_snippet "uci commit system" "uci set luci.main.media" "$theme_snippet"
+        if grep -qF "uci set luci.main.media" "$file_setup_config"; then
+            echo "【Lin】设置默认主题为 ${WRT_THEME} 成功！"
+        fi
     else
         echo "【Lin】不存在主题【$WRT_THEME】，使用默认主题"
     fi
