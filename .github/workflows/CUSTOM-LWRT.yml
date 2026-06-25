@@ -46,22 +46,22 @@ jobs:
       WRT_MINE_SAY: ${{ inputs.WHAT_MY_SAY }}
     secrets: inherit
 
-  cmiot_ax18_nowifi_fw3_frps:
-    name: CMIOT-AX18-NOWIFI-fw3-frps
-    uses: ./.github/workflows/CORE-ALL.yml
-    with:
-      WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
-      WRT_DEVICE: CMIOT-AX18-NOWIFI
-      SOURCE_TYPE: 'lean'
-      WRT_FIREWALL: auto
-      WRT_OVERLAYS: frps
-      WRT_DIY_SETTING: diy_config.sh
-      WRT_DIYPackages: Packages.sh
-      WRT_DIY_FEEDS: diy_feeds.sh
-      WRT_DEFAULT_LANIP: 192.168.0.1
-      WRT_RELEASE_FIRMWARE: ${{ inputs.WRT_RELEASE_FIRMWARE || github.event_name == 'schedule' }}
-      WRT_MINE_SAY: ${{ inputs.WHAT_MY_SAY }}
-    secrets: inherit
+  # cmiot_ax18_nowifi_fw3_frps:
+  #   name: CMIOT-AX18-NOWIFI-fw3-frps
+  #   uses: ./.github/workflows/CORE-ALL.yml
+  #   with:
+  #     WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
+  #     WRT_DEVICE: CMIOT-AX18-NOWIFI
+  #     SOURCE_TYPE: 'lean'
+  #     WRT_FIREWALL: auto
+  #     WRT_OVERLAYS: frps
+  #     WRT_DIY_SETTING: diy_config.sh
+  #     WRT_DIYPackages: Packages.sh
+  #     WRT_DIY_FEEDS: diy_feeds.sh
+  #     WRT_DEFAULT_LANIP: 192.168.0.1
+  #     WRT_RELEASE_FIRMWARE: ${{ inputs.WRT_RELEASE_FIRMWARE || github.event_name == 'schedule' }}
+  #     WRT_MINE_SAY: ${{ inputs.WHAT_MY_SAY }}
+  #   secrets: inherit
 
   gl_mt6000_wifi_fw3:
     name: GL-MT6000-WIFI-fw3-base
