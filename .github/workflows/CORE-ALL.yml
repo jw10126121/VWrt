@@ -343,10 +343,16 @@ jobs:
             WRT_USE_APK="false"
           fi
         fi
-        if [ "${WRT_FIREWALL}" = "auto" ]; then
-          if [ "$SOURCE_TYPE" = "vwrt" ] || [ "$SOURCE_TYPE" = "libwrt" ]; then
+        # libwrt/vwrt 强制使用 fw4（nftables），不支持 fw3
+        if [ "$SOURCE_TYPE" = "vwrt" ] || [ "$SOURCE_TYPE" = "libwrt" ]; then
+          if [ "${WRT_FIREWALL}" = "fw3" ]; then
+            echo "【Lin】警告：${SOURCE_TYPE} 源码类型不支持 fw3，已自动切换为 fw4"
             WRT_FIREWALL="fw4"
-          else
+          elif [ "${WRT_FIREWALL}" = "auto" ]; then
+            WRT_FIREWALL="fw4"
+          fi
+        else
+          if [ "${WRT_FIREWALL}" = "auto" ]; then
             WRT_FIREWALL="fw3"
           fi
         fi
