@@ -246,23 +246,33 @@ jobs:
         echo "START_TIME=$START_TIME" >> $GITHUB_ENV
         echo "【Lin】编译日期：$START_DATE；编译时间：$START_TIME；"
         # 源码仓库：优先使用传入值，否则按 SOURCE_TYPE 自动推断
+        # 判断是否为高通 IPQ 平台（CMIOT-AX18、JD-AX1800PRO、JD-AX6600 等）
+        IS_QUALCOMMAX=false
+        if [[ "$WRT_DEVICE" =~ (CMIOT|JD-AX) ]]; then
+          IS_QUALCOMMAX=true
+        fi
         if [ -n "${WRT_REPO_URL}" ]; then
           echo "【Lin】使用传入源码：[${WRT_REPO_BRANCH}] ${WRT_REPO_URL}"
         elif [ "${SOURCE_TYPE}" = "lean" ]; then
           WRT_REPO_URL="https://github.com/coolsnowwolf/lede"
           WRT_REPO_BRANCH="master"
         elif [ "${SOURCE_TYPE}" = "libwrt" ]; then
-          WRT_REPO_URL="https://github.com/LiBwrt/LibWrt"
-          WRT_REPO_BRANCH="main-nss"
-        else
-          if [[ "$WRT_DEVICE" =~ GL-MT6000 ]]; then
-            # WRT_REPO_URL="https://github.com/immortalwrt/immortalwrt"
-            # WRT_REPO_BRANCH="master"
-            WRT_REPO_URL="https://github.com/VIKINGYFY/immortalwrt"
-            WRT_REPO_BRANCH="owrt"
+          # libwrt 仅支持 IPQ60xx/IPQ80xx，非高通平台回退到官方 immortalwrt
+          if [ "${IS_QUALCOMMAX}" = "true" ]; then
+            WRT_REPO_URL="https://github.com/LiBwrt/LibWrt"
+            WRT_REPO_BRANCH="main-nss"
           else
+            WRT_REPO_URL="https://github.com/immortalwrt/immortalwrt"
+            WRT_REPO_BRANCH="master"
+            echo "【Lin】libwrt 不支持当前平台 ${WRT_DEVICE}，回退到 immortalwrt 官方源码"
+          fi
+        else
+          if [ "${IS_QUALCOMMAX}" = "true" ]; then
             WRT_REPO_URL="https://github.com/VIKINGYFY/immortalwrt"
             WRT_REPO_BRANCH="main"
+          else
+            WRT_REPO_URL="https://github.com/VIKINGYFY/immortalwrt"
+            WRT_REPO_BRANCH="owrt"
           fi
         fi
         echo "WRT_REPO_URL=${WRT_REPO_URL}" >> $GITHUB_ENV
