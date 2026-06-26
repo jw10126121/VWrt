@@ -334,10 +334,11 @@ jobs:
         echo "SOURCE_TYPE=$SOURCE_TYPE" >> $GITHUB_ENV
         echo "【Lin】源码类型：${SOURCE_TYPE}"
         # 包管理器和防火墙：auto 时根据源码类型自动选择
+        # vwrt → fw4 / apk，libwrt → fw4 / ipk，lean → fw3 / ipk
         WRT_USE_APK="${{ inputs.WRT_USE_APK }}"
         WRT_FIREWALL="${{ inputs.WRT_FIREWALL }}"
         if [ "${WRT_USE_APK}" = "auto" ]; then
-          if [ "$SOURCE_TYPE" = "vwrt" ] || [ "$SOURCE_TYPE" = "libwrt" ]; then
+          if [ "$SOURCE_TYPE" = "vwrt" ]; then
             WRT_USE_APK="true"
           else
             WRT_USE_APK="false"

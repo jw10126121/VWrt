@@ -150,7 +150,7 @@ jobs:
           firewall="${{ inputs.WRT_FIREWALL }}"
           use_apk="${{ inputs.WRT_USE_APK }}"
 
-          # vwrt/libwrt → fw4 / apk，lean → fw3 / ipk
+          # vwrt → fw4 / apk，libwrt → fw4 / ipk，lean → fw3 / ipk
           if [ "$firewall" = "auto" ]; then
             if [ "$source_type" = "vwrt" ] || [ "$source_type" = "libwrt" ]; then
               firewall="fw4"
@@ -159,7 +159,7 @@ jobs:
             fi
           fi
           if [ "$use_apk" = "auto" ]; then
-            if [ "$source_type" = "vwrt" ] || [ "$source_type" = "libwrt" ]; then
+            if [ "$source_type" = "vwrt" ]; then
               use_apk="true"
             else
               use_apk="false"
