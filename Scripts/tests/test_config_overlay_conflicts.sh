@@ -21,32 +21,32 @@ cat > "$TMPDIR/DEVICE-A.txt" <<'EOF'
 CONFIG_DEVICE=device-a
 EOF
 
-cat > "$TMPDIR/overlays/APK.txt" <<'EOF'
+cat > "$TMPDIR/overlays/apk.txt" <<'EOF'
 # OVERLAY_GROUP=package-manager
 CONFIG_PKG_FORMAT=apk
 EOF
 
-cat > "$TMPDIR/overlays/IPK.txt" <<'EOF'
+cat > "$TMPDIR/overlays/ipk.txt" <<'EOF'
 # OVERLAY_GROUP=package-manager
 CONFIG_PKG_FORMAT=ipk
 EOF
 
-cat > "$TMPDIR/overlays/FRPS.txt" <<'EOF'
+cat > "$TMPDIR/overlays/frps.txt" <<'EOF'
 # OVERLAY_GROUP=frp
 CONFIG_FRP_ROLE=server
 EOF
 
-cat > "$TMPDIR/overlays/FRPC.txt" <<'EOF'
+cat > "$TMPDIR/overlays/frpc.txt" <<'EOF'
 # OVERLAY_GROUP=frp
 CONFIG_FRP_ROLE=client
 EOF
 
-cat > "$TMPDIR/overlays/USB.txt" <<'EOF'
+cat > "$TMPDIR/overlays/usb.txt" <<'EOF'
 # OVERLAY_GROUP=usb
 CONFIG_USB_PROFILE=full
 EOF
 
-cat > "$TMPDIR/overlays/NOUSB.txt" <<'EOF'
+cat > "$TMPDIR/overlays/nousb.txt" <<'EOF'
 # OVERLAY_GROUP=usb
 CONFIG_USB_PROFILE=none
 EOF

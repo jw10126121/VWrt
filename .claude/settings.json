@@ -38,7 +38,19 @@
       "Bash(SOURCE_TYPE=iwrt bash Scripts/export_config.sh --device CMIOT-AX18-NOWIFI --fw fw4 --output /tmp/test_config.txt)",
       "Bash(SOURCE_TYPE=iwrt bash Scripts/export_config.sh --device GL-MT6000-WIFI --fw fw4 --output /tmp/test_config2.txt)",
       "Bash(SOURCE_TYPE=iwrt bash Scripts/export_config.sh --device JD-AX6600-WIFI --fw fw4 --output /tmp/test_config3.txt)",
-      "Bash(rm -f /tmp/test_config*.txt)"
+      "Bash(rm -f /tmp/test_config*.txt)",
+      "Bash(mv CMIOT-AX18-NOWIFI-FW3.txt cmiot-ax18-nowifi-fw3.txt)",
+      "Bash(mv CMIOT-AX18-NOWIFI-FW4-iwrt.txt cmiot-ax18-nowifi-fw4-iwrt.txt)",
+      "Bash(mv GENERAL-iwrt.txt general-iwrt.txt)",
+      "Bash(mv GENERAL.txt general.txt)",
+      "Bash(mv GL-MT6000-WIFI-FW3.txt gl-mt6000-wifi-fw3.txt)",
+      "Bash(mv APK.txt apk.txt)",
+      "Bash(mv FRPC.txt frpc.txt)",
+      "Bash(mv FRPS.txt frps.txt)",
+      "Bash(mv IPK.txt ipk.txt)",
+      "Bash(mv NOUSB.txt nousb.txt)",
+      "Bash(bash Scripts/export_config.sh --device CMIOT-AX18-NOWIFI --fw fw4 --overlay apk --output /tmp/test_config.txt)",
+      "Bash(git rm *)"
     ],
     "additionalDirectories": [
       "/tmp"

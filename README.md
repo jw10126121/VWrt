@@ -87,10 +87,10 @@ Config/overlays/<overlay>.txt  # 自定义差异层（按 WRT_OVERLAYS 顺序叠
 
 | 设备 | fw3 配置 | fw4 配置 |
 |------|----------|----------|
-| CMIOT-AX18-NOWIFI | `Config/CMIOT-AX18-NOWIFI-FW3.txt` | `Config/CMIOT-AX18-NOWIFI-FW4-iwrt.txt` |
-| GL-MT6000-WIFI | `Config/GL-MT6000-WIFI-FW3.txt` | `Config/GL-MT6000-WIFI-FW4-iwrt.txt` |
-| JD-AX1800PRO-WIFI | `Config/JD-AX1800PRO-WIFI-FW3.txt` | `Config/JD-AX1800PRO-WIFI-FW4-iwrt.txt` |
-| JD-AX6600-WIFI | `Config/JD-AX6600-WIFI-FW3.txt` | `Config/JD-AX6600-WIFI-FW4-iwrt.txt` |
+| CMIOT-AX18-NOWIFI | `Config/cmiot-ax18-nowifi-fw3.txt` | `Config/cmiot-ax18-nowifi-fw4-iwrt.txt` |
+| GL-MT6000-WIFI | `Config/gl-mt6000-wifi-fw3.txt` | `Config/gl-mt6000-wifi-fw4-iwrt.txt` |
+| JD-AX1800PRO-WIFI | `Config/jd-ax1800pro-wifi-fw3.txt` | `Config/jd-ax1800pro-wifi-fw4-iwrt.txt` |
+| JD-AX6600-WIFI | `Config/jd-ax6600-wifi-fw3.txt` | `Config/jd-ax6600-wifi-fw4-iwrt.txt` |
 
 ## Overlay 系统
 
@@ -110,7 +110,7 @@ Overlay 用于在不修改设备主配置的前提下叠加功能差异。
 
 ### 自定义 Overlay
 
-1. 在 `Config/overlays/` 下创建 `.txt` 文件，例如 `Config/overlays/MYVPN.txt`
+1. 在 `Config/overlays/` 下创建 `.txt` 文件，例如 `Config/overlays/myvpn.txt`
 2. 使用时在 `WRT_OVERLAYS` 中填入文件名（不含扩展名），例如 `WRT_OVERLAYS=myvpn`
 3. 后面的 overlay 会覆盖前面的同名配置
 4. 可通过 `# OVERLAY_GROUP=<组名>` 声明互斥组，同组只保留最后出现的 overlay

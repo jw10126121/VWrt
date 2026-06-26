@@ -44,11 +44,11 @@ CONFIG_DEVICE_FW=device-a-fw3
 CONFIG_FRP_ROLE=device-default
 EOF
 
-cat > "$TMPDIR/overlays/FRPS.txt" <<'EOF'
+cat > "$TMPDIR/overlays/frps.txt" <<'EOF'
 CONFIG_FRP_ROLE=server
 EOF
 
-cat > "$TMPDIR/overlays/APK.txt" <<'EOF'
+cat > "$TMPDIR/overlays/apk.txt" <<'EOF'
 CONFIG_PKG_FORMAT=apk
 EOF
 

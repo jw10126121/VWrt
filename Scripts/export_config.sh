@@ -24,40 +24,42 @@ resolve_device_config() {
 	local config_root=$1
 	local device_name=$2
 	local source_type="${SOURCE_TYPE:-lean}"
+	local device_name_lower
+	device_name_lower=$(echo "$device_name" | tr '[:upper:]' '[:lower:]')
 
 	# 1. 源码类型专用配置
 	#    vwrt/libwrt → DEVICE-FW4-iwrt.txt（vwrt/libwrt 默认 fw4）
 	#    lean → DEVICE-FW3.txt（lean 默认 fw3）
 	if [ "$source_type" = "vwrt" ] || [ "$source_type" = "libwrt" ]; then
-		if [ -f "$config_root/${device_name}-FW4-iwrt.txt" ]; then
-			printf '%s\n' "${device_name}-FW4-iwrt.txt"
+		if [ -f "$config_root/${device_name_lower}-fw4-iwrt.txt" ]; then
+			printf '%s\n' "${device_name_lower}-fw4-iwrt.txt"
 			return 0
 		fi
 	else
-		if [ -f "$config_root/${device_name}-FW3.txt" ]; then
-			printf '%s\n' "${device_name}-FW3.txt"
+		if [ -f "$config_root/${device_name_lower}-fw3.txt" ]; then
+			printf '%s\n' "${device_name_lower}-fw3.txt"
 			return 0
 		fi
 	fi
 
 	# 2. 兼容旧文件名（过渡期，迁移完成后可移除）
-	if [ -f "$config_root/${device_name}.txt" ]; then
-		printf '%s\n' "${device_name}.txt"
+	if [ -f "$config_root/${device_name_lower}.txt" ]; then
+		printf '%s\n' "${device_name_lower}.txt"
 		return 0
 	fi
 
 	# 3. NOWIFI 设备回退到基础设备配置（NOWIFI 语义由 overlay 处理）
-	case "$device_name" in
-		*-NOWIFI)
-			local short_name=${device_name%-NOWIFI}
+	case "$device_name_lower" in
+		*-nowifi)
+			local short_name=${device_name_lower%-nowifi}
 			if [ "$source_type" = "vwrt" ] || [ "$source_type" = "libwrt" ]; then
-				if [ -f "$config_root/${short_name}-FW4-iwrt.txt" ]; then
-					printf '%s\n' "${short_name}-FW4-iwrt.txt"
+				if [ -f "$config_root/${short_name}-fw4-iwrt.txt" ]; then
+					printf '%s\n' "${short_name}-fw4-iwrt.txt"
 					return 0
 				fi
 			else
-				if [ -f "$config_root/${short_name}-FW3.txt" ]; then
-					printf '%s\n' "${short_name}-FW3.txt"
+				if [ -f "$config_root/${short_name}-fw3.txt" ]; then
+					printf '%s\n' "${short_name}-fw3.txt"
 					return 0
 				fi
 			fi
@@ -76,26 +78,28 @@ resolve_general_configs() {
 	local device_name=$2
 	local short_device_name=''
 	local source_type="${SOURCE_TYPE:-lean}"
-	local general_file='GENERAL.txt'
-	local source_type_file="GENERAL-${source_type}.txt"
+	local device_name_lower
+	device_name_lower=$(echo "$device_name" | tr '[:upper:]' '[:lower:]')
+	local general_file='general.txt'
+	local source_type_file="general-${source_type}.txt"
 
 	# 1. 设备专用配置（最高优先）
-	if [ -f "$config_root/GENERAL-${device_name}.txt" ]; then
-		printf '%s\n' "GENERAL-${device_name}.txt"
+	if [ -f "$config_root/general-${device_name_lower}.txt" ]; then
+		printf '%s\n' "general-${device_name_lower}.txt"
 		return 0
 	fi
 
-	case "$device_name" in
-		*-WIFI)
-			short_device_name=${device_name%-WIFI}
+	case "$device_name_lower" in
+		*-wifi)
+			short_device_name=${device_name_lower%-wifi}
 			;;
-		*-NOWIFI)
-			short_device_name=${device_name%-NOWIFI}
+		*-nowifi)
+			short_device_name=${device_name_lower%-nowifi}
 			;;
 	esac
 
-	if [ -n "$short_device_name" ] && [ -f "$config_root/GENERAL-${short_device_name}.txt" ]; then
-		printf '%s\n' "GENERAL-${short_device_name}.txt"
+	if [ -n "$short_device_name" ] && [ -f "$config_root/general-${short_device_name}.txt" ]; then
+		printf '%s\n' "general-${short_device_name}.txt"
 		return 0
 	fi
 
@@ -104,8 +108,8 @@ resolve_general_configs() {
 	if [ -f "$config_root/$source_type_file" ]; then
 		printf '%s\n' "$source_type_file"
 		return 0
-	elif [ "$source_type" = "libwrt" ] && [ -f "$config_root/GENERAL-iwrt.txt" ]; then
-		printf '%s\n' "GENERAL-iwrt.txt"
+	elif [ "$source_type" = "libwrt" ] && [ -f "$config_root/general-iwrt.txt" ]; then
+		printf '%s\n' "general-iwrt.txt"
 		return 0
 	fi
 

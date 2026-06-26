@@ -10,7 +10,7 @@ resolve_overlay_file() {
 	local config_root=$1
 	local overlay_name=$2
 
-	printf '%s/overlays/%s.txt\n' "$config_root" "$(printf '%s' "$overlay_name" | tr '[:lower:]' '[:upper:]')"
+	printf '%s/overlays/%s.txt\n' "$config_root" "$(printf '%s' "$overlay_name" | tr '[:upper:]' '[:lower:]')"
 }
 
 read_overlay_group() {
