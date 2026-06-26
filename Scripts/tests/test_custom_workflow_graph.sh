@@ -35,10 +35,10 @@ assert_not_contains() {
 assert_contains "$custom_workflow" 'uses: ./.github/workflows/CORE-ALL.yml' "CUSTOM should call CORE-ALL directly for a flat graph"
 assert_not_contains "$custom_workflow" 'uses: ./.github/workflows/DEFAULT.yml' "CUSTOM should not add the DEFAULT wrapper layer"
 
-assert_contains "$custom_workflow" 'name: CMIOT-AX18-NOWIFI-fw3-base' "CUSTOM AX18 base job should have a device-first display name"
-assert_contains "$custom_workflow" 'name: CMIOT-AX18-NOWIFI-fw3-frps' "CUSTOM AX18 frps job should have a device-first display name"
-assert_contains "$custom_workflow" 'name: GL-MT6000-WIFI-fw3-base' "CUSTOM MT6000 job should have a device-first display name"
-assert_contains "$custom_workflow" 'name: JD-AX6600-WIFI-fw3-base' "CUSTOM JD AX6600 job should have a device-first display name"
+assert_contains "$custom_workflow" 'name: cmiot-ax18-nowifi-fw3-base' "CUSTOM AX18 base job should have a device-first display name"
+assert_contains "$custom_workflow" 'name: cmiot-ax18-nowifi-fw3-frps' "CUSTOM AX18 frps job should have a device-first display name"
+assert_contains "$custom_workflow" 'name: gl-mt6000-wifi-fw3-base' "CUSTOM MT6000 job should have a device-first display name"
+assert_contains "$custom_workflow" 'name: jd-ax6600-wifi-fw3-base' "CUSTOM JD AX6600 job should have a device-first display name"
 assert_not_contains "$custom_workflow" 'name: lean-' "CUSTOM graph labels should not be prefixed with lean"
 
 assert_contains "$custom_workflow" 'WRT_SOURCE_HASH_INFO:' "CUSTOM should expose the optional source hash input"

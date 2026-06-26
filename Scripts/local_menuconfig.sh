@@ -14,14 +14,14 @@ show_help() {
 用法：
   直接通过环境变量传参后执行脚本，例如：
 
-  WRT_DEVICE=CMIOT-AX18-NOWIFI \
+  WRT_DEVICE=cmiot-ax18-nowifi \
   WRT_FIREWALL=fw3 \
   WRT_OVERLAYS=frps,apk \
   bash Scripts/local_menuconfig.sh
 
 主要参数（尽量对齐 DEFAULT.yml）：
   OPENWRT_PATH           本地 OpenWrt 源码目录，默认 /Volumes/OpenWrt/lede
-  WRT_DEVICE             设备名，必填，例如 CMIOT-AX18-NOWIFI、JD-AX1800PRO-WIFI
+  WRT_DEVICE             设备名，必填，例如 cmiot-ax18-nowifi、jd-ax1800pro-wifi
   WRT_FIREWALL           防火墙栈，必填，fw3 或 fw4
   WRT_OVERLAYS           可选 overlays，逗号分隔，例如 frps,apk
                          同一 OVERLAY_GROUP 内按传入顺序以最后一个为准
@@ -109,8 +109,11 @@ IS_RESET_PASSWORD=${IS_RESET_PASSWORD:-true}
 LOCAL_SKIP_MENUCONFIG=${LOCAL_SKIP_MENUCONFIG:-false}
 LOCAL_CLEAN_GENERATED=${LOCAL_CLEAN_GENERATED:-true}
 
+# 将设备名转换为小写
+WRT_DEVICE="${WRT_DEVICE,,}"
+
 [ -n "$WRT_DEVICE" ] || {
-	echo "缺少 WRT_DEVICE，例如 CMIOT-AX18-NOWIFI" >&2
+	echo "缺少 WRT_DEVICE，例如 cmiot-ax18-nowifi" >&2
 	exit 1
 }
 
@@ -151,7 +154,7 @@ else
 	package_manager=ipk
 fi
 
-WRT_CONFIG_LABEL="${WRT_DEVICE}-$(printf '%s' "$WRT_FIREWALL" | tr '[:lower:]' '[:upper:]')"
+WRT_CONFIG_LABEL="${WRT_DEVICE}-${WRT_FIREWALL}"
 
 export OPENWRT_PATH
 export WRT_LUCI_BRANCH

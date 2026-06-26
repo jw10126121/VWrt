@@ -12,22 +12,22 @@ cleanup() {
 trap cleanup EXIT
 
 touch "$TMPDIR/Packages.sh"
-touch "$TMPDIR/Packages-JD-AX6600.sh"
-touch "$TMPDIR/Packages-GL-MT6000-WIFI.sh"
+touch "$TMPDIR/Packages-jd-ax6600.sh"
+touch "$TMPDIR/Packages-gl-mt6000-wifi.sh"
 
-result=$(bash "$RESOLVE_SCRIPT" "$TMPDIR" "auto" "JD-AX6600-WIFI")
-test "$result" = "Packages-JD-AX6600.sh"
+result=$(bash "$RESOLVE_SCRIPT" "$TMPDIR" "auto" "jd-ax6600-wifi")
+test "$result" = "Packages-jd-ax6600.sh"
 
-result=$(bash "$RESOLVE_SCRIPT" "$TMPDIR" "auto" "GL-MT6000-WIFI")
-test "$result" = "Packages-GL-MT6000-WIFI.sh"
+result=$(bash "$RESOLVE_SCRIPT" "$TMPDIR" "auto" "gl-mt6000-wifi")
+test "$result" = "Packages-gl-mt6000-wifi.sh"
 
-result=$(bash "$RESOLVE_SCRIPT" "$TMPDIR" "auto" "CMIOT-AX18-NOWIFI")
+result=$(bash "$RESOLVE_SCRIPT" "$TMPDIR" "auto" "cmiot-ax18-nowifi")
 test "$result" = "Packages.sh"
 
-result=$(bash "$RESOLVE_SCRIPT" "$TMPDIR" "Packages.sh" "JD-AX6600-WIFI")
+result=$(bash "$RESOLVE_SCRIPT" "$TMPDIR" "Packages.sh" "jd-ax6600-wifi")
 test "$result" = "Packages.sh"
 
-PACKAGES_JD_AX6600_SCRIPT="$SCRIPT_DIR/Packages-JD-AX6600.sh"
+PACKAGES_JD_AX6600_SCRIPT="$SCRIPT_DIR/Packages-jd-ax6600.sh"
 grep -Fq 'bash "${script_dir}/Packages.sh"' "$PACKAGES_JD_AX6600_SCRIPT"
 grep -Fq '继续执行 AX6600 专用包逻辑' "$PACKAGES_JD_AX6600_SCRIPT"
 

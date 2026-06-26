@@ -19,13 +19,13 @@ FW4_OUT="$TMPDIR/fw4.txt"
 
 bash "$EXPORT_SCRIPT" \
 	--config-dir "$SCRIPT_DIR/../Config" \
-	--device "CMIOT-AX18-NOWIFI" \
+	--device "cmiot-ax18-nowifi" \
 	--fw "fw3" \
 	--output "$FW3_OUT" >/dev/null
 
 bash "$EXPORT_SCRIPT" \
 	--config-dir "$SCRIPT_DIR/../Config" \
-	--device "CMIOT-AX18-NOWIFI" \
+	--device "cmiot-ax18-nowifi" \
 	--fw "fw4" \
 	--output "$FW4_OUT" >/dev/null
 

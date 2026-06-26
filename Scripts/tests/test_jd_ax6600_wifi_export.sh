@@ -44,13 +44,13 @@ assert_no_active_value() {
 
 bash "$EXPORT_SCRIPT" \
 	--config-dir "$SCRIPT_DIR/../Config" \
-	--device "JD-AX6600-WIFI" \
+	--device "jd-ax6600-wifi" \
 	--fw "fw3" \
 	--output "$FW3_OUT" >/dev/null
 
 bash "$EXPORT_SCRIPT" \
 	--config-dir "$SCRIPT_DIR/../Config" \
-	--device "JD-AX6600-WIFI" \
+	--device "jd-ax6600-wifi" \
 	--fw "fw4" \
 	--output "$FW4_OUT" >/dev/null
 

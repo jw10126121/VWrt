@@ -56,11 +56,11 @@ on:
         required: true
         type: choice
         options:
-          - CMIOT-AX18-NOWIFI
-          - JD-AX1800PRO-WIFI
-          - JD-AX6600-WIFI
-          - GL-MT6000-WIFI
-        default: 'CMIOT-AX18-NOWIFI'
+          - cmiot-ax18-nowifi
+          - jd-ax1800pro-wifi
+          - jd-ax6600-wifi
+          - gl-mt6000-wifi
+        default: 'cmiot-ax18-nowifi'
       SOURCE_TYPE:
         description: '源码类型（vwrt=immortalwrt，lean=coolsnowwolf/lede，libwrt=LiBwrt/LibWrt）'
         required: false

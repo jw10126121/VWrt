@@ -21,13 +21,13 @@ if ! grep -q 'preload_openclash_meta_core' "$TARGET_SCRIPT"; then
 fi
 
 # 检查设备识别逻辑
-if ! grep -q 'JD-AX6600-WIFI' "$TARGET_SCRIPT"; then
-    echo "JD-AX6600-WIFI device check should exist" >&2
+if ! grep -q 'jd-ax6600-wifi' "$TARGET_SCRIPT"; then
+    echo "jd-ax6600-wifi device check should exist" >&2
     exit 1
 fi
 
-if ! grep -q 'GL-MT6000-WIFI' "$TARGET_SCRIPT"; then
-    echo "GL-MT6000-WIFI device check should exist" >&2
+if ! grep -q 'gl-mt6000-wifi' "$TARGET_SCRIPT"; then
+    echo "gl-mt6000-wifi device check should exist" >&2
     exit 1
 fi
 

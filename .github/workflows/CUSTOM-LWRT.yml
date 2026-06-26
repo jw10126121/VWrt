@@ -30,11 +30,11 @@ permissions: write-all
 #CI任务
 jobs:
   cmiot_ax18_nowifi_fw3:
-    name: CMIOT-AX18-NOWIFI-fw3-base
+    name: cmiot-ax18-nowifi-fw3-base
     uses: ./.github/workflows/CORE-ALL.yml
     with:
       WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
-      WRT_DEVICE: CMIOT-AX18-NOWIFI
+      WRT_DEVICE: cmiot-ax18-nowifi
       SOURCE_TYPE: 'lean'
       WRT_FIREWALL: auto
       WRT_OVERLAYS: ''
@@ -47,11 +47,11 @@ jobs:
     secrets: inherit
 
   # cmiot_ax18_nowifi_fw3_frps:
-  #   name: CMIOT-AX18-NOWIFI-fw3-frps
+  #   name: cmiot-ax18-nowifi-fw3-frps
   #   uses: ./.github/workflows/CORE-ALL.yml
   #   with:
   #     WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
-  #     WRT_DEVICE: CMIOT-AX18-NOWIFI
+  #     WRT_DEVICE: cmiot-ax18-nowifi
   #     SOURCE_TYPE: 'lean'
   #     WRT_FIREWALL: auto
   #     WRT_OVERLAYS: frps
@@ -64,11 +64,11 @@ jobs:
   #   secrets: inherit
 
   gl_mt6000_wifi_fw3:
-    name: GL-MT6000-WIFI-fw3-base
+    name: gl-mt6000-wifi-fw3-base
     uses: ./.github/workflows/CORE-ALL.yml
     with:
       WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
-      WRT_DEVICE: GL-MT6000-WIFI
+      WRT_DEVICE: gl-mt6000-wifi
       SOURCE_TYPE: 'lean'
       WRT_FIREWALL: auto
       WRT_OVERLAYS: ''
@@ -81,11 +81,11 @@ jobs:
     secrets: inherit
 
   jd_ax6600_wifi_fw3:
-    name: JD-AX6600-WIFI-fw3-base
+    name: jd-ax6600-wifi-fw3-base
     uses: ./.github/workflows/CORE-ALL.yml
     with:
       WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
-      WRT_DEVICE: JD-AX6600-WIFI
+      WRT_DEVICE: jd-ax6600-wifi
       SOURCE_TYPE: 'lean'
       WRT_FIREWALL: auto
       WRT_OVERLAYS: ''

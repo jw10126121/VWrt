@@ -18,17 +18,17 @@ FW4_OUT="$TMPDIR/fw4.txt"
 
 bash "$EXPORT_SCRIPT" \
 	--config-dir "$SCRIPT_DIR/../Config" \
-	--device "GL-MT6000-WIFI" \
+	--device "gl-mt6000-wifi" \
 	--fw "fw4" \
 	--output "$FW4_OUT" >/dev/null
 
 if grep -q '^CONFIG_PACKAGE_luci-app-mwan3=' "$FW4_OUT"; then
-	echo "GL-MT6000-WIFI FW4 should not include luci-app-mwan3" >&2
+	echo "gl-mt6000-wifi FW4 should not include luci-app-mwan3" >&2
 	exit 1
 fi
 
 if grep -q '^CONFIG_PACKAGE_luci-app-mwan3helper=' "$FW4_OUT"; then
-	echo "GL-MT6000-WIFI FW4 should not include luci-app-mwan3helper" >&2
+	echo "gl-mt6000-wifi FW4 should not include luci-app-mwan3helper" >&2
 	exit 1
 fi
 

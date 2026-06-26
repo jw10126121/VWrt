@@ -177,7 +177,7 @@ luci_version="$(extract_luci_version "${openwrt_path}/feeds.conf.default" "${op_
 device_profile="$(extract_device_profile_from_config "${openwrt_path}/.config")"
 # 优先使用 WRT_DEVICE（逻辑设备名），.config 解析结果作为后备
 if [ -n "${WRT_DEVICE:-}" ]; then
-    device_profile="${WRT_DEVICE}"
+    device_profile="${WRT_DEVICE,,}"
 fi
 wrt_has_lite_text='[常规版]'
 wrt_has_wifi_text='有WIFI'

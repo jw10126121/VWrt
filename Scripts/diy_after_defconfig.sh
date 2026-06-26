@@ -52,13 +52,13 @@ configure_ecm_accel_delay_fix() {
     [ -f "${ecm_init_file}" ] || return 0
     [ -f "${marker_file}" ] || return 0
 
-    target_label=$(tr -d '\r' < "${marker_file}")
+    target_label=$(tr -d '\r' < "${marker_file}" | tr '[:upper:]' '[:lower:]')
     case "${target_label}" in
-        CMIOT-AX18-NOWIFI|CMIOT-AX18-NOWIFI-FW3|CMIOT-AX18-NOWIFI-FW4)
-            matched_device="CMIOT-AX18"
+        cmiot-ax18-nowifi|cmiot-ax18-nowifi-fw3|cmiot-ax18-nowifi-fw4)
+            matched_device="cmiot-ax18"
             ;;
-        JD-AX6600-WIFI*)
-            matched_device="JD-AX6600"
+        jd-ax6600-wifi*)
+            matched_device="jd-ax6600"
             ;;
         *)
             return 0
@@ -66,10 +66,10 @@ configure_ecm_accel_delay_fix() {
     esac
 
     case "${matched_device}" in
-        CMIOT-AX18)
+        cmiot-ax18)
             grep -q "${ax18_device_config}" ./.config 2>/dev/null || return 0
             ;;
-        JD-AX6600)
+        jd-ax6600)
             grep -q "${ax6600_device_config}" ./.config 2>/dev/null || return 0
             ;;
     esac
@@ -102,9 +102,9 @@ preload_openclash_meta_core() {
     fi
 
     # 检查设备是否为 AX6600 或 GL-MT6000（仅这两款大内存设备预置）
-    target_label=$(tr -d '\r' < "${target_label_marker_file}" 2>/dev/null || echo "")
+    target_label=$(tr -d '\r' < "${target_label_marker_file}" 2>/dev/null | tr '[:upper:]' '[:lower:]' || echo "")
     case "${target_label}" in
-        JD-AX6600-WIFI*|GL-MT6000-WIFI*)
+        jd-ax6600-wifi*|gl-mt6000-wifi*)
             ;;
         *)
             echo "【Lin】设备 ${target_label:-未知} 不在预置列表中，跳过 OpenClash 内核预置"

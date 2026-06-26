@@ -60,12 +60,12 @@ check_config_file() {
 has_duplicate=0
 
 check_config_file \
-    "$CONFIG_DIR/CMIOT-AX18-NOWIFI.txt" \
-    "$CONFIG_DIR/GENERAL.txt" || has_duplicate=1
+    "$CONFIG_DIR/cmiot-ax18-nowifi.txt" \
+    "$CONFIG_DIR/general.txt" || has_duplicate=1
 
 check_config_file \
-    "$CONFIG_DIR/GL-MT6000-WIFI.txt" \
-    "$CONFIG_DIR/GENERAL.txt" || has_duplicate=1
+    "$CONFIG_DIR/gl-mt6000-wifi.txt" \
+    "$CONFIG_DIR/general.txt" || has_duplicate=1
 
 if [ "$has_duplicate" -ne 0 ]; then
     echo "发现设备层或设备叠加层与其下层基础配置重复的同值配置，请继续收敛。" >&2

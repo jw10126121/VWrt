@@ -19,13 +19,13 @@ FW4_OUT="$TMPDIR/fw4.txt"
 
 bash "$EXPORT_SCRIPT" \
 	--config-dir "$SCRIPT_DIR/../Config" \
-	--device "GL-MT6000-WIFI" \
+	--device "gl-mt6000-wifi" \
 	--fw "fw3" \
 	--output "$FW3_OUT" >/dev/null
 
 bash "$EXPORT_SCRIPT" \
 	--config-dir "$SCRIPT_DIR/../Config" \
-	--device "GL-MT6000-WIFI" \
+	--device "gl-mt6000-wifi" \
 	--fw "fw4" \
 	--output "$FW4_OUT" >/dev/null
 

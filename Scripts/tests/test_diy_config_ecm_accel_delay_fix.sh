@@ -38,12 +38,12 @@ extract_function "write_build_target_marker" > "$FUNCTIONS_FILE"
 
 (
 	cd "$TMPDIR"
-	config_name='CMIOT-AX18-NOWIFI-FW3'
+	config_name='cmiot-ax18-nowifi-fw3'
 	# shellcheck disable=SC1090
 	. "$FUNCTIONS_FILE"
 	write_build_target_marker
 )
 
-grep -qx 'CMIOT-AX18-NOWIFI-FW3' "$TMPDIR/.linjw-target-label"
+grep -qx 'cmiot-ax18-nowifi-fw3' "$TMPDIR/.linjw-target-label"
 
 echo "test_diy_config_ecm_accel_delay_fix: ok"

@@ -31,8 +31,8 @@ assert_fw4_core() {
 }
 
 for device in \
-	CMIOT-AX18-NOWIFI \
-	JD-AX1800PRO-WIFI
+	cmiot-ax18-nowifi \
+	jd-ax1800pro-wifi
 do
 	assert_fw4_core "$device"
 done

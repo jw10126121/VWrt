@@ -36,7 +36,7 @@ show_help() {
     echo "  -p is_reset_password  是否重置密码，默认true"
     echo "  -t default_theme_name 默认主题，默认不修改"
     echo "  -m package_manager    包管理器类型，默认ipk，可选apk"
-    echo "  -c config_name        配置名，如IPQ60XX-NOWIFI-iwrt"
+    echo "  -c config_name        配置名，如ipq60xx-nowifi-iwrt"
     echo "  -s wifi_ssid          WiFi名称（vwrt专用）"
     echo "  -w wifi_password      WiFi密码，none表示开放WiFi（vwrt专用）"
 }

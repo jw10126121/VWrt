@@ -76,7 +76,7 @@ fi
 
 # 优先使用 WRT_DEVICE（逻辑设备名），.config 解析结果作为后备
 if [ -n "${WRT_DEVICE:-}" ]; then
-    device_profile="${WRT_DEVICE}"
+    device_profile="${WRT_DEVICE,,}"
 fi
 
 dir_linux_version="${openwrt_path}/target/linux"

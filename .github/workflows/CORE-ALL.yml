@@ -206,15 +206,19 @@ jobs:
       run: |
         . "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/lib/overlay_utils.sh"
 
+        # 将设备名转换为小写
+        WRT_DEVICE="${WRT_DEVICE,,}"
+        echo "WRT_DEVICE=$WRT_DEVICE" >> $GITHUB_ENV
+
         WRT_HAS_WIFI=true
-        [[ "$WRT_DEVICE" =~ NOWIFI|WIFINO|NO-WIFI|WIFI-NO ]] && { WRT_HAS_WIFI=false; }
+        [[ "$WRT_DEVICE" =~ nowifi|wifino|no-wifi|wifi-no ]] && { WRT_HAS_WIFI=false; }
         echo "WRT_HAS_WIFI=$WRT_HAS_WIFI" >> $GITHUB_ENV
 
         WRT_HAS_LITE=false
-        [[ "${WRT_DEVICE,,}" =~ lite|mini ]] && { WRT_HAS_LITE=true; }
+        [[ "${WRT_DEVICE}" =~ lite|mini ]] && { WRT_HAS_LITE=true; }
         echo "WRT_HAS_LITE=$WRT_HAS_LITE" >> $GITHUB_ENV
 
-        WRT_CONFIG_LABEL="${WRT_DEVICE}-${WRT_FIREWALL^^}"
+        WRT_CONFIG_LABEL="${WRT_DEVICE}-${WRT_FIREWALL}"
         echo "WRT_CONFIG_LABEL=$WRT_CONFIG_LABEL" >> $GITHUB_ENV
 
         if [ -n "$WRT_OVERLAYS" ]; then
@@ -248,7 +252,7 @@ jobs:
         # 源码仓库：优先使用传入值，否则按 SOURCE_TYPE 自动推断
         # 判断是否为高通 IPQ 平台（CMIOT-AX18、JD-AX1800PRO、JD-AX6600 等）
         IS_QUALCOMMAX=false
-        if [[ "$WRT_DEVICE" =~ (CMIOT|JD-AX) ]]; then
+        if [[ "$WRT_DEVICE" =~ (cmiot|jd-ax) ]]; then
           IS_QUALCOMMAX=true
         fi
         if [ -n "${WRT_REPO_URL}" ]; then

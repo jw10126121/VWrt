@@ -16,13 +16,13 @@ AX1800_OUT="$TMPDIR/jd-ax1800pro-wifi.txt"
 
 bash "$EXPORT_SCRIPT" \
 	--config-dir "$SCRIPT_DIR/../Config" \
-	--device "CMIOT-AX18-NOWIFI" \
+	--device "cmiot-ax18-nowifi" \
 	--fw "fw3" \
 	--output "$BASE_OUT" >/dev/null
 
 bash "$EXPORT_SCRIPT" \
 	--config-dir "$SCRIPT_DIR/../Config" \
-	--device "JD-AX1800PRO-WIFI" \
+	--device "jd-ax1800pro-wifi" \
 	--fw "fw3" \
 	--output "$AX1800_OUT" >/dev/null
 
