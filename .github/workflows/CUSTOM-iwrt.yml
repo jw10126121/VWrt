@@ -1,6 +1,6 @@
 #CI项目
-name: CUSTOM-VWRT
-run-name: CUSTOM-VWRT-${{ (inputs.WRT_RELEASE_FIRMWARE || github.event_name == 'schedule') && 'release' || 'test' }}
+name: CUSTOM-IWRT
+run-name: CUSTOM-IWRT-${{ (inputs.WRT_RELEASE_FIRMWARE || github.event_name == 'schedule') && 'release' || 'test' }}
 
 #CI计划
 on:

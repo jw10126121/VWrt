@@ -1,6 +1,6 @@
 # VWrt — OpenWrt 云编译仓库
 
-基于 [coolsnowwolf/lede](https://github.com/coolsnowwolf/lede)（Lean源码）和 [VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt)（VIKINGYFY源码）的 OpenWrt 云编译仓库，通过 GitHub Actions 自动构建多设备、多防火墙栈的固件。
+基于 [coolsnowwolf/lede](https://github.com/coolsnowwolf/lede)（Lean源码）、[VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt)（VIKINGYFY源码）和 [LiBwrt/LibWrt](https://github.com/LiBwrt/LibWrt)（LibWrt源码）的 OpenWrt 云编译仓库，通过 GitHub Actions 自动构建多设备、多防火墙栈的固件。
 
 ## 目录
 
@@ -18,11 +18,14 @@
 | 风味 | 源码 | 分支 | 防火墙 | 说明 |
 |------|------|------|--------|------|
 | **LWRT** | [coolsnowwolf/lede](https://github.com/coolsnowwolf/lede) | `master` | fw3 | Lean源码，兼容性好 |
-| **VWRT** | [VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt) | `main` / `owrt` | fw4 (nftables) | VIKINGYFY源码，功能更新 |
+| **IWRT** | [VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt) | `main` / `owrt` | fw4 (nftables) | VIKINGYFY源码，功能更新 |
+| **LIBWRT** | [LiBwrt/LibWrt](https://github.com/LiBwrt/LibWrt) | `main-nss` | fw4 (nftables) | LibWrt源码，功能丰富 |
 
-**VWRT 分支说明：** GL-MT6000-WIFI 使用 `owrt` 分支，其余设备使用 `main` 分支。
+**IWRT 分支说明：** GL-MT6000-WIFI 使用 `owrt` 分支，其余设备使用 `main` 分支。
 
-两种风味共用同一套设备配置和构建脚本，通过 `SOURCE_TYPE`（`lean` / `vwrt`）和 `WRT_FIREWALL` 参数区分。
+**源码回退机制：** 当选择 `iwrt` 或 `libwrt` 风味时，如果目标设备不是 IPQ 平台（如 GL-MT6000-WIFI 使用 MediaTek 平台），将自动回退到 [immortalwrt 官方源码](https://github.com/immortalwrt/immortalwrt) 的 `master` 分支，以确保固件正常编译。
+
+三种风味共用同一套设备配置和构建脚本，通过 `SOURCE_TYPE`（`lean` / `iwrt` / `libwrt`）和 `WRT_FIREWALL` 参数区分。
 
 ## 支持设备
 
@@ -38,7 +41,7 @@
 ## CI 工作流
 
 [![CUSTOM-LWRT](https://github.com/jw10126121/VWrt/actions/workflows/CUSTOM-LWRT.yml/badge.svg)](https://github.com/jw10126121/VWrt/actions/workflows/CUSTOM-LWRT.yml)
-[![CUSTOM-VWRT](https://github.com/jw10126121/VWrt/actions/workflows/CUSTOM-VWRT.yml/badge.svg)](https://github.com/jw10126121/VWrt/actions/workflows/CUSTOM-VWRT.yml)
+[![CUSTOM-IWRT](https://github.com/jw10126121/VWrt/actions/workflows/CUSTOM-IWRT.yml/badge.svg)](https://github.com/jw10126121/VWrt/actions/workflows/CUSTOM-IWRT.yml)
 [![DEFAULT](https://github.com/jw10126121/VWrt/actions/workflows/DEFAULT.yml/badge.svg)](https://github.com/jw10126121/VWrt/actions/workflows/DEFAULT.yml)
 
 ### 预设工作流
@@ -46,7 +49,7 @@
 | 工作流 | 触发方式 | 说明 |
 |--------|----------|------|
 | **CUSTOM-LWRT** | 定时（每月 2、16 日 03:00 UTC）/ 手动 | 批量构建 fw3 风味的全部设备 |
-| **CUSTOM-VWRT** | 定时（每月 1、15 日 03:00 UTC）/ 手动 | 批量构建 fw4 风味的全部设备 |
+| **CUSTOM-IWRT** | 定时（每月 1、15 日 03:00 UTC）/ 手动 | 批量构建 fw4 风味的全部设备 |
 | **DEFAULT** | 手动触发 | 单设备自定义构建，灵活选择参数 |
 
 ### DEFAULT 工作流参数
@@ -56,7 +59,7 @@
 | 参数 | 说明 | 示例 |
 |------|------|------|
 | `WRT_DEVICE` | 设备型号 | `CMIOT-AX18-NOWIFI` |
-| `SOURCE_TYPE` | 源码类型 | `lean` / `vwrt` |
+| `SOURCE_TYPE` | 源码类型 | `lean` / `iwrt` / `libwrt` |
 | `WRT_FIREWALL` | 防火墙栈 | `fw3` / `fw4` |
 | `WRT_OVERLAYS` | 差异层，逗号分隔 | `frps,apk` |
 | `WRT_LUCI_BRANCH` | LuCI feed 分支 | `openwrt-23.05` |
@@ -84,10 +87,10 @@ Config/overlays/<overlay>.txt  # 自定义差异层（按 WRT_OVERLAYS 顺序叠
 
 | 设备 | fw3 配置 | fw4 配置 |
 |------|----------|----------|
-| CMIOT-AX18-NOWIFI | `Config/CMIOT-AX18-NOWIFI-FW3.txt` | `Config/CMIOT-AX18-NOWIFI-FW4-VWRT.txt` |
-| GL-MT6000-WIFI | `Config/GL-MT6000-WIFI-FW3.txt` | `Config/GL-MT6000-WIFI-FW4-VWRT.txt` |
-| JD-AX1800PRO-WIFI | `Config/JD-AX1800PRO-WIFI-FW3.txt` | `Config/JD-AX1800PRO-WIFI-FW4-VWRT.txt` |
-| JD-AX6600-WIFI | `Config/JD-AX6600-WIFI-FW3.txt` | `Config/JD-AX6600-WIFI-FW4-VWRT.txt` |
+| CMIOT-AX18-NOWIFI | `Config/CMIOT-AX18-NOWIFI-FW3.txt` | `Config/CMIOT-AX18-NOWIFI-FW4-iwrt.txt` |
+| GL-MT6000-WIFI | `Config/GL-MT6000-WIFI-FW3.txt` | `Config/GL-MT6000-WIFI-FW4-iwrt.txt` |
+| JD-AX1800PRO-WIFI | `Config/JD-AX1800PRO-WIFI-FW3.txt` | `Config/JD-AX1800PRO-WIFI-FW4-iwrt.txt` |
+| JD-AX6600-WIFI | `Config/JD-AX6600-WIFI-FW3.txt` | `Config/JD-AX6600-WIFI-FW4-iwrt.txt` |
 
 ## Overlay 系统
 
@@ -124,7 +127,7 @@ Overlay 用于在不修改设备主配置的前提下叠加功能差异。
 ## 下载固件
 
 - **发布页**：[VWrt Releases](https://github.com/jw10126121/VWrt/releases)
-- **上游源码**：[coolsnowwolf/lede](https://github.com/coolsnowwolf/lede)（Lean）| [VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt)（VIKINGYFY）
+- **上游源码**：[coolsnowwolf/lede](https://github.com/coolsnowwolf/lede)（Lean）| [VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt)（VIKINGYFY）| [LiBwrt/LibWrt](https://github.com/LiBwrt/LibWrt)（LibWrt）
 
 ## 刷机说明
 
@@ -143,6 +146,7 @@ Overlay 用于在不修改设备主配置的前提下叠加功能差异。
 
 - [coolsnowwolf/lede](https://github.com/coolsnowwolf/lede) — Lean大佬的 OpenWrt 源码
 - [VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt) — VIKINGYFY大佬的 ImmortalWrt 源码
+- [LiBwrt/LibWrt](https://github.com/LiBwrt/LibWrt) — LibWrt大佬的 OpenWrt 源码
 - [OpenWrt](https://github.com/openwrt/openwrt) — OpenWrt 官方项目
 - 感谢所有上游贡献者和社区用户的支持与反馈
 - 本项目大部分功能由AI实现

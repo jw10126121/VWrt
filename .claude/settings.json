@@ -10,7 +10,7 @@
       "Bash(bash Scripts/export_config.sh --help)",
       "Bash(bash Scripts/export_config.sh --device CMIOT-AX18-NOWIFI --fw fw4 --output /tmp/test_config.txt)",
       "Read(//tmp/**)",
-      "Bash(python3 -c \"import yaml; yaml.safe_load\\(open\\('/Users/shapp/Documents/Git/Linjw/VWrt/.github/workflows/CUSTOM-VWRT.yml'\\)\\); print\\('YAML 语法正确'\\)\")",
+      "Bash(python3 -c \"import yaml; yaml.safe_load\\(open\\('/Users/shapp/Documents/Git/Linjw/VWrt/.github/workflows/CUSTOM-IWRT.yml'\\)\\); print\\('YAML 语法正确'\\)\")",
       "Bash(python3 -c \"import yaml; yaml.safe_load\\(open\\('/Users/shapp/Documents/Git/Linjw/VWrt/.github/workflows/CORE-ALL.yml'\\)\\); print\\('YAML 语法正确'\\)\")",
       "Bash(bash Scripts/export_config.sh --device CMIOT-AX18-NOWIFI --fw fw4 --output /tmp/test1.txt)",
       "Bash(bash Scripts/export_config.sh --device GL-MT6000-WIFI --fw fw4 --output /tmp/test2.txt)",
@@ -30,7 +30,18 @@
       "Bash(git commit -m 'feat: 启用 OpenClash 代理插件 *)",
       "Bash(git commit -m 'refactor: 调整定时重启和推送机器人配置 *)",
       "Bash(git commit -m 'chore: 注释掉 CMIOT frps 编译任务 *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(bash --version)",
+      "Bash(bash Scripts/export_config.sh --device GL-MT6000-WIFI --fw fw4 --output /tmp/test_config2.txt)",
+      "Bash(bash Scripts/export_config.sh --device JD-AX6600-WIFI --fw fw4 --output /tmp/test_config3.txt)",
+      "Bash(bash -x Scripts/export_config.sh --device CMIOT-AX18-NOWIFI --fw fw4 --output /tmp/test_config.txt)",
+      "Bash(SOURCE_TYPE=iwrt bash Scripts/export_config.sh --device CMIOT-AX18-NOWIFI --fw fw4 --output /tmp/test_config.txt)",
+      "Bash(SOURCE_TYPE=iwrt bash Scripts/export_config.sh --device GL-MT6000-WIFI --fw fw4 --output /tmp/test_config2.txt)",
+      "Bash(SOURCE_TYPE=iwrt bash Scripts/export_config.sh --device JD-AX6600-WIFI --fw fw4 --output /tmp/test_config3.txt)",
+      "Bash(rm -f /tmp/test_config*.txt)"
+    ],
+    "additionalDirectories": [
+      "/tmp"
     ]
   }
 }

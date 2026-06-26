@@ -271,8 +271,10 @@ jobs:
             WRT_REPO_URL="https://github.com/VIKINGYFY/immortalwrt"
             WRT_REPO_BRANCH="main"
           else
-            WRT_REPO_URL="https://github.com/VIKINGYFY/immortalwrt"
-            WRT_REPO_BRANCH="owrt"
+            # WRT_REPO_URL="https://github.com/VIKINGYFY/immortalwrt"
+            # WRT_REPO_BRANCH="owrt"
+            WRT_REPO_URL="https://github.com/immortalwrt/immortalwrt"
+            WRT_REPO_BRANCH="master"
           fi
         fi
         echo "WRT_REPO_URL=${WRT_REPO_URL}" >> $GITHUB_ENV

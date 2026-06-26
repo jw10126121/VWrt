@@ -26,11 +26,11 @@ resolve_device_config() {
 	local source_type="${SOURCE_TYPE:-lean}"
 
 	# 1. 源码类型专用配置
-	#    vwrt/libwrt → DEVICE-FW4-VWRT.txt（vwrt/libwrt 默认 fw4）
+	#    vwrt/libwrt → DEVICE-FW4-iwrt.txt（vwrt/libwrt 默认 fw4）
 	#    lean → DEVICE-FW3.txt（lean 默认 fw3）
 	if [ "$source_type" = "vwrt" ] || [ "$source_type" = "libwrt" ]; then
-		if [ -f "$config_root/${device_name}-FW4-VWRT.txt" ]; then
-			printf '%s\n' "${device_name}-FW4-VWRT.txt"
+		if [ -f "$config_root/${device_name}-FW4-iwrt.txt" ]; then
+			printf '%s\n' "${device_name}-FW4-iwrt.txt"
 			return 0
 		fi
 	else
@@ -51,8 +51,8 @@ resolve_device_config() {
 		*-NOWIFI)
 			local short_name=${device_name%-NOWIFI}
 			if [ "$source_type" = "vwrt" ] || [ "$source_type" = "libwrt" ]; then
-				if [ -f "$config_root/${short_name}-FW4-VWRT.txt" ]; then
-					printf '%s\n' "${short_name}-FW4-VWRT.txt"
+				if [ -f "$config_root/${short_name}-FW4-iwrt.txt" ]; then
+					printf '%s\n' "${short_name}-FW4-iwrt.txt"
 					return 0
 				fi
 			else
@@ -77,7 +77,7 @@ resolve_general_configs() {
 	local short_device_name=''
 	local source_type="${SOURCE_TYPE:-lean}"
 	local general_file='GENERAL.txt'
-	local source_type_file="GENERAL-${source_type^^}.txt"
+	local source_type_file="GENERAL-${source_type}.txt"
 
 	# 1. 设备专用配置（最高优先）
 	if [ -f "$config_root/GENERAL-${device_name}.txt" ]; then
@@ -100,12 +100,12 @@ resolve_general_configs() {
 	fi
 
 	# 2. 源码类型专用配置（独立使用，不加载通用基线）
-	# libwrt 继承 vwrt 的配置
+	# libwrt 继承 iwrt 的配置
 	if [ -f "$config_root/$source_type_file" ]; then
 		printf '%s\n' "$source_type_file"
 		return 0
-	elif [ "$source_type" = "libwrt" ] && [ -f "$config_root/GENERAL-VWRT.txt" ]; then
-		printf '%s\n' "GENERAL-VWRT.txt"
+	elif [ "$source_type" = "libwrt" ] && [ -f "$config_root/GENERAL-iwrt.txt" ]; then
+		printf '%s\n' "GENERAL-iwrt.txt"
 		return 0
 	fi
 
