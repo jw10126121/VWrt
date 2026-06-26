@@ -236,7 +236,7 @@ fi
 
 build_variant_tag="${source_flavor_tag}_${fw_stack_tag}_${package_manager_tag}_${frp_role_tag}"
 
-if [ "${wrt_has_wifi}" != "true" ]; then
+if [ "${wrt_has_wifi}" != "true" ] && [[ "${device_name_alias}" != *"nowifi"* ]]; then
     output_name_prefix="${source_flavor_tag}_${device_name_alias}_nowifi_${fw_stack_tag}_${package_manager_tag}_${frp_role_tag}_${start_time_tag}"
 else
     output_name_prefix="${source_flavor_tag}_${device_name_alias}_${fw_stack_tag}_${package_manager_tag}_${frp_role_tag}_${start_time_tag}"
