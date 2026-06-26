@@ -31,8 +31,12 @@ resolve_device_config() {
 	#    vwrt/libwrt → DEVICE-FW4-iwrt.txt（vwrt/libwrt 默认 fw4）
 	#    lean → DEVICE-FW3.txt（lean 默认 fw3）
 	if [ "$source_type" = "vwrt" ] || [ "$source_type" = "libwrt" ]; then
+		# vwrt/libwrt 优先查找 fw4-iwrt 配置，如果不存在则查找 fw3 配置
 		if [ -f "$config_root/${device_name_lower}-fw4-iwrt.txt" ]; then
 			printf '%s\n' "${device_name_lower}-fw4-iwrt.txt"
+			return 0
+		elif [ -f "$config_root/${device_name_lower}-fw3.txt" ]; then
+			printf '%s\n' "${device_name_lower}-fw3.txt"
 			return 0
 		fi
 	else
@@ -53,8 +57,12 @@ resolve_device_config() {
 		*-nowifi)
 			local short_name=${device_name_lower%-nowifi}
 			if [ "$source_type" = "vwrt" ] || [ "$source_type" = "libwrt" ]; then
+				# vwrt/libwrt 优先查找 fw4-iwrt 配置，如果不存在则查找 fw3 配置
 				if [ -f "$config_root/${short_name}-fw4-iwrt.txt" ]; then
 					printf '%s\n' "${short_name}-fw4-iwrt.txt"
+					return 0
+				elif [ -f "$config_root/${short_name}-fw3.txt" ]; then
+					printf '%s\n' "${short_name}-fw3.txt"
 					return 0
 				fi
 			else
