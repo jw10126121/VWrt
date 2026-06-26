@@ -391,6 +391,31 @@ EOF
     fi
 }
 
+# 检测无 WiFi 配置标志。
+# 当配置名同时包含 "wifi" 和 "no"（如 CMIOT-AX18-NOWIFI）时，
+# 设置 WRT_WIFI="wifi-no"，供后续 DTS 调整等逻辑使用。
+detect_nowifi_config() {
+    WRT_WIFI=""
+    local config_lower="${config_name,,}"
+    if [[ "${config_lower}" == *"wifi"* && "${config_lower}" == *"no"* ]]; then
+        WRT_WIFI="wifi-no"
+        echo "【Lin】检测到无 WiFi 配置：${config_name}"
+    fi
+}
+
+# 高通 qualcommax 平台无 WiFi 配置：替换 DTS 中的 IPQ DTS 引用为 nowifi 版本。
+# 将 ipq6018.dtsi / ipq8074.dtsi 替换为 ipq6018-nowifi.dtsi / ipq8074-nowifi.dtsi，
+# 减少固件体积（移除 WiFi 相关设备树节点）。
+configure_qualcommax_nowifi_dts() {
+    local dts_path="./target/linux/qualcommax/dts/"
+
+    [ -d "${dts_path}" ] || return 0
+    [ "${WRT_WIFI}" = "wifi-no" ] || return 0
+
+    find "${dts_path}" -type f ! -iname '*nowifi*' -exec sed -i 's/ipq\(6018\|8074\)\.dtsi/ipq\1-nowifi.dtsi/g' {} +
+    echo "【Lin】qualcommax 无 WiFi DTS 配置完成"
+}
+
 # 写入编译目标标记文件，用于后续流程识别当前编译的配置名。
 write_build_target_marker() {
     local marker_file="${target_label_marker_file:-./.linjw-target-label}"
@@ -585,6 +610,12 @@ configure_base_package_options() {
 main() {
     WRT_TARGET="${config_name}"
     echo "【Lin】源码类型：${SOURCE_TYPE}"
+
+    # 检测无 WiFi 配置，vwrt/libwrt 源码下调整 qualcommax DTS
+    detect_nowifi_config
+    if [ "${SOURCE_TYPE}" = "vwrt" ] || [ "${SOURCE_TYPE}" = "libwrt" ]; then
+        configure_qualcommax_nowifi_dts
+    fi
 
     configure_common_system_defaults
 
