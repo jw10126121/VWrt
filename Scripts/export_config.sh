@@ -333,7 +333,7 @@ fi
 
 device_config=$(resolve_device_config "$config_dir" "$device" || true)
 if [ -z "$device_config" ]; then
-	echo "缺少设备配置：$config_dir/${device}.txt 或 $config_dir/${device}-FW3.txt" >&2
+	echo "缺少设备配置：$config_dir/${device}.txt 或 $config_dir/${device}-fw3.txt" >&2
 	exit 1
 fi
 
