@@ -52,7 +52,12 @@
       "Bash(bash Scripts/export_config.sh --device CMIOT-AX18-NOWIFI --fw fw4 --overlay apk --output /tmp/test_config.txt)",
       "Bash(git rm *)",
       "Bash(bash Scripts/export_config.sh --device cmiot-ax18-nowifi --fw fw4 --output /tmp/test_config.txt)",
-      "Bash(SOURCE_TYPE=libwrt bash Scripts/export_config.sh --device cmiot-ax18-nowifi --fw fw3 --output /tmp/test_config.txt)"
+      "Bash(SOURCE_TYPE=libwrt bash Scripts/export_config.sh --device cmiot-ax18-nowifi --fw fw3 --output /tmp/test_config.txt)",
+      "Bash(ls -la /Users/shapp/Downloads/logs_76262719901/)",
+      "Read(//Users/shapp/Downloads/logs_76262719901/**)",
+      "Bash(git config *)",
+      "Bash(git restore *)",
+      "Bash(git checkout *)"
     ],
     "additionalDirectories": [
       "/tmp"
