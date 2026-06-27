@@ -93,6 +93,7 @@ resolve_general_configs() {
 
 	# 1. 设备专用配置（最高优先）
 	if [ -f "$config_root/general-${device_name_lower}.txt" ]; then
+		echo "【Lin】加载通用配置：general-${device_name_lower}.txt（设备专用）" >&2
 		printf '%s\n' "general-${device_name_lower}.txt"
 		return 0
 	fi
@@ -107,21 +108,25 @@ resolve_general_configs() {
 	esac
 
 	if [ -n "$short_device_name" ] && [ -f "$config_root/general-${short_device_name}.txt" ]; then
+		echo "【Lin】加载通用配置：general-${short_device_name}.txt（设备简写）" >&2
 		printf '%s\n' "general-${short_device_name}.txt"
 		return 0
 	fi
 
 	# 2. 源码类型专用配置（独立使用，不加载通用基线）
-	# libwrt 继承 iwrt 的配置
+	# vwrt/libwrt 继承 iwrt 的配置
 	if [ -f "$config_root/$source_type_file" ]; then
+		echo "【Lin】加载通用配置：${source_type_file}（源码类型 ${source_type}）" >&2
 		printf '%s\n' "$source_type_file"
 		return 0
-	elif [ "$source_type" = "libwrt" ] && [ -f "$config_root/general-iwrt.txt" ]; then
+	elif { [ "$source_type" = "vwrt" ] || [ "$source_type" = "libwrt" ]; } && [ -f "$config_root/general-iwrt.txt" ]; then
+		echo "【Lin】加载通用配置：general-iwrt.txt（vwrt/libwrt 继承）" >&2
 		printf '%s\n' "general-iwrt.txt"
 		return 0
 	fi
 
 	# 3. 通用基线（兜底）
+	echo "【Lin】加载通用配置：${general_file}（通用基线）" >&2
 	printf '%s\n' "$general_file"
 }
 
