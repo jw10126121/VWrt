@@ -232,6 +232,14 @@ elif grep -q '^CONFIG_PACKAGE_frpc=m$' "${openwrt_path}/.config" 2>/dev/null && 
      grep -q '^CONFIG_PACKAGE_frps=m$' "${openwrt_path}/.config" 2>/dev/null; then
     frp_role='安装包'
     frp_role_tag='pkg'
+elif grep -q '^CONFIG_PACKAGE_frps=y$' "${openwrt_path}/.config" 2>/dev/null && \
+     ! grep -q '^CONFIG_PACKAGE_frpc=[ym]$' "${openwrt_path}/.config" 2>/dev/null; then
+    frp_role='frps'
+    frp_role_tag='frps'
+elif grep -q '^CONFIG_PACKAGE_frpc=y$' "${openwrt_path}/.config" 2>/dev/null && \
+     ! grep -q '^CONFIG_PACKAGE_frps=[ym]$' "${openwrt_path}/.config" 2>/dev/null; then
+    frp_role='frpc'
+    frp_role_tag='frpc'
 fi
 
 build_variant_tag="${source_flavor_tag}_${fw_stack_tag}_${package_manager_tag}_${frp_role_tag}"
