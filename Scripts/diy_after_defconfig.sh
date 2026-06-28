@@ -15,6 +15,9 @@ current_dir=$(pwd)
 openwrt_workdir="${current_dir}"
 target_label_marker_file="./.linjw-target-label"
 
+# 配置
+PRELOAD_HOMEPROXY_RESOURCES=true  # 是否预置 HomeProxy 规则资源，true/false，默认false
+
 # 获取CPU架构
 cputype=$(grep -m 1 "^CONFIG_TARGET_ARCH_PACKAGES=" ./.config | awk -F'=' '{print $2}' | tr -d '"')
 cputype_simple=''
@@ -185,13 +188,13 @@ preload_homeproxy_resources() {
     cd "${openwrt_workdir}"
     rm -rf "${hp_rules}"
 
-    echo "【Lin】homeproxy date has been updated!"
+    echo "【Lin】homeproxy data has been updated!"
 }
 
 cd "${openwrt_workdir}"
 configure_ecm_accel_delay_fix
 # preload_openclash_meta_core
-#preload_homeproxy_resources
+preload_homeproxy_resources
 
 
 
