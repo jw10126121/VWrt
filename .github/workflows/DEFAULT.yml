@@ -69,7 +69,7 @@ on:
           - vwrt
           - lean
           - libwrt
-        default: 'lean'
+        default: 'vwrt'
       WRT_FIREWALL:
         description: '防火墙栈（auto=按源码类型自动选择，lean→fw3，vwrt→fw4）'
         required: false
