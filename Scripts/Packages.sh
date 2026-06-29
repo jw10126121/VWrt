@@ -12,6 +12,8 @@ echo "【Lin】脚本目录：${current_script_dir}"
 
 luci_feed_helper="${current_script_dir}/lib/luci_feed_compat.sh"
 [ -f "${luci_feed_helper}" ] && . "${luci_feed_helper}"
+source_type_helper="${current_script_dir}/lib/source_type.sh"
+[ -f "${source_type_helper}" ] && . "${source_type_helper}"
 
 # 允许从仓库根目录执行，脚本会自行切换到 package/；
 # 如果当前目录和子目录里都没有 package/，则直接退出，避免误删其它路径。
@@ -27,19 +29,12 @@ fi
 package_workdir=$(pwd)
 openwrt_workdir="$(readlink -f ..)"
 luci_feed_branch='unknown'
-file_default_settings="./lean/default-settings/files/zzz-default-settings"
 
-# 源码类型：根据 lean 特有文件自动判断
-# 如果存在 lean/default-settings/files/zzz-default-settings 则为 lean，否则为 vwrt
-# 也可通过环境变量强制指定：SOURCE_TYPE=vwrt bash Packages.sh
-if [ -n "${SOURCE_TYPE:-}" ]; then
-    echo "【Lin】使用环境变量指定的源码类型：${SOURCE_TYPE}"
-elif [ -f "${file_default_settings}" ]; then
-    SOURCE_TYPE="lean"
-else
-    SOURCE_TYPE="vwrt"
-fi
+# 源码类型：根据 lean 特有文件自动判断；非 lean 统一按 iwrt 配置族处理。
+SOURCE_TYPE=$(resolve_source_type "${SOURCE_TYPE:-auto}" "$openwrt_workdir")
+SOURCE_CONFIG_FAMILY=$(source_config_family "${SOURCE_TYPE}")
 echo "【Lin】源码类型：${SOURCE_TYPE}"
+echo "【Lin】配置族：${SOURCE_CONFIG_FAMILY}"
 
 echo "【Lin】工作目录：${package_workdir}"
 
@@ -441,9 +436,9 @@ apply_lean_package_overrides() {
     update_package_list "luci-app-netspeedtest speedtest-cli" "sbwml/openwrt_pkgs" "main"
 }
 
-# vwrt源码风格
-apply_vwrt_package_overrides() {
-    echo "【Lin】启用vwrt专属包覆盖"
+# iwrt 配置族源码风格：vwrt/libwrt 共用。
+apply_iwrt_package_overrides() {
+    echo "【Lin】启用 iwrt 配置族专属包覆盖"
     # UPDATE_PACKAGE "luci-theme-noobwrt" "nooblk-98/luci-theme-noobwrt" "master"
     UPDATE_PACKAGE "shadcn" "eamonxg/luci-theme-shadcn" "main"
     UPDATE_PACKAGE "aurora" "eamonxg/luci-theme-aurora" "master"
@@ -493,8 +488,6 @@ apply_luci_feed_25_12_package_overrides() {
     echo "【Lin】25.12未找到luci-app-accesscontrol和luci-app-filetransfer，从coolsnowwolf/luci的openwrt-23.05分支获取"
     update_package_list "luci-app-accesscontrol luci-app-filetransfer" "coolsnowwolf/luci" "openwrt-23.05" # 25.12 feed 时补入 lean 上游 v23.05 luci-app-accesscontrol和luci-app-filetransfer
 
-    # echo "【Lin】当前 luci-app-adguardhome 仍缺中文，从 coolsnowwolf/luci 的 openwrt-23.05 分支补回"
-    # update_package_list "luci-app-adguardhome" "coolsnowwolf/luci" "openwrt-23.05"
 }
 
 # quickfile 的上游二进制文件名和本地 OpenWrt 架构名并不总是一一对应。
@@ -529,23 +522,6 @@ apply_lang_node_prebuilt_fix() {
 
     echo "【Lin】未命中可用的 sbwml lang_node 预编译分支，继续使用官方 lang/node"
     return 0
-}
-
-find_adguardhome_package_dir() {
-    find ./ ../feeds/luci -maxdepth 4 -type d -iname "luci-app-adguardhome" -print | head -n 1
-}
-
-package_has_adguardhome_translation_zh() {
-    local adguardhome_dir=$1
-
-    [ -n "${adguardhome_dir}" ] || return 1
-
-    find "${adguardhome_dir}/po" -maxdepth 2 -type f \( \
-        -path "*/zh_Hans/adguardhome.po" -o \
-        -path "*/zh-cn/adguardhome.po" -o \
-        -path "*/zh_CN/adguardhome.po" -o \
-        -path "*/zh/adguardhome.po" \
-    \) -print -quit 2>/dev/null | grep -q .
 }
 
 # 下列函数都属于“后置修补链”：
@@ -711,15 +687,15 @@ apply_post_update_fixes() {
 
 # 主入口保持极简，只负责串联三个阶段：
 # 1. 应用通用包覆盖
-# 2. 应用源码类型专属覆盖（lean 或 vwrt）
+# 2. 应用源码配置族专属覆盖（lean 或 iwrt）
 # 3. 执行后置修补链
 main() {
     resolve_packages_luci_feed_branch
     apply_common_package_overrides
 
-    case "${SOURCE_TYPE}" in
-        vwrt)
-            apply_vwrt_package_overrides
+    case "${SOURCE_CONFIG_FAMILY}" in
+        iwrt)
+            apply_iwrt_package_overrides
             ;;
         lean|*)
             apply_lean_package_overrides

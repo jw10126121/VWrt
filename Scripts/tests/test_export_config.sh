@@ -39,6 +39,15 @@ CONFIG_DEVICE_STACK=fw3-device
 # <<< FW4-END
 EOF
 
+cat > "$TMPDIR/general-iwrt.txt" <<'EOF'
+CONFIG_ALPHA=y
+CONFIG_GENERAL_FLAVOR=iwrt
+EOF
+
+cat > "$TMPDIR/DEVICE-IWRT-FW4-iwrt.txt" <<'EOF'
+CONFIG_DEVICE_FLAVOR=iwrt
+EOF
+
 cat > "$TMPDIR/device-overlays/DEVICE-A-FW4.txt" <<'EOF'
 CONFIG_DEVICE_FW_ONLY=y
 CONFIG_FRP_ROLE=proxy
@@ -55,6 +64,9 @@ EOF
 
 FW3_OUTPUT="$TMPDIR/fw3-merged.txt"
 FW4_OUTPUT="$TMPDIR/fw4-merged.txt"
+VWRT_OUTPUT="$TMPDIR/vwrt-merged.txt"
+AUTO_OUTPUT="$TMPDIR/auto-merged.txt"
+AUTO_IWRT_OUTPUT="$TMPDIR/auto-iwrt-merged.txt"
 
 bash "$EXPORT_SCRIPT" \
 	--config-dir "$TMPDIR" \
@@ -118,5 +130,39 @@ if grep -q '^CONFIG_OVERLAY_ONLY=y$' "$FW4_OUTPUT"; then
 	exit 1
 fi
 grep -n '^CONFIG_FRP_ROLE=' "$FW4_OUTPUT" | tail -n 1 | grep -q 'CONFIG_FRP_ROLE=proxy'
+
+SOURCE_TYPE=vwrt bash "$EXPORT_SCRIPT" \
+	--config-dir "$TMPDIR" \
+	--device "DEVICE-IWRT" \
+	--fw "fw4" \
+	--output "$VWRT_OUTPUT"
+
+grep -q '^CONFIG_GENERAL_FLAVOR=iwrt$' "$VWRT_OUTPUT"
+grep -q '^CONFIG_DEVICE_FLAVOR=iwrt$' "$VWRT_OUTPUT"
+if grep -q '^CONFIG_DEVICE_STACK=fw3-device$' "$VWRT_OUTPUT"; then
+	echo "vwrt export should prefer the fw4-iwrt device config over fw3" >&2
+	exit 1
+fi
+
+SOURCE_TYPE=auto bash "$EXPORT_SCRIPT" \
+	--config-dir "$TMPDIR" \
+	--device "DEVICE-A" \
+	--fw "fw3" \
+	--output "$AUTO_OUTPUT"
+
+grep -q '^CONFIG_DEVICE_STACK=fw3-device$' "$AUTO_OUTPUT"
+if grep -q '^CONFIG_DEVICE_FLAVOR=iwrt$' "$AUTO_OUTPUT"; then
+	echo "auto export without OPENWRT_PATH should keep the historical lean default" >&2
+	exit 1
+fi
+
+mkdir -p "$TMPDIR/iwrt-tree/package/base-files"
+SOURCE_TYPE=auto OPENWRT_PATH="$TMPDIR/iwrt-tree" bash "$EXPORT_SCRIPT" \
+	--config-dir "$TMPDIR" \
+	--device "DEVICE-IWRT" \
+	--fw "fw4" \
+	--output "$AUTO_IWRT_OUTPUT"
+
+grep -q '^CONFIG_DEVICE_FLAVOR=iwrt$' "$AUTO_IWRT_OUTPUT"
 
 echo "test_export_config: ok"

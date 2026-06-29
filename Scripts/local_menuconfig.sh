@@ -7,6 +7,7 @@ REPO_ROOT=$(cd "${SCRIPT_DIR}/.." && pwd)
 SCRIPT_ROOT="${REPO_ROOT}/Scripts"
 CONFIG_ROOT="${REPO_ROOT}/Config"
 OVERLAY_UTILS="${SCRIPT_ROOT}/lib/overlay_utils.sh"
+SOURCE_TYPE_LIB="${SCRIPT_ROOT}/lib/source_type.sh"
 LOCAL_COMPAT_DIR=''
 
 show_help() {
@@ -22,7 +23,7 @@ show_help() {
 主要参数（尽量对齐 DEFAULT.yml）：
   OPENWRT_PATH           本地 OpenWrt 源码目录，默认 /Volumes/OpenWrt/lede
   WRT_DEVICE             设备名，必填，例如 cmiot-ax18-nowifi、jd-ax1800pro-wifi
-  WRT_FIREWALL           防火墙栈，必填，fw3 或 fw4
+  WRT_FIREWALL           防火墙栈，默认 auto；支持 auto、fw3、fw4
   WRT_OVERLAYS           可选 overlays，逗号分隔，例如 frps,apk
                          同一 OVERLAY_GROUP 内按传入顺序以最后一个为准
   WRT_LUCI_BRANCH        可选 LuCI 分支，例如 openwrt-23.05
@@ -31,6 +32,7 @@ show_help() {
   WRT_DIY_FEEDS          自定义 feeds 脚本，默认 diy_feeds.sh
   WRT_DEFAULT_LANIP      默认 LAN IP，默认 192.168.0.1
   WRT_SOURCE_HASH_INFO   可选源码 commit hash
+  SOURCE_TYPE            源码类型，默认 auto；支持 lean、vwrt、libwrt
 
 本地辅助参数：
   WRT_THEME_NAME         默认 auto（lean 使用 argon，其它源码使用 aurora）
@@ -96,7 +98,7 @@ fi
 
 OPENWRT_PATH=${OPENWRT_PATH:-/Volumes/OpenWrt/lede}
 WRT_DEVICE=${WRT_DEVICE:-}
-WRT_FIREWALL=${WRT_FIREWALL:-}
+WRT_FIREWALL=${WRT_FIREWALL:-auto}
 WRT_OVERLAYS=${WRT_OVERLAYS:-}
 WRT_LUCI_BRANCH=${WRT_LUCI_BRANCH:-}
 WRT_DIY_SETTING=${WRT_DIY_SETTING:-diy_config.sh}
@@ -117,16 +119,11 @@ WRT_DEVICE="${WRT_DEVICE,,}"
 	exit 1
 }
 
-[ -n "$WRT_FIREWALL" ] || {
-	echo "缺少 WRT_FIREWALL，取值 fw3 或 fw4" >&2
-	exit 1
-}
-
 case "$WRT_FIREWALL" in
-	fw3|fw4)
+	auto|fw3|fw4)
 		;;
 	*)
-		echo "WRT_FIREWALL 只支持 fw3 或 fw4" >&2
+		echo "WRT_FIREWALL 只支持 auto、fw3 或 fw4" >&2
 		exit 1
 		;;
 esac
@@ -139,8 +136,10 @@ require_file "$SCRIPT_ROOT/export_config.sh"
 require_file "$SCRIPT_ROOT/resolve_device_script.sh"
 require_file "$SCRIPT_ROOT/diy_after_defconfig.sh"
 require_file "$OVERLAY_UTILS"
+require_file "$SOURCE_TYPE_LIB"
 
 . "$OVERLAY_UTILS"
+. "$SOURCE_TYPE_LIB"
 
 if [ -n "$WRT_OVERLAYS" ]; then
 	WRT_OVERLAYS=$(normalize_overlay_list "$CONFIG_ROOT" "$WRT_OVERLAYS")
@@ -168,6 +167,23 @@ require_dir .git
 require_file ./scripts/feeds
 require_file ./scripts/diffconfig.sh
 require_file ./Makefile
+
+SOURCE_TYPE=$(resolve_source_type "${SOURCE_TYPE:-auto}" "$OPENWRT_PATH")
+SOURCE_CONFIG_FAMILY=$(source_config_family "$SOURCE_TYPE")
+export SOURCE_TYPE
+echo "【Lin】源码类型：$SOURCE_TYPE"
+echo "【Lin】配置族：$SOURCE_CONFIG_FAMILY"
+
+if [ "$WRT_FIREWALL" = "auto" ]; then
+	if [ "$SOURCE_CONFIG_FAMILY" = "lean" ]; then
+		WRT_FIREWALL="fw3"
+	else
+		WRT_FIREWALL="fw4"
+	fi
+elif [ "$SOURCE_CONFIG_FAMILY" = "iwrt" ] && [ "$WRT_FIREWALL" = "fw3" ]; then
+	echo "【Lin】警告：${SOURCE_TYPE} 使用 iwrt 配置族，已将 fw3 自动切换为 fw4"
+	WRT_FIREWALL="fw4"
+fi
 
 if [ "$LOCAL_CLEAN_GENERATED" = 'true' ]; then
 	echo "【Lin】清理本地生成物，避免旧缓存污染 feeds / defconfig"

@@ -23,9 +23,9 @@
 
 **IWRT 分支说明：** GL-MT6000-WIFI 使用 `owrt` 分支，其余设备使用 `main` 分支。
 
-**源码回退机制：** 当选择 `iwrt` 或 `libwrt` 风味时，如果目标设备不是 IPQ 平台（如 GL-MT6000-WIFI 使用 MediaTek 平台），将自动回退到 [immortalwrt 官方源码](https://github.com/immortalwrt/immortalwrt) 的 `master` 分支，以确保固件正常编译。
+**源码回退机制：** 当选择 `vwrt` 或 `libwrt` 风味时，如果目标设备不是 IPQ 平台（如 GL-MT6000-WIFI 使用 MediaTek 平台），将自动回退到 [immortalwrt 官方源码](https://github.com/immortalwrt/immortalwrt) 的 `master` 分支，以确保固件正常编译。
 
-三种风味共用同一套设备配置和构建脚本，通过 `SOURCE_TYPE`（`lean` / `iwrt` / `libwrt`）和 `WRT_FIREWALL` 参数区分。
+三种风味共用同一套设备配置和构建脚本，通过 `SOURCE_TYPE`（`lean` / `vwrt` / `libwrt`）和 `WRT_FIREWALL` 参数区分。`vwrt` 与 `libwrt` 都属于 iwrt 配置族，默认使用 fw4；`lean` 默认使用 fw3。
 
 ## 支持设备
 
@@ -59,7 +59,7 @@
 | 参数 | 说明 | 示例 |
 |------|------|------|
 | `WRT_DEVICE` | 设备型号 | `CMIOT-AX18-NOWIFI` |
-| `SOURCE_TYPE` | 源码类型 | `lean` / `iwrt` / `libwrt` |
+| `SOURCE_TYPE` | 源码类型 | `lean` / `vwrt` / `libwrt` |
 | `WRT_FIREWALL` | 防火墙栈 | `fw3` / `fw4` |
 | `WRT_OVERLAYS` | 差异层，逗号分隔 | `frps,apk` |
 | `WRT_LUCI_BRANCH` | LuCI feed 分支 | `openwrt-23.05` |

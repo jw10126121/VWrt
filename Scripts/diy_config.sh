@@ -13,6 +13,9 @@ work_dir=$(pwd)
 current_script_dir=$(cd $(dirname $0) && pwd)
 echo "【Lin】脚本目录：${current_script_dir}"
 
+source_type_helper="${current_script_dir}/lib/source_type.sh"
+[ -f "${source_type_helper}" ] && . "${source_type_helper}"
+
 if [ $(basename "$(pwd)") != 'openwrt' ]; then
     if [ -n "${OPENWRT_PATH:-}" ] && [ -d "${OPENWRT_PATH}" ]; then
         cd "${OPENWRT_PATH}"
@@ -37,8 +40,8 @@ show_help() {
     echo "  -t default_theme_name 默认主题，默认不修改"
     echo "  -m package_manager    包管理器类型，默认ipk，可选apk"
     echo "  -c config_name        配置名，如ipq60xx-nowifi-iwrt"
-    echo "  -s wifi_ssid          WiFi名称（vwrt专用）"
-    echo "  -w wifi_password      WiFi密码，none表示开放WiFi（vwrt专用）"
+    echo "  -s wifi_ssid          WiFi名称（iwrt配置族专用）"
+    echo "  -w wifi_password      WiFi密码，none表示开放WiFi（iwrt配置族专用）"
 }
 
 # 检查是否需要显示帮助信息
@@ -115,17 +118,11 @@ file_setup_config="./package/base-files/files/etc/uci-defaults/99-setup_config"
 setup_config_template="${current_script_dir}/patch/99-setup_config.txt"
 target_label_marker_file="./.linjw-target-label"
 
-# 源码类型：根据 lean 特有文件自动判断
-# 如果存在 ./package/lean/default-settings/files/zzz-default-settings 则为 lean，否则为 vwrt
-# 支持通过环境变量 SOURCE_TYPE 显式指定（如 libwrt）
-if [ -n "${SOURCE_TYPE:-}" ] && [ "${SOURCE_TYPE}" != "auto" ]; then
-    echo "【Lin】使用指定源码类型：${SOURCE_TYPE}"
-elif [ -f "${file_default_settings}" ]; then
-    SOURCE_TYPE="lean"
-else
-    SOURCE_TYPE="vwrt"
-fi
+# 源码类型：根据 lean 特有文件自动判断；非 lean 统一按 iwrt 配置族处理。
+SOURCE_TYPE=$(resolve_source_type "${SOURCE_TYPE:-auto}" "$(pwd)")
+SOURCE_CONFIG_FAMILY=$(source_config_family "${SOURCE_TYPE}")
 echo "【Lin】源码类型：${SOURCE_TYPE}"
+echo "【Lin】配置族：${SOURCE_CONFIG_FAMILY}"
 
 # 设置 .config 中的配置项。
 # 如果配置项已存在则修改，不存在则追加，避免多次调用产生重复配置。
@@ -262,7 +259,7 @@ configure_default_system() {
         echo "【Lin】LEDE默认：IP: ${WRT_IP}，主机名：$WRT_NAME"
     fi
 
-    # 配置IP(vwrt用)
+    # 配置IP(iwrt配置族用)
     if [ -d "./feeds/luci/modules/luci-mod-system/" ]; then
         sed -i "s/192\.168\.[0-9]*\.[0-9]*/$WRT_IP/g" $(find ./feeds/luci/modules/luci-mod-system/ -type f -name "flash.js")
     fi
@@ -451,7 +448,7 @@ clear_passwords() {
     fi
 }
 
-# vwrt 源码专用：配置无线参数。
+# iwrt 配置族源码专用：配置无线参数。
 # 支持两种无线配置文件格式：
 # 1. set-wireless.sh（旧格式）
 # 2. mac80211.uc（新格式）
@@ -620,7 +617,7 @@ main() {
     WRT_TARGET="${config_name}"
     echo "【Lin】源码类型：${SOURCE_TYPE}"
 
-    # 检测无 WiFi 配置，vwrt/libwrt 源码下调整 qualcommax DTS
+    # 检测无 WiFi 配置，iwrt 配置族源码下调整 qualcommax DTS
     detect_nowifi_config
 
     configure_common_system_defaults
@@ -632,8 +629,8 @@ main() {
         # configure_wifi_lean
     fi
 
-    # vwrt/libwrt 源码专用：配置无线参数
-    if [ "${SOURCE_TYPE}" = "vwrt" ] || [ "${SOURCE_TYPE}" = "libwrt" ]; then
+    # iwrt 配置族源码专用：配置无线参数
+    if [ "${SOURCE_CONFIG_FAMILY}" = "iwrt" ]; then
         configure_wifi_vwrt
     fi
 

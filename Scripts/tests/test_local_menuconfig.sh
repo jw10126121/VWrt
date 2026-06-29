@@ -8,6 +8,7 @@ TARGET_SCRIPT="$SCRIPT_DIR/local_menuconfig.sh"
 test -f "$TARGET_SCRIPT"
 grep -Fq 'OPENWRT_PATH=${OPENWRT_PATH:-/Volumes/OpenWrt/lede}' "$TARGET_SCRIPT"
 grep -Fq 'WRT_DIY_FEEDS=${WRT_DIY_FEEDS:-diy_feeds.sh}' "$TARGET_SCRIPT"
+grep -Fq 'WRT_FIREWALL=${WRT_FIREWALL:-auto}' "$TARGET_SCRIPT"
 grep -Fq 'WRT_DIYPackages=${WRT_DIYPackages:-auto}' "$TARGET_SCRIPT"
 grep -Fq 'WRT_THEME_NAME=${WRT_THEME_NAME:-auto}' "$TARGET_SCRIPT"
 grep -Fq 'resolve_device_script.sh' "$TARGET_SCRIPT"
@@ -26,6 +27,13 @@ grep -Fq 'bash "$SCRIPT_ROOT/export_config.sh" "${EXPORT_ARGS[@]}"' "$TARGET_SCR
 grep -Fq 'make menuconfig' "$TARGET_SCRIPT"
 grep -Fq 'bash ./scripts/diffconfig.sh > seed.config' "$TARGET_SCRIPT"
 grep -Fq 'WRT_CONFIG_LABEL="${WRT_DEVICE}-${WRT_FIREWALL}"' "$TARGET_SCRIPT"
+grep -Fq '. "$SOURCE_TYPE_LIB"' "$TARGET_SCRIPT"
+grep -Fq 'SOURCE_TYPE=$(resolve_source_type "${SOURCE_TYPE:-auto}" "$OPENWRT_PATH")' "$TARGET_SCRIPT"
+grep -Fq 'SOURCE_CONFIG_FAMILY=$(source_config_family "$SOURCE_TYPE")' "$TARGET_SCRIPT"
+if grep -Fq '支持 lean、iwrt、vwrt、libwrt' "$TARGET_SCRIPT"; then
+	echo "local_menuconfig.sh should not expose iwrt as a SOURCE_TYPE option" >&2
+	exit 1
+fi
 grep -Fq 'PATH="${LOCAL_COMPAT_DIR}:$PATH"' "$TARGET_SCRIPT"
 grep -Fq 'exec /usr/bin/sed -i "" "$@"' "$TARGET_SCRIPT"
 if grep -Fq 'apk 与 ipk 不能同时启用' "$TARGET_SCRIPT"; then

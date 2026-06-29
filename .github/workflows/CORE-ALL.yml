@@ -87,7 +87,7 @@ env:
   WEBHOOK_FEISHU: ${{ secrets.WEBHOOK_FEISHU }}
   WRT_SOURCE_HASH_INFO: ${{inputs.WRT_SOURCE_HASH_INFO}}
   WRT_DEVICE: ${{inputs.WRT_DEVICE}}                          # 设备名
-  SOURCE_TYPE: ${{inputs.SOURCE_TYPE || 'auto'}}               # 源码类型 vwrt/lean/auto
+  SOURCE_TYPE: ${{inputs.SOURCE_TYPE || 'auto'}}               # 源码类型 vwrt/lean/libwrt/auto
   WRT_FIREWALL: ${{inputs.WRT_FIREWALL}}                      # fw3 / fw4
   WRT_OVERLAYS: ${{inputs.WRT_OVERLAYS || '' }}               # 可选 overlays
   WRT_LUCI_BRANCH: ${{inputs.WRT_LUCI_BRANCH || '' }}         # 可选 LuCI feed 分支
@@ -344,7 +344,7 @@ jobs:
             WRT_USE_APK="false"
           fi
         fi
-        # libwrt/vwrt 强制使用 fw4（nftables），不支持 fw3
+        # vwrt/libwrt 强制使用 fw4（nftables），不支持 fw3
         if [ "$SOURCE_TYPE" = "vwrt" ] || [ "$SOURCE_TYPE" = "libwrt" ]; then
           if [ "${WRT_FIREWALL}" = "fw3" ]; then
             echo "【Lin】警告：${SOURCE_TYPE} 源码类型不支持 fw3，已自动切换为 fw4"

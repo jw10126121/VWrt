@@ -196,17 +196,11 @@ cd "${openwrt_workdir}"
 # preload_openclash_meta_core
 preload_homeproxy_resources
 
-SOURCE_TYPE="iwrt"
-# lean.默认配置文件，用来判断是不是lean源码用
-lean_file_default_settings="./package/lean/default-settings/files/zzz-default-settings"
-if [ -f "${lean_file_default_settings}" ]; then
-    SOURCE_TYPE="lean"
-else
-    SOURCE_TYPE="iwrt"
-fi
+source_type_helper="${current_script_dir}/lib/source_type.sh"
+[ -f "${source_type_helper}" ] && . "${source_type_helper}"
+SOURCE_TYPE=$(resolve_source_type "${SOURCE_TYPE:-auto}" "${openwrt_workdir}")
 
 if [ "${SOURCE_TYPE}" = "lean" ]; then
     configure_ecm_accel_delay_fix
 fi
-
 

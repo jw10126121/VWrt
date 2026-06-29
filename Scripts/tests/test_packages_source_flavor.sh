@@ -8,10 +8,8 @@ TARGET_SCRIPT="$SCRIPT_DIR/Packages.sh"
 for fn in \
 	UPDATE_PACKAGE \
 	apply_lean_package_overrides \
-	apply_luci_feed_25_12_package_overrides \
-	find_adguardhome_package_dir \
-	package_has_adguardhome_translation_zh \
-	fallback_adguardhome_package_25_12; do
+	apply_iwrt_package_overrides \
+	apply_luci_feed_25_12_package_overrides; do
     grep -q "^${fn}() {" "$TARGET_SCRIPT"
 done
 
@@ -26,23 +24,27 @@ extract_function_body() {
 }
 
 extract_function_body "apply_common_package_overrides" | grep -q 'UPDATE_PACKAGE "luci-theme-kucat" "sirpdboy/luci-theme-kucat" "master"'
-extract_function_body "apply_common_package_overrides" | grep -q 'update_package_list "luci-app-vlmcsd vlmcsd" "sbwml/openwrt_pkgs" "main"'
-extract_function_body "apply_common_package_overrides" | grep -q 'update_package_list "luci-app-socat" "Lienol/openwrt-package" "main"'
+extract_function_body "apply_common_package_overrides" | grep -q 'update_package_list "luci-app-socat luci-app-guest-wifi" "Lienol/openwrt-package" "main"'
 if extract_function_body "apply_common_package_overrides" | grep -q 'luci-app-3cat'; then
 	echo "apply_common_package_overrides should not carry 3cat feed-specific logic" >&2
 	exit 1
 fi
+extract_function_body "apply_lean_package_overrides" | grep -q 'update_package_list "luci-app-vlmcsd vlmcsd" "sbwml/openwrt_pkgs" "main"'
 extract_function_body "apply_lean_package_overrides" | grep -q 'luci-theme-argon'
 extract_function_body "apply_lean_package_overrides" | grep -q 'if ! is_luci_feed_25_12 "${openwrt_workdir}/feeds.conf.default"; then'
 extract_function_body "apply_lean_package_overrides" | grep -q 'update_package_list "luci-app-3cat" "coolsnowwolf/luci" "openwrt-25.12"'
 extract_function_body "UPDATE_PACKAGE" | grep -q '成功clone插件：${package_name} \[库：${repo_name} | 分支：${package_branch}\]'
 extract_function_body "apply_luci_feed_25_12_package_overrides" | grep -q 'is_luci_feed_25_12'
-extract_function_body "apply_luci_feed_25_12_package_overrides" | grep -q 'update_package_list "luci-app-accesscontrol" "coolsnowwolf/luci" "openwrt-23.05"'
-extract_function_body "package_has_adguardhome_translation_zh" | grep -q 'zh_Hans/adguardhome.po'
-extract_function_body "package_has_adguardhome_translation_zh" | grep -q 'zh/adguardhome.po'
-extract_function_body "fallback_adguardhome_package_25_12" | grep -q 'package_has_adguardhome_translation_zh'
-extract_function_body "fallback_adguardhome_package_25_12" | grep -q 'update_package_list "luci-app-adguardhome" "kenzok8/openwrt-packages" "master"'
+extract_function_body "apply_luci_feed_25_12_package_overrides" | grep -q 'update_package_list "luci-app-accesscontrol luci-app-filetransfer" "coolsnowwolf/luci" "openwrt-23.05"'
 grep -q 'find "./${list_repo}" -mindepth 1 -maxdepth 2 -type d -iname "${package_name}" -print | head -n 1' "$TARGET_SCRIPT"
+if grep -q '^apply_vwrt_package_overrides() {' "$TARGET_SCRIPT"; then
+	echo "Packages.sh should use apply_iwrt_package_overrides for non-lean sources" >&2
+	exit 1
+fi
+if grep -q '^ensure_adguardhome_menu_compat() {' "$TARGET_SCRIPT" || grep -q '^fallback_adguardhome_package_25_12() {' "$TARGET_SCRIPT"; then
+	echo "Packages.sh should not keep legacy adguardhome compatibility hooks" >&2
+	exit 1
+fi
 if grep -q '^ensure_vlmcsd_ini() {' "$TARGET_SCRIPT"; then
 	echo "Packages.sh should no longer carry the legacy ensure_vlmcsd_ini hook" >&2
 	exit 1
@@ -52,5 +54,8 @@ if grep -q '^apply_generic_package_overrides() {' "$TARGET_SCRIPT"; then
 	echo "Packages.sh should no longer keep generic source overrides" >&2
 	exit 1
 fi
+grep -q 'SOURCE_CONFIG_FAMILY=$(source_config_family "${SOURCE_TYPE}")' "$TARGET_SCRIPT"
+grep -q 'iwrt)' "$TARGET_SCRIPT"
+grep -q 'apply_iwrt_package_overrides' "$TARGET_SCRIPT"
 
 echo "test_packages_source_flavor: ok"

@@ -10,8 +10,10 @@ set -eu
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 MERGE_SCRIPT="$SCRIPT_DIR/merge_configs.sh"
 OVERLAY_UTILS="$SCRIPT_DIR/lib/overlay_utils.sh"
+SOURCE_TYPE_LIB="$SCRIPT_DIR/lib/source_type.sh"
 
 . "$OVERLAY_UTILS"
+. "$SOURCE_TYPE_LIB"
 
 config_dir='Config'
 device=''
@@ -20,18 +22,38 @@ overlay_list=''
 output_config=''
 cleanup_files=''
 
+resolve_export_source_type() {
+	local requested_type="${SOURCE_TYPE:-lean}"
+
+	if [ "$requested_type" = "auto" ]; then
+		if [ -n "${OPENWRT_PATH:-}" ] && [ -d "${OPENWRT_PATH}" ]; then
+			resolve_source_type "$requested_type" "$OPENWRT_PATH"
+		else
+			printf '%s\n' 'lean'
+		fi
+	else
+		resolve_source_type "$requested_type" .
+	fi
+}
+
 resolve_device_config() {
 	local config_root=$1
 	local device_name=$2
-	local source_type="${SOURCE_TYPE:-lean}"
+	local fw_name=$3
+	local source_type
+	local source_family
+	local fw_lower
 	local device_name_lower
+	source_type=$(resolve_export_source_type)
+	source_family=$(source_config_family "$source_type")
+	fw_lower=$(echo "$fw_name" | tr '[:upper:]' '[:lower:]')
 	device_name_lower=$(echo "$device_name" | tr '[:upper:]' '[:lower:]')
 
 	# 1. 源码类型专用配置
-	#    vwrt/libwrt → DEVICE-FW4-iwrt.txt（vwrt/libwrt 默认 fw4）
+	#    iwrt/vwrt/libwrt → DEVICE-FW4-iwrt.txt（iwrt 配置族默认 fw4）
 	#    lean → DEVICE-FW3.txt（lean 默认 fw3）
-	if [ "$source_type" = "vwrt" ] || [ "$source_type" = "libwrt" ]; then
-		# vwrt/libwrt 优先查找 fw4-iwrt 配置，如果不存在则查找 fw3 配置
+	if [ "$source_family" = "iwrt" ] || [ "$fw_lower" = "fw4" ]; then
+		# iwrt 配置族优先查找 fw4-iwrt 配置，如果不存在则查找 fw3 配置
 		if [ -f "$config_root/${device_name_lower}-fw4-iwrt.txt" ]; then
 			printf '%s\n' "${device_name_lower}-fw4-iwrt.txt"
 			return 0
@@ -56,8 +78,8 @@ resolve_device_config() {
 	case "$device_name_lower" in
 		*-nowifi)
 			local short_name=${device_name_lower%-nowifi}
-			if [ "$source_type" = "vwrt" ] || [ "$source_type" = "libwrt" ]; then
-				# vwrt/libwrt 优先查找 fw4-iwrt 配置，如果不存在则查找 fw3 配置
+			if [ "$source_family" = "iwrt" ] || [ "$fw_lower" = "fw4" ]; then
+				# iwrt 配置族优先查找 fw4-iwrt 配置，如果不存在则查找 fw3 配置
 				if [ -f "$config_root/${short_name}-fw4-iwrt.txt" ]; then
 					printf '%s\n' "${short_name}-fw4-iwrt.txt"
 					return 0
@@ -84,12 +106,24 @@ resolve_device_config() {
 resolve_general_configs() {
 	local config_root=$1
 	local device_name=$2
+	local fw_name=$3
 	local short_device_name=''
-	local source_type="${SOURCE_TYPE:-lean}"
+	local source_type
+	local source_family
+	local fw_lower
+	local family_reason=''
+	source_type=$(resolve_export_source_type)
+	source_family=$(source_config_family "$source_type")
+	fw_lower=$(echo "$fw_name" | tr '[:upper:]' '[:lower:]')
+	if [ "$fw_lower" = "fw4" ]; then
+		source_family='iwrt'
+		family_reason='fw4'
+	fi
 	local device_name_lower
 	device_name_lower=$(echo "$device_name" | tr '[:upper:]' '[:lower:]')
 	local general_file='general.txt'
 	local source_type_file="general-${source_type}.txt"
+	local source_family_file="general-${source_family}.txt"
 
 	# 1. 设备专用配置（最高优先）
 	if [ -f "$config_root/general-${device_name_lower}.txt" ]; then
@@ -114,14 +148,18 @@ resolve_general_configs() {
 	fi
 
 	# 2. 源码类型专用配置（独立使用，不加载通用基线）
-	# vwrt/libwrt 继承 iwrt 的配置
+	# iwrt/vwrt/libwrt 继承 iwrt 的配置
 	if [ -f "$config_root/$source_type_file" ]; then
 		echo "【Lin】加载通用配置：${source_type_file}（源码类型 ${source_type}）" >&2
 		printf '%s\n' "$source_type_file"
 		return 0
-	elif { [ "$source_type" = "vwrt" ] || [ "$source_type" = "libwrt" ]; } && [ -f "$config_root/general-iwrt.txt" ]; then
-		echo "【Lin】加载通用配置：general-iwrt.txt（vwrt/libwrt 继承）" >&2
-		printf '%s\n' "general-iwrt.txt"
+	elif [ "$source_family" = "iwrt" ] && [ -f "$config_root/$source_family_file" ]; then
+		if [ -n "$family_reason" ]; then
+			echo "【Lin】加载通用配置：${source_family_file}（${family_reason} 配置族）" >&2
+		else
+			echo "【Lin】加载通用配置：${source_family_file}（${source_type} 继承）" >&2
+		fi
+		printf '%s\n' "$source_family_file"
 		return 0
 	fi
 
@@ -336,13 +374,13 @@ if [ -n "$overlay_list" ]; then
 	overlay_list=$(normalize_overlay_list "$config_dir" "$overlay_list")
 fi
 
-device_config=$(resolve_device_config "$config_dir" "$device" || true)
+device_config=$(resolve_device_config "$config_dir" "$device" "$fw" || true)
 if [ -z "$device_config" ]; then
-	echo "缺少设备配置：$config_dir/${device}.txt 或 $config_dir/${device}-fw3.txt" >&2
+	echo "缺少设备配置：$config_dir/${device}.txt、$config_dir/${device}-fw3.txt 或 $config_dir/${device}-fw4-iwrt.txt" >&2
 	exit 1
 fi
 
-resolved_general_configs=$(resolve_general_configs "$config_dir" "$device")
+resolved_general_configs=$(resolve_general_configs "$config_dir" "$device" "$fw")
 device_config_path="$config_dir/$device_config"
 processed_device_config="$device_config_path"
 embeds_fw_stack=false
