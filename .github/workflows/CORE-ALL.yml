@@ -296,7 +296,7 @@ jobs:
         git config --global http.lowSpeedTime 999999
         git config --global advice.detachedHead false
 
-    - name: Clone Source Code (克隆源代码)
+    - name: Clone Openwrt Code (克隆openwrt代码)
       id: clone_source
       run: |
         echo "【Lin】源码类型：${SOURCE_TYPE}"
