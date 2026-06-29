@@ -5,7 +5,7 @@ run-name: ForCache-${{ (inputs.WRT_RELEASE_FIRMWARE || github.event_name == 'sch
 #CI计划
 on:
   schedule:
-    - cron: '0 3 2,16 * *'  # 每月1日 03:00 UTC
+    - cron: '0 3 * * 5'  # 每周五 03:00 UTC
   workflow_dispatch:
     inputs:
       WHAT_MY_SAY:
