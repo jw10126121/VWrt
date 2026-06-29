@@ -201,10 +201,12 @@ SOURCE_TYPE="iwrt"
 lean_file_default_settings="./package/lean/default-settings/files/zzz-default-settings"
 if [ -f "${lean_file_default_settings}" ]; then
     SOURCE_TYPE="lean"
-    configure_ecm_accel_delay_fix
 else
     SOURCE_TYPE="iwrt"
 fi
 
+if [ "${SOURCE_TYPE}" = "lean" ]; then
+    configure_ecm_accel_delay_fix
+fi
 
 

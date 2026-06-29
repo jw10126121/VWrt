@@ -8,6 +8,25 @@ set -eu
 SCRIPT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 TARGET_SCRIPT="$SCRIPT_DIR/diy_after_defconfig.sh"
 
+if ! awk '
+	index($0, "if [ \"${SOURCE_TYPE}\" = \"lean\" ]; then") {
+		in_source_type_guard=1
+		next
+	}
+	in_source_type_guard && /^[[:space:]]*configure_ecm_accel_delay_fix[[:space:]]*$/ {
+		found=1
+	}
+	in_source_type_guard && /^[[:space:]]*fi[[:space:]]*$/ {
+		in_source_type_guard=0
+	}
+	END {
+		exit found ? 0 : 1
+	}
+' "$TARGET_SCRIPT"; then
+	echo "configure_ecm_accel_delay_fix must be guarded by SOURCE_TYPE=lean" >&2
+	exit 1
+fi
+
 TMPDIR=$(mktemp -d)
 TEST_BIN="$TMPDIR/test-bin"
 cleanup() {
