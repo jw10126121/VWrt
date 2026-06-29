@@ -33,7 +33,7 @@ show_help() {
   WRT_SOURCE_HASH_INFO   可选源码 commit hash
 
 本地辅助参数：
-  WRT_THEME_NAME         默认 argon
+  WRT_THEME_NAME         默认 auto（lean 使用 argon，其它源码使用 aurora）
   IS_RESET_PASSWORD      默认 true
   LOCAL_SKIP_MENUCONFIG  true 时跳过 make menuconfig，默认 false
 EOF
@@ -104,7 +104,7 @@ WRT_DIYPackages=${WRT_DIYPackages:-auto}
 WRT_DIY_FEEDS=${WRT_DIY_FEEDS:-diy_feeds.sh}
 WRT_DEFAULT_LANIP=${WRT_DEFAULT_LANIP:-192.168.0.1}
 WRT_SOURCE_HASH_INFO=${WRT_SOURCE_HASH_INFO:-}
-WRT_THEME_NAME=${WRT_THEME_NAME:-argon}
+WRT_THEME_NAME=${WRT_THEME_NAME:-auto}
 IS_RESET_PASSWORD=${IS_RESET_PASSWORD:-true}
 LOCAL_SKIP_MENUCONFIG=${LOCAL_SKIP_MENUCONFIG:-false}
 LOCAL_CLEAN_GENERATED=${LOCAL_CLEAN_GENERATED:-true}

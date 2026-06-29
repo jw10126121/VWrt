@@ -308,24 +308,46 @@ configure_common_system_defaults() {
     configure_source_default_settings_package
 }
 
+# 解析默认 LuCI 主题。
+# auto 表示按源码类型选择：lean 使用 argon，其它源码使用 aurora。
+resolve_default_theme() {
+    case "$WRT_THEME" in
+        '')
+            printf '%s\n' ''
+            ;;
+        auto)
+            if [ "${SOURCE_TYPE}" = "lean" ]; then
+                printf '%s\n' 'argon'
+            else
+                printf '%s\n' 'aurora'
+            fi
+            ;;
+        *)
+            printf '%s\n' "$WRT_THEME"
+            ;;
+    esac
+}
+
 # 配置默认 LuCI 主题。
 # 在 feeds 中查找指定主题，如果存在则修改默认主题并启用该主题包。
 configure_default_theme() {
-    local theme_dir
+    local theme_dir theme_name
 
-    [ -n "$WRT_THEME" ] || {
+    theme_name=$(resolve_default_theme)
+
+    [ -n "$theme_name" ] || {
         echo "【Lin】使用源码默认主题"
         return 0
     }
 
-    theme_dir=$(find ./package ./feeds/luci/ ./feeds/packages/ -maxdepth 3 -type d -iname "luci-theme-${WRT_THEME}" -prune)
+    theme_dir=$(find ./package ./feeds/luci/ ./feeds/packages/ -maxdepth 3 -type d -iname "luci-theme-${theme_name}" -prune)
     if [ -n "$theme_dir" ]; then
-        sed -i "s/luci-theme-bootstrap/luci-theme-$WRT_THEME/g" $(find ./feeds/luci/collections/ -type f -name "Makefile")
-        set_kconfig_value "CONFIG_PACKAGE_luci-theme-$WRT_THEME" "y"
-        set_kconfig_value "CONFIG_PACKAGE_luci-app-$WRT_THEME-config" "y"
-        echo "【Lin】默认主题：${WRT_THEME}，主题目录：${theme_dir}"
+        sed -i "s/luci-theme-bootstrap/luci-theme-$theme_name/g" $(find ./feeds/luci/collections/ -type f -name "Makefile")
+        set_kconfig_value "CONFIG_PACKAGE_luci-theme-$theme_name" "y"
+        set_kconfig_value "CONFIG_PACKAGE_luci-app-$theme_name-config" "y"
+        echo "【Lin】默认主题：${theme_name}，主题目录：${theme_dir}"
     else
-        echo "【Lin】不存在主题【$WRT_THEME】，使用默认主题"
+        echo "【Lin】不存在主题【$theme_name】，使用默认主题"
     fi
 }
 

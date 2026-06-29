@@ -101,7 +101,7 @@ env:
   WRT_DIR_CONFIGS: Config                                     # 自定义配置文件夹
   WRT_DIR_SCRIPTS: Scripts                                    # 脚本文件夹
   WRT_diy_after_defconfig: 'diy_after_defconfig.sh'
-  WRT_THEME_NAME: 'argon'
+  WRT_THEME_NAME: 'auto'
   UPLOAD_FIRMWARE_DIR: true
   SPLIT_ARTIFACTS: true                                       # 是否将固件和Packages包分开上传到Artifact
   IS_RESET_PASSWORD: true                                     # 是否把密码重置为空
