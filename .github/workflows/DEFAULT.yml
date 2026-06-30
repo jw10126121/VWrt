@@ -58,6 +58,7 @@ on:
         options:
           - cmiot-ax18-nowifi
           - jd-ax1800pro-wifi
+          - jd-ax1800pro-nowifi
           - jd-ax6600-wifi
           - gl-mt6000-wifi
         default: 'cmiot-ax18-nowifi'
