@@ -354,7 +354,7 @@ apply_common_package_overrides() {
     # v0.47.110 编译异常，暂时固定到 v0.47.096。
     UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "v0.47.096" "pkg"
     # UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "master" "pkg"
-    
+
     UPDATE_PACKAGE "luci-app-substore" "xiaohai77/luci-app-substore" "main" "pkg"
 
 
@@ -453,6 +453,8 @@ apply_iwrt_package_overrides() {
     UPDATE_PACKAGE "kucat-config" "sirpdboy/luci-app-kucat-config" "master"
 
     UPDATE_PACKAGE "homeproxy" "VIKINGYFY/homeproxy" "main"
+    UPDATE_VERSION "sing-box" # 升级sing-box到最新版本
+
     UPDATE_PACKAGE "momo" "nikkinikki-org/OpenWrt-momo" "main"
     UPDATE_PACKAGE "nikki" "nikkinikki-org/OpenWrt-nikki" "main"
     # UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev" "pkg"
