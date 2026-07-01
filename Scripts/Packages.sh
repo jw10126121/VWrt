@@ -350,8 +350,11 @@ resolve_packages_luci_feed_branch() {
 apply_common_package_overrides() {
     # UPDATE_PACKAGE "luci-theme-kucat" "sirpdboy/luci-theme-kucat" "master"
     UPDATE_PACKAGE "luci-theme-noobwrt" "nooblk-98/luci-theme-noobwrt" "master"
-    UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "master" "pkg"
-
+    
+    # v0.47.110 编译异常，暂时固定到 v0.47.096。
+    UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "v0.47.096" "pkg"
+    # UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "master" "pkg"
+    
     update_package_list "luci-app-onliner" "danchexiaoyang/luci-app-onliner" "main"
     update_package_list "wrtbwmon" "brvphoenix/wrtbwmon" "master"
     update_package_list "luci-app-wrtbwmon" "brvphoenix/luci-app-wrtbwmon" "master"
