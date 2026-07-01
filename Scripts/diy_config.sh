@@ -463,8 +463,10 @@ configure_wifi_vwrt() {
         sed -i "s/BASE_SSID='.*'/BASE_SSID='${WRT_SSID}'/g" "$wifi_sh"
         if [[ -n "${WRT_WORD}" && "${WRT_WORD}" != "none" ]]; then
             sed -i "s/BASE_WORD='.*'/BASE_WORD='${WRT_WORD}'/g" "$wifi_sh"
+            sed -i "s/BASE_ENCRYPTION='.*'/BASE_ENCRYPTION='psk2+ccmp'/g" "$wifi_sh"
         else
             sed -i "/BASE_WORD=/d" "$wifi_sh"
+            sed -i "s/BASE_ENCRYPTION='.*'/BASE_ENCRYPTION='none'/g" "$wifi_sh"
         fi
         echo "【Lin】WiFi 配置已写入：${wifi_sh}"
     elif [ -f "$wifi_uc" ]; then
@@ -473,6 +475,9 @@ configure_wifi_vwrt() {
         if [[ -n "${WRT_WORD}" && "${WRT_WORD}" != "none" ]]; then
             sed -i "s/key='.*'/key='${WRT_WORD}'/g" "$wifi_uc"
             sed -i "s/encryption='.*'/encryption='psk2+ccmp'/g" "$wifi_uc"
+        else
+            sed -i "s/key='.*'/key=''/g" "$wifi_uc"
+            sed -i "s/encryption='.*'/encryption='none'/g" "$wifi_uc"
         fi
         echo "【Lin】WiFi 配置已写入：${wifi_uc}"
     else
