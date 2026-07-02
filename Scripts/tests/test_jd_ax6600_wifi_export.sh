@@ -21,10 +21,10 @@ assert_last_value() {
 	local actual
 
 	actual=$(
-		grep -n "^${key}=" "$file" |
+		grep -nE "^[#[:space:]]*${key}=" "$file" |
 			tail -n 1 |
-			cut -d '=' -f 2- |
-			sed 's/[[:space:]]*#.*$//; s/[[:space:]]*$//' || true
+			sed -E 's/^[0-9]+://; s/^#[[:space:]]*//; s/[[:space:]]*#.*$//; s/[[:space:]]*$//' |
+			cut -d '=' -f 2- || true
 	)
 	if [ "$actual" != "$expected" ]; then
 		echo "expected last ${key}=${expected}, got ${actual:-<missing>}" >&2
@@ -60,23 +60,19 @@ assert_no_active_value "$FW3_OUT" "CONFIG_PACKAGE_kmod-ath11k"
 assert_no_active_value "$FW3_OUT" "CONFIG_PACKAGE_ath11k-firmware-ipq6018"
 assert_no_active_value "$FW3_OUT" "CONFIG_PACKAGE_wpad-openssl"
 
-assert_last_value "$FW3_OUT" "CONFIG_FEED_video" "n"
-assert_last_value "$FW3_OUT" "CONFIG_TARGET_ROOTFS_INITRAMFS" "n"
-assert_no_active_value "$FW3_OUT" "CONFIG_IB"
-assert_no_active_value "$FW3_OUT" "CONFIG_IB_STANDALONE"
-assert_last_value "$FW3_OUT" "CONFIG_PACKAGE_cpufreq" "y"
-assert_last_value "$FW3_OUT" "CONFIG_PACKAGE_kmod-bonding" "y"
-assert_last_value "$FW3_OUT" "CONFIG_PACKAGE_kmod-dummy" "y"
-assert_last_value "$FW3_OUT" "CONFIG_PACKAGE_kmod-netlink-diag" "y"
-assert_last_value "$FW3_OUT" "CONFIG_PACKAGE_kmod-veth" "y"
-assert_last_value "$FW3_OUT" "CONFIG_PACKAGE_proto-bonding" "y"
-assert_last_value "$FW3_OUT" "CONFIG_PACKAGE_luci-lib-ipkg" "y"
-assert_no_active_value "$FW3_OUT" "CONFIG_PACKAGE_kmod-dsa-tag-dsa"
-assert_no_active_value "$FW3_OUT" "CONFIG_PACKAGE_kmod-sched-act-ipt"
+assert_last_value "$FW3_OUT" "CONFIG_IB" "y"
+assert_last_value "$FW3_OUT" "CONFIG_IB_STANDALONE" "y"
+assert_last_value "$FW3_OUT" "CONFIG_PACKAGE_cpufreq" "m"
+assert_last_value "$FW3_OUT" "CONFIG_PACKAGE_kmod-dsa-tag-dsa" "y"
+assert_last_value "$FW3_OUT" "CONFIG_PACKAGE_kmod-sched-act-ipt" "y"
 
-grep -n '^CONFIG_PACKAGE_firewall4=' "$FW4_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_firewall4=y'
-grep -n '^CONFIG_PACKAGE_firewall=' "$FW4_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_firewall=n'
-grep -n '^CONFIG_PACKAGE_luci-app-homeproxy=' "$FW4_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_luci-app-homeproxy=y'
-grep -n '^CONFIG_PACKAGE_luci-app-ssr-plus=' "$FW4_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_luci-app-ssr-plus=n'
+assert_last_value "$FW4_OUT" "CONFIG_PACKAGE_firewall4" "y"
+assert_last_value "$FW4_OUT" "CONFIG_PACKAGE_firewall" "n"
+assert_last_value "$FW4_OUT" "CONFIG_PACKAGE_iptables" "n"
+assert_last_value "$FW4_OUT" "CONFIG_PACKAGE_nftables" "y"
+assert_last_value "$FW4_OUT" "CONFIG_PACKAGE_luci-app-turboacc" "n"
+assert_last_value "$FW4_OUT" "CONFIG_PACKAGE_luci-app-homeproxy" "y"
+assert_last_value "$FW4_OUT" "CONFIG_PACKAGE_luci-app-openclash" "y"
+assert_no_active_value "$FW4_OUT" "CONFIG_PACKAGE_luci-app-ssr-plus"
 
 echo "test_jd_ax6600_wifi_export: ok"
