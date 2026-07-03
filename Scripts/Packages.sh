@@ -552,6 +552,20 @@ ensure_luci_app_frp_init_permissions() {
     done
 }
 
+fix_luci_app_subconverter_postinst() {
+    local subconverter_makefile="./luci-app-subconverter/Makefile"
+
+    [ -f "${subconverter_makefile}" ] || return 0
+
+    if grep -Fq '${IPKG_INSTROOT}/etc/subconverter/subconverter' "${subconverter_makefile}"; then
+        echo "【Lin】luci-app-subconverter postinst 已兼容 IPKG_INSTROOT"
+        return 0
+    fi
+
+    perl -0pi -e 's@define Package/\$\(PKG_NAME\)/postinst\n\s+#!/bin/sh\n\s+chmod 755 /etc/subconverter/subconverter\nendef@define Package/\$(PKG_NAME)/postinst\n    #!/bin/sh\n    [ -f "\${IPKG_INSTROOT}/etc/subconverter/subconverter" ] || exit 0\n    chmod 755 "\${IPKG_INSTROOT}/etc/subconverter/subconverter"\nendef@s' "${subconverter_makefile}"
+    echo "【Lin】已修复 luci-app-subconverter postinst 安装根路径：${subconverter_makefile}"
+}
+
 update_openvpn_easy_rsa_version() {
     UPDATE_VERSION "openvpn-easy-rsa"
 }
@@ -692,6 +706,7 @@ apply_post_update_fixes() {
     fix_quickfile_makefile
     apply_lang_node_prebuilt_fix
     update_openvpn_easy_rsa_version
+    fix_luci_app_subconverter_postinst
     fix_tailscale_makefile
     fix_rust_build
     fix_diskman_makefile
