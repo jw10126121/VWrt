@@ -119,8 +119,7 @@ CONFIG_PACKAGE_frpc=y                        # FRP 服务端后端
 CONFIG_PACKAGE_luci-app-frps=m               # FRP 内网穿透服务端
 CONFIG_PACKAGE_luci-i18n-frps-zh-cn=m        # FRP 服务端中文语言包
 CONFIG_PACKAGE_frps=m                        # FRP 服务端后端
-# CONFIG_PACKAGE_luci-app-substore=y           # 订阅转换
-# CONFIG_PACKAGE_luci-i18n-substore-zh-cn=y    # 订阅转换中文语言包
+CONFIG_PACKAGE_luci-app-subconverter=y       # 订阅转换 # 目前2026/07/03只支持aarch64
 
 
 # ------------------------------------------------------------------------

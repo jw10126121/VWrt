@@ -358,7 +358,10 @@ apply_common_package_overrides() {
     UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "v0.47.096" "pkg"
     # UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "master" "pkg"
 
-    UPDATE_PACKAGE "luci-app-substore" "xiaohai77/luci-app-substore" "main" "pkg"
+    # 订阅转换
+    UPDATE_PACKAGE "luci-app-subconverter" "0x2196f3/luci-app-subconverter" "main" "pkg" # 目前2026/07/03只支持aarch64
+    # UPDATE_PACKAGE "luci-app-substore" "xiaohai77/luci-app-substore" "main" "pkg"
+    # update_package_list "luci-app-subconverter" "0x2196f3/luci-app-subconverter" "main"
 
 
     update_package_list "luci-app-onliner" "danchexiaoyang/luci-app-onliner" "main"
