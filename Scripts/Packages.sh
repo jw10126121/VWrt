@@ -359,10 +359,10 @@ apply_common_package_overrides() {
     # UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "master" "pkg"
 
     # 订阅转换
-    # UPDATE_PACKAGE "luci-app-subconverter" "0x2196f3/luci-app-subconverter" "main" "pkg" # 目前2026/07/03只支持aarch64
+    UPDATE_PACKAGE "luci-app-subconverter" "0x2196f3/luci-app-subconverter" "main" "pkg" # 目前2026/07/03只支持aarch64
     # UPDATE_PACKAGE "luci-app-substore" "xiaohai77/luci-app-substore" "main" "pkg"
-    update_package_list "luci-app-subconverter" "0x2196f3/luci-app-subconverter" "main"
-
+    # update_package_list "luci-app-subconverter" "0x2196f3/luci-app-subconverter" "main"
+    fix_luci_app_subconverter_postinst
 
     update_package_list "luci-app-onliner" "danchexiaoyang/luci-app-onliner" "main"
     update_package_list "wrtbwmon" "brvphoenix/wrtbwmon" "master"
@@ -706,7 +706,6 @@ apply_post_update_fixes() {
     fix_quickfile_makefile
     apply_lang_node_prebuilt_fix
     update_openvpn_easy_rsa_version
-    fix_luci_app_subconverter_postinst
     fix_tailscale_makefile
     fix_rust_build
     fix_diskman_makefile
