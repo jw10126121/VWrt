@@ -350,6 +350,9 @@ resolve_packages_luci_feed_branch() {
 apply_common_package_overrides() {
     # UPDATE_PACKAGE "luci-theme-kucat" "sirpdboy/luci-theme-kucat" "master"
     UPDATE_PACKAGE "luci-theme-noobwrt" "nooblk-98/luci-theme-noobwrt" "master"
+
+    UPDATE_PACKAGE "aurora" "eamonxg/luci-theme-aurora" "master"
+    UPDATE_PACKAGE "aurora-config" "eamonxg/luci-app-aurora-config" "master"
     
     # v0.47.110 编译异常，暂时固定到 v0.47.096。
     UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "v0.47.096" "pkg"
@@ -447,8 +450,6 @@ apply_iwrt_package_overrides() {
     echo "【Lin】启用 iwrt 配置族专属包覆盖"
     # UPDATE_PACKAGE "luci-theme-noobwrt" "nooblk-98/luci-theme-noobwrt" "master"
     UPDATE_PACKAGE "shadcn" "eamonxg/luci-theme-shadcn" "main"
-    UPDATE_PACKAGE "aurora" "eamonxg/luci-theme-aurora" "master"
-    UPDATE_PACKAGE "aurora-config" "eamonxg/luci-app-aurora-config" "master"
     UPDATE_PACKAGE "kucat" "sirpdboy/luci-theme-kucat" "master"
     UPDATE_PACKAGE "kucat-config" "sirpdboy/luci-app-kucat-config" "master"
 

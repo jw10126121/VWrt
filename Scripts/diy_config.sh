@@ -314,7 +314,7 @@ resolve_default_theme() {
             ;;
         auto)
             if [ "${SOURCE_TYPE}" = "lean" ]; then
-                printf '%s\n' 'argon'
+                printf '%s\n' 'aurora' # argon
             else
                 printf '%s\n' 'aurora'
             fi
