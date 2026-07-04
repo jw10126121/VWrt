@@ -118,7 +118,7 @@ on:
         description: '发布firmware'
         required: false
         type: boolean
-        default: true
+        default: false
       WHAT_MY_SAY:
         description: '编译说明'
         required: false

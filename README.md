@@ -4,14 +4,22 @@
 
 ## 目录
 
-- [固件风味](#固件风味)
-- [支持设备](#支持设备)
-- [CI 工作流](#ci-工作流)
-- [配置组织](#配置组织)
-- [Overlay 系统](#overlay-系统)
-- [固件默认值](#固件默认值)
-- [下载固件](#下载固件)
-- [刷机说明](#刷机说明)
+- [VWrt — OpenWrt 云编译仓库](#vwrt--openwrt-云编译仓库)
+  - [目录](#目录)
+  - [固件风味](#固件风味)
+  - [支持设备](#支持设备)
+  - [CI 工作流](#ci-工作流)
+    - [预设工作流](#预设工作流)
+    - [DEFAULT 工作流参数](#default-工作流参数)
+  - [配置组织](#配置组织)
+    - [主维护配置文件](#主维护配置文件)
+  - [Overlay 系统](#overlay-系统)
+    - [内置 Overlay](#内置-overlay)
+    - [自定义 Overlay](#自定义-overlay)
+  - [固件默认值](#固件默认值)
+  - [下载固件](#下载固件)
+  - [刷机说明](#刷机说明)
+  - [致谢](#致谢)
 
 ## 固件风味
 
@@ -33,6 +41,7 @@
 |------|------|------|
 | `CMIOT-AX18-NOWIFI` | qualcommax-ipq60xx / aarch64 | 默认无 Wi-Fi |
 | `JD-AX1800PRO-WIFI` | qualcommax-ipq60xx / aarch64 | 京东云亚瑟，带 Wi-Fi |
+| `JD-AX1800PRO-NOWIFI` | qualcommax-ipq60xx / aarch64 | 京东云亚瑟，无 Wi-Fi |
 | `JD-AX6600-WIFI` | qualcommax-ipq60xx / aarch64 | 京东云雅典娜，带 Wi-Fi |
 | `GL-MT6000-WIFI` | mediatek-filogic / aarch64 | GL.iNet MT6000，带 Wi-Fi |
 
@@ -64,7 +73,7 @@
 | `WRT_OVERLAYS` | 差异层，逗号分隔 | `frps,apk` |
 | `WRT_LUCI_BRANCH` | LuCI feed 分支 | `openwrt-23.05` |
 | `WRT_DIYPackages` | 包脚本选择 | `auto`（默认）/ `Packages.sh` |
-| `WRT_SOURCE_HASH_INFO` | 固定 lean 提交 | commit hash |
+| `WRT_SOURCE_HASH_INFO` | 固定 git 提交 | commit hash |
 
 **参数说明：**
 

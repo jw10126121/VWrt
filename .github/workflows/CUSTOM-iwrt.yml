@@ -1,6 +1,6 @@
 #CI项目
-name: CUSTOM-iwrt
-run-name: CUSTOM-iwrt-${{ inputs.WRT_RELEASE_FIRMWARE && 'release' || 'test' }}
+name: CUSTOM-IWRT
+run-name: CUSTOM-IWRT-${{ inputs.WRT_RELEASE_FIRMWARE && 'release' || 'test' }}
 
 #CI计划
 on:
