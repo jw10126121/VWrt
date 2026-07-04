@@ -168,6 +168,7 @@ turboacc|luci-app-turboacc_ luci-i18n-turboacc-zh-cn_ kmod-fast-classifier_ kmod
 vsftpd|luci-app-vsftpd_ luci-i18n-vsftpd-zh-cn_ vsftpd_ vsftpd-alt_
 lucky|luci-app-lucky_ luci-i18n-lucky-zh-cn_ lucky_
 sqmcontroller|luci-app-sqm-controller_ luci-i18n-sqm-controller-zh-cn_ python3_ python3-light_ kmod-sched-connmark_ kmod-sched-ctinfo_
+nikki|luci-app-nikki_ nikki_
 EOF
 )
 
