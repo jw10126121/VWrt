@@ -76,3 +76,6 @@ if target_luci_branch="$(resolve_luci_branch_override)"; then
 fi
 
 dedupe_active_feeds
+
+# 加入 miaomiaowu feed，主要用于 luci-app-miaomiaowu。
+append_feed_if_missing "miaomiaowu" "src-git miaomiaowu https://github.com/xiaohai77/OpenWrt-MMW.git"
