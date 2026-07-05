@@ -306,7 +306,7 @@ configure_common_system_defaults() {
 }
 
 # 解析默认 LuCI 主题。
-# auto 表示按源码类型选择：lean 使用 argon，其它源码使用 aurora。
+# auto 表示按源码类型选择：lean 使用 aurora，其它源码使用 aurora。
 resolve_default_theme() {
     case "$WRT_THEME" in
         '')

@@ -87,6 +87,7 @@ configure_ecm_accel_delay_fix() {
     fi
 }
 
+# 预置openclash核心
 preload_openclash_meta_core() {
     local choose_type_openclash
     local app_openclash_dir
@@ -143,6 +144,7 @@ preload_openclash_meta_core() {
     fi
 }
 
+# 预置hp资源
 preload_homeproxy_resources() {
     local choose_type_homeproxy
     local app_homeproxy_dir
