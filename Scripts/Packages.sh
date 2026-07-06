@@ -207,6 +207,44 @@ update_package_list() {
     rm -rf "${repo_name}"
 }
 
+# luci-app-lanspeed 仓库同时维护 LuCI 前端与后端守护进程，
+# 这里按上游目录结构分别拷出 applications/ 与 net/ 下的两个目标包。
+UPDATE_LANSPEED() {
+    local LANSPEED_REPO="https://github.com/qimaoww/luci-app-lanspeed.git"
+    local TMP_DIR
+
+    TMP_DIR=$(mktemp -d) || {
+        echo "【Lin】无法创建 luci-app-lanspeed 临时目录" >&2
+        return 1
+    }
+
+    DELETE_PACKAGE "luci-app-lanspeed"
+    DELETE_PACKAGE "lanspeedd"
+    rm -rf "${package_workdir}/luci-app-lanspeed" "${package_workdir}/lanspeedd"
+
+    if ! git clone --depth 1 --single-branch "${LANSPEED_REPO}" "${TMP_DIR}"; then
+        rm -rf "${TMP_DIR}"
+        return 1
+    fi
+
+    if [ ! -f "${TMP_DIR}/applications/luci-app-lanspeed/Makefile" ]; then
+        echo "【Lin】luci-app-lanspeed Makefile not found in ${LANSPEED_REPO}" >&2
+        rm -rf "${TMP_DIR}"
+        return 1
+    fi
+
+    if [ ! -f "${TMP_DIR}/net/lanspeedd/Makefile" ]; then
+        echo "【Lin】lanspeedd Makefile not found in ${LANSPEED_REPO}" >&2
+        rm -rf "${TMP_DIR}"
+        return 1
+    fi
+
+    cp -rf "${TMP_DIR}/applications/luci-app-lanspeed" "${package_workdir}/luci-app-lanspeed"
+    cp -rf "${TMP_DIR}/net/lanspeedd" "${package_workdir}/lanspeedd"
+    rm -rf "${TMP_DIR}"
+    echo "【Lin】成功导入 luci-app-lanspeed / lanspeedd"
+}
+
 pin_easytier_binary_version() {
     local package_dir=$1
     local target_version=${2:-}
@@ -369,6 +407,8 @@ apply_common_package_overrides() {
     update_package_list "luci-app-onliner" "danchexiaoyang/luci-app-onliner" "main"
     update_package_list "wrtbwmon" "brvphoenix/wrtbwmon" "master"
     update_package_list "luci-app-wrtbwmon" "brvphoenix/luci-app-wrtbwmon" "master"
+    # UPDATE_LANSPEED
+    update_package_list "luci-app-lanspeed lanspeedd" "qimaoww/luci-app-lanspeed" "master"
     update_package_list "luci-app-oaf oaf open-app-filter" "destan19/OpenAppFilter" "master"
 
     safe_update_package "frp" "https://github.com/jw10126121/openwrt_frp" "main" # "v0.69.0"
