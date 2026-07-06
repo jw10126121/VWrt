@@ -14,7 +14,7 @@ extract_kernel_patchver() {
     local makefile_path=$1
 
     [ -f "${makefile_path}" ] || return 0
-    grep -E "KERNEL_PATCHVER[:=]+" "${makefile_path}" | awk -F ':=' '{print $2}' | tr -d ' ' | head -n1
+    sed -nE 's/^[[:space:]]*KERNEL_PATCHVER[[:space:]]*:?=[[:space:]]*([^[:space:]#]+).*/\1/p' "${makefile_path}" | head -n1
 }
 
 extract_kernel_version() {
@@ -61,6 +61,9 @@ while IFS= read -r line; do
         device_target="${BASH_REMATCH[2]}"
         device_subtarget="${BASH_REMATCH[3]}"
         device_name_list+=("${BASH_REMATCH[4]}")
+    elif [[ -z "${device_target}" && -z "${device_subtarget}" && $line =~ ^CONFIG_TARGET_([a-z0-9]+)_([a-z0-9]+)=y$ ]]; then
+        device_target="${BASH_REMATCH[1]}"
+        device_subtarget="${BASH_REMATCH[2]}"
     fi
 done < "${config_path}"
 
@@ -80,12 +83,11 @@ if [ -n "${WRT_DEVICE:-}" ]; then
 fi
 
 dir_linux_version="${openwrt_path}/target/linux"
-dir_linux_device_target="$(find "${dir_linux_version}" -type d -name "${device_target}" -print -prune)"
-makefile_path="${dir_linux_device_target}/Makefile"
+makefile_path="${dir_linux_version}/${device_target}/Makefile"
 kernel_patchver="$(extract_kernel_patchver "${makefile_path}")"
 
 if [ -z "${kernel_patchver}" ]; then
-    kernel_patchver="6.1"
+    kernel_patchver="unknown"
 fi
 
 version_kernel="$(extract_kernel_version "${openwrt_path}" "${kernel_patchver}")"
