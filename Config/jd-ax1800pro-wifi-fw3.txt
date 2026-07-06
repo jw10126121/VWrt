@@ -80,15 +80,15 @@ CONFIG_PACKAGE_smartdns=m                    # SmartDNS 后端
 CONFIG_PACKAGE_luci-app-accesscontrol=y      # 上网时间控制。lean luci v25.12版本，这个插件已去掉，所以这边不生效
 CONFIG_PACKAGE_luci-i18n-accesscontrol-zh-cn=y # 上网时间控制中文语言包。lean luci v25.12版本，这个插件已去掉，所以这边不生效
 CONFIG_PACKAGE_luci-app-oaf=y                # OpenAppFilter 应用过滤
+CONFIG_PACKAGE_luci-app-watchcat=y           # 网络守护
+CONFIG_PACKAGE_luci-i18n-watchcat-zh-cn=y    # Watchcat 中文语言包
+CONFIG_PACKAGE_watchcat=y                    # Watchcat 后端
 CONFIG_PACKAGE_luci-app-pushbot=m            # PushBot 推送
 CONFIG_PACKAGE_luci-i18n-pushbot-zh-cn=m     # PushBot 中文语言包
 CONFIG_PACKAGE_luci-app-wechatpush=y         # 微信推送
 CONFIG_PACKAGE_luci-app-vlmcsd=y             # KMS 服务
 CONFIG_PACKAGE_luci-i18n-vlmcsd-zh-cn=y      # KMS 中文语言包
 CONFIG_PACKAGE_vlmcsd=y                      # KMS 后端
-CONFIG_PACKAGE_luci-app-watchcat=y           # 网络守护
-CONFIG_PACKAGE_luci-i18n-watchcat-zh-cn=y    # Watchcat 中文语言包
-CONFIG_PACKAGE_watchcat=y                    # Watchcat 后端
 # <<< SERVICE-END
 CONFIG_PACKAGE_luci-app-arpbind=m            # ARP 绑定
 CONFIG_PACKAGE_luci-i18n-arpbind-zh-cn=m     # ARP 绑定中文语言包
@@ -159,18 +159,18 @@ CONFIG_PACKAGE_ipt2socks=m                   # SSR Plus 依赖后端
 #  菜单整理：NAS
 # ------------------------------------------------------------------------
 #  维护提示：共享、同步、FTP、打印和文件索引都归到这组。
-CONFIG_PACKAGE_luci-app-hd-idle=m            # 硬盘休眠
-CONFIG_PACKAGE_luci-i18n-hd-idle-zh-cn=m     # 硬盘休眠中文语言包
-CONFIG_PACKAGE_luci-app-openlist=m           # OpenList 文件索引
-CONFIG_PACKAGE_luci-i18n-openlist-zh-cn=m    # OpenList 中文语言包
 CONFIG_PACKAGE_luci-app-samba4=m             # Samba 共享
 CONFIG_PACKAGE_luci-i18n-samba4-zh-cn=m      # Samba 中文语言包
+CONFIG_PACKAGE_luci-app-openlist=m           # OpenList 文件索引
+CONFIG_PACKAGE_luci-i18n-openlist-zh-cn=m    # OpenList 中文语言包
+CONFIG_PACKAGE_luci-app-hd-idle=m            # 硬盘休眠
+CONFIG_PACKAGE_luci-i18n-hd-idle-zh-cn=m     # 硬盘休眠中文语言包
 CONFIG_PACKAGE_luci-app-usb-printer=m        # USB 打印服务
 CONFIG_PACKAGE_luci-i18n-usb-printer-zh-cn=m # USB 打印中文语言包
-CONFIG_PACKAGE_luci-app-verysync=m           # 微力同步
-CONFIG_PACKAGE_luci-i18n-verysync-zh-cn=m    # 微力同步中文语言包
 CONFIG_PACKAGE_luci-app-vsftpd=m             # FTP 服务
 CONFIG_PACKAGE_luci-i18n-vsftpd-zh-cn=m      # FTP 中文语言包
+CONFIG_PACKAGE_luci-app-verysync=m           # 微力同步
+CONFIG_PACKAGE_luci-i18n-verysync-zh-cn=m    # 微力同步中文语言包
 
 # ------------------------------------------------------------------------
 #  防火墙相关插件
@@ -223,4 +223,3 @@ CONFIG_TARGET_DEVICE_qualcommax_ipq60xx_DEVICE_xiaomi_rm1800=n      # 小米RM18
 #CONFIG_PACKAGE_wpad-openssl=y                # 启用 AP 认证组件
 #CONFIG_PACKAGE_hostapd-common=y              # 启用 hostapd 公共库
 #CONFIG_PACKAGE_ipq-wifi-jdcloud_ax1800pro=y  # 亚瑟 AX1800 Pro 板级校准包
-
