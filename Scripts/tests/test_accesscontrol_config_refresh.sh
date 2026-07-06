@@ -6,8 +6,8 @@
 set -eu
 
 WORKFLOW_FILE="$(cd "$(dirname "$0")/../.." && pwd)/.github/workflows/CORE-ALL.yml"
-DIY_PACKAGES_LINE=$(grep -n '^    - name: diy Packages (自定义包)$' "$WORKFLOW_FILE" | cut -d: -f1)
-DIY_CONFIG_LINE=$(grep -n '^    - name: diy config (自定义配置)$' "$WORKFLOW_FILE" | cut -d: -f1)
+DIY_PACKAGES_LINE=$(grep -n '^    - name: DIY Packages (自定义包)$' "$WORKFLOW_FILE" | cut -d: -f1)
+DIY_CONFIG_LINE=$(grep -n '^    - name: DIY Config (导出基础配置)$' "$WORKFLOW_FILE" | cut -d: -f1)
 
 if grep -q '^    - name: Refresh Package Metadata After DIY Packages (刷新注入包后的元数据)$' "$WORKFLOW_FILE"; then
 	echo "refresh-package-metadata step should be removed from CORE-ALL workflow" >&2

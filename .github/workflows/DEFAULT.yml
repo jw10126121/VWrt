@@ -1,6 +1,6 @@
 #CI项目
 name: DEFAULT
-run-name: ${{ inputs.WRT_DEVICE }}-${{ inputs.SOURCE_TYPE }}-${{ inputs.WRT_FIREWALL == 'auto' && (inputs.SOURCE_TYPE == 'lean' && 'fw3' || 'fw4') || inputs.WRT_FIREWALL }}-${{ inputs.WRT_OVERLAYS != '' && inputs.WRT_OVERLAYS || 'base' }}
+run-name: ${{ inputs.WRT_DEVICE }}-${{ inputs.SOURCE_TYPE }}-${{ inputs.WRT_FIREWALL == 'auto' && (inputs.SOURCE_TYPE == 'lean' && 'fw3' || 'fw4') || inputs.WRT_FIREWALL }}-${{ inputs.WRT_FRP_MODE }}-${{ inputs.WRT_USB_MODE }}-${{ inputs.WRT_PACKAGE_MANAGER }}-${{ inputs.WRT_OVERLAYS != '' && inputs.WRT_OVERLAYS || 'base' }}
 
 on:
   workflow_call:
@@ -13,6 +13,18 @@ on:
         type: string
         default: 'lean'
       WRT_FIREWALL:
+        required: false
+        type: string
+        default: 'auto'
+      WRT_FRP_MODE:
+        required: false
+        type: string
+        default: 'frpc'
+      WRT_USB_MODE:
+        required: false
+        type: string
+        default: 'default'
+      WRT_PACKAGE_MANAGER:
         required: false
         type: string
         default: 'auto'
@@ -67,8 +79,9 @@ on:
           - gl-mt6000-wifi
           - gl-mt6000-nowifi
         default: 'cmiot-ax18-nowifi'
+      # 源码类型：vwrt = immortalwrt，lean = coolsnowwolf/lede，libwrt = LiBwrt/LibWrt
       SOURCE_TYPE:
-        description: '源码类型（vwrt=immortalwrt，lean=coolsnowwolf/lede，libwrt=LiBwrt/LibWrt）'
+        description: '源码类型'
         required: false
         type: choice
         options:
@@ -76,8 +89,9 @@ on:
           - lean
           - libwrt
         default: 'vwrt'
+      # 防火墙栈：- auto = lean -> fw3，vwrt/libwrt -> fw4，- fw3 / fw4 = 手动指定
       WRT_FIREWALL:
-        description: '防火墙栈（auto=按源码类型自动选择，lean→fw3，vwrt/libwrt→fw4）'
+        description: '防火墙栈'
         required: false
         type: choice
         options:
@@ -85,47 +99,72 @@ on:
           - fw3
           - fw4
         default: 'auto'
-      WRT_OVERLAYS:
-        description: '可选 overlays，逗号分隔，例如 frps'
+      # FRP 模式：- frpc = 客户端，- frps = 服务端，- frp = 同时启用 frpc 与 frps，- none = 不额外追加 FRP overlay
+      WRT_FRP_MODE:
+        description: 'FRP 模式'
         required: false
-        type: string
-        default: ''
-      WRT_EXTRA_CONFIGS:
-        description: '临时附加配置，支持 luci-app-mmw / luci-app-mmw=y / CONFIG_PACKAGE_xxx=y；支持空格、逗号、中文逗号或换行分隔'
+        type: choice
+        options:
+          - frpc
+          - frps
+          - frp
+          - none
+        default: 'frpc'
+      # USB 模式：- default = 保持设备默认，- usb / nousb = 显式覆盖
+      WRT_USB_MODE:
+        description: 'USB 模式'
         required: false
-        type: string
-        default: ''
-      WRT_USE_APK:
-        description: '包管理器（auto=按源码类型自动选择，true=强制apk，false=强制ipk）'
+        type: choice
+        options:
+          - default
+          - usb
+          - nousb
+        default: 'default'
+      # 包管理器：- auto = 按源码默认选择，- apk / ipk = 显式指定
+      WRT_PACKAGE_MANAGER:
+        description: '包管理器'
         required: false
         type: choice
         options:
           - auto
-          - 'true'
-          - 'false'
+          - apk
+          - ipk
         default: 'auto'
+      # 高级兜底 overlays：- 逗号分隔，- 会追加在结构化选项之后
+      WRT_OVERLAYS:
+        description: '高级 overlays'
+        required: false
+        type: string
+        default: ''
+      # 临时附加配置：- 支持 luci-app-mmw，- 支持 luci-app-mmw=y，- 支持 CONFIG_PACKAGE_xxx=y，- 支持空格、逗号、中文逗号、换行分隔
+      WRT_EXTRA_CONFIGS:
+        description: '临时附加配置'
+        required: false
+        type: string
+        default: ''
+      # LuCI feed 分支：- 例如 openwrt-23.05 / 23.05 / 2305
       WRT_LUCI_BRANCH:
-        description: '可选 LuCI feed 分支，例如 openwrt-23.05、23.05 或 2305；'
+        description: 'LuCI 分支'
         required: false
         type: string
         default: ''
       WRT_DIY_SETTING:
-        description: 'diy_setting脚本'
+        description: 'DIY 设置脚本'
         required: false
         type: string
         default: 'diy_config.sh'
       WRT_DIYPackages:
-        description: 'DIY包配置'
+        description: 'DIY 包脚本'
         required: false
         type: string
         default: 'auto'
       WRT_DEFAULT_LANIP:
-        description: '默认LAN-IP'
+        description: '默认 LAN IP'
         required: false
         type: string
         default: '192.168.0.1'
       WRT_RELEASE_FIRMWARE:
-        description: '发布firmware'
+        description: '发布固件'
         required: false
         type: boolean
         default: false
@@ -134,8 +173,10 @@ on:
         required: false
         type: string
         default: ''
+      # 源码 HASH：
+      # - 可选填写 commit hash
       WRT_SOURCE_HASH_INFO:
-        description: '源码 HASH，可选填写 commit hash'
+        description: '源码 HASH'
         required: false
         type: string
         default: ''
@@ -151,17 +192,37 @@ jobs:
     runs-on: ubuntu-22.04
     outputs:
       firewall: ${{ steps.resolve.outputs.firewall }}
-      use_apk: ${{ steps.resolve.outputs.use_apk }}
-      pkg_mgr: ${{ steps.resolve.outputs.pkg_mgr }}
+      package_manager: ${{ steps.resolve.outputs.package_manager }}
+      overlays: ${{ steps.resolve.outputs.overlays }}
+      overlay_label: ${{ steps.resolve.outputs.overlay_label }}
     steps:
       - name: Resolve auto values
         id: resolve
+        shell: bash
         run: |
+          set -euo pipefail
+
           source_type="${{ inputs.SOURCE_TYPE }}"
           firewall="${{ inputs.WRT_FIREWALL }}"
-          use_apk="${{ inputs.WRT_USE_APK }}"
+          package_manager_input="${{ inputs.WRT_PACKAGE_MANAGER }}"
+          resolved_package_manager="$package_manager_input"
+          manual_overlays="${{ inputs.WRT_OVERLAYS }}"
+          frp_mode="${{ inputs.WRT_FRP_MODE }}"
+          usb_mode="${{ inputs.WRT_USB_MODE }}"
+          structured_overlays=''
+          overlays=''
 
-          # vwrt → fw4 / apk，libwrt → fw4 / ipk，lean → fw3 / ipk
+          append_csv() {
+            local overlay_name=${1:-}
+            [ -n "$overlay_name" ] || return 0
+            if [ -n "$structured_overlays" ]; then
+              structured_overlays="${structured_overlays},${overlay_name}"
+            else
+              structured_overlays="$overlay_name"
+            fi
+          }
+
+          # 配置防火墙版本：vwrt → fw4 / apk，libwrt → fw4 / ipk，lean → fw3 / ipk
           if [ "$firewall" = "auto" ]; then
             if [ "$source_type" = "vwrt" ] || [ "$source_type" = "libwrt" ]; then
               firewall="fw4"
@@ -169,27 +230,51 @@ jobs:
               firewall="fw3"
             fi
           fi
-          if [ "$use_apk" = "auto" ]; then
+
+          # 配置包管理器：vwrt → apk，libwrt → ipk，lean → ipk
+          if [ "$package_manager_input" = "auto" ]; then
             if [ "$source_type" = "vwrt" ]; then
-              use_apk="true"
+              resolved_package_manager="apk"
             else
-              use_apk="false"
+              resolved_package_manager="ipk"
             fi
           fi
 
-          echo "firewall=$firewall" >> $GITHUB_OUTPUT
-          echo "use_apk=$use_apk" >> $GITHUB_OUTPUT
-          if [ "$use_apk" = "true" ]; then
-            echo "pkg_mgr=apk" >> $GITHUB_OUTPUT
-          else
-            echo "pkg_mgr=ipk" >> $GITHUB_OUTPUT
+          # 配置frp_mode的结构化overlays
+          if [ "$frp_mode" = "frpc" ] || [ "$frp_mode" = "frps" ] || [ "$frp_mode" = "frp" ]; then
+            append_csv "$frp_mode"
           fi
+
+          # 配置usb_mode的结构化overlays
+          if [ "$usb_mode" = "usb" ] || [ "$usb_mode" = "nousb" ]; then
+            append_csv "$usb_mode"
+          fi
+
+          manual_overlays=$(printf '%s' "$manual_overlays" | sed 's/^[[:space:],]*//; s/[[:space:],]*$//')
+
+          if [ -n "$structured_overlays" ] && [ -n "$manual_overlays" ]; then
+            overlays="${structured_overlays},${manual_overlays}"
+          elif [ -n "$structured_overlays" ]; then
+            overlays="$structured_overlays"
+          else
+            overlays="$manual_overlays"
+          fi
+
+          overlay_label="${overlays:-base}"
+
+          echo "firewall=$firewall" >> $GITHUB_OUTPUT
+          echo "package_manager=$resolved_package_manager" >> $GITHUB_OUTPUT
+          echo "overlays=$overlays" >> "$GITHUB_OUTPUT"
+          echo "overlay_label=$overlay_label" >> "$GITHUB_OUTPUT"
           echo "【Lin】源码类型：${source_type}"
-          echo "【Lin】解析结果：fw=${firewall}, apk=${use_apk}"
+          echo "【Lin】FRP 模式：${frp_mode:-none}"
+          echo "【Lin】USB 模式：${usb_mode:-default}"
+          echo "【Lin】解析结果：fw=${firewall}, pkg=${resolved_package_manager}"
+          echo "【Lin】结构化 overlays：${overlay_label}"
 
   config:
     needs: resolve
-    name: ${{ inputs.WRT_DEVICE }}-${{ needs.resolve.outputs.firewall }}-${{ needs.resolve.outputs.pkg_mgr }}-${{ inputs.WRT_OVERLAYS != '' && inputs.WRT_OVERLAYS || 'base' }}
+    name: ${{ inputs.WRT_DEVICE }}-${{ needs.resolve.outputs.firewall }}-${{ needs.resolve.outputs.package_manager }}-${{ needs.resolve.outputs.overlay_label }}
     # 调用公用编译核心ALL-CORE.yml
     uses: ./.github/workflows/CORE-ALL.yml
     with:
@@ -202,9 +287,9 @@ jobs:
       # 防火墙栈：fw3 或 fw4，从SOURCE_TYPE获取
       WRT_FIREWALL: ${{ needs.resolve.outputs.firewall }}
       # 包管理器：apk 或 ipk，从SOURCE_TYPE获取
-      WRT_USE_APK: ${{ needs.resolve.outputs.use_apk }}
+      WRT_PACKAGE_MANAGER: ${{ needs.resolve.outputs.package_manager }}
       # overlays，例如 frps
-      WRT_OVERLAYS: ${{ inputs.WRT_OVERLAYS }}
+      WRT_OVERLAYS: ${{ needs.resolve.outputs.overlays }}
       # 临时附加配置，例如 luci-app-mmw=y
       WRT_EXTRA_CONFIGS: ${{ inputs.WRT_EXTRA_CONFIGS }}
       # LuCI feed 分支，例如 openwrt-23.05、23.05 或 2305

@@ -3,20 +3,11 @@
 # Lisence: MIT
 #=================================================
 
-name:  CORE-ALL
+name: CORE-ALL
 
 on:
   workflow_call:
     inputs:
-      # WRT_REPO_INFO:
-      #   required: true
-      #   type: string
-      # WRT_REPO_URL:
-      #   required: true
-      #   type: string
-      # WRT_REPO_BRANCH:
-      #   required: true
-      #   type: string
       WRT_SOURCE_HASH_INFO:
         required: true
         type: string
@@ -69,7 +60,7 @@ on:
       WRT_MINE_SAY:
         required: true
         type: string
-      WRT_USE_APK:
+      WRT_PACKAGE_MANAGER:
         required: false
         type: string
         default: 'auto'
@@ -91,52 +82,37 @@ env:
   WEBHOOK_FEISHU: ${{ secrets.WEBHOOK_FEISHU }}
   WRT_SOURCE_HASH_INFO: ${{inputs.WRT_SOURCE_HASH_INFO}}
   WRT_DEVICE: ${{inputs.WRT_DEVICE}}                          # 设备名
-  SOURCE_TYPE: ${{inputs.SOURCE_TYPE || 'auto'}}               # 源码类型 vwrt/lean/libwrt/auto
+  SOURCE_TYPE: ${{inputs.SOURCE_TYPE}}                        # 源码类型 vwrt/lean/libwrt/auto
   WRT_FIREWALL: ${{inputs.WRT_FIREWALL}}                      # fw3 / fw4
   WRT_OVERLAYS: ${{inputs.WRT_OVERLAYS || '' }}               # 可选 overlays
   WRT_EXTRA_CONFIGS: ${{inputs.WRT_EXTRA_CONFIGS || '' }}     # 临时附加配置
   WRT_LUCI_BRANCH: ${{inputs.WRT_LUCI_BRANCH || '' }}         # 可选 LuCI feed 分支
-  WRT_CONFIG_LABEL: ''                                        # 组合标签
   WRT_DIY_SETTING: ${{ inputs.WRT_DIY_SETTING }}              # 自定义配置
-  WRT_DIY_FEEDS: ${{ inputs.WRT_DIY_FEEDS || 'diy_feeds.sh' }} # 主要用于更新Feeds
+  WRT_DIY_FEEDS: ${{ inputs.WRT_DIY_FEEDS }}                  # 主要用于更新Feeds
   WRT_DIYPackages: ${{inputs.WRT_DIYPackages}}                # 自定义包配置
   WRT_RELEASE_FIRMWARE: ${{inputs.WRT_RELEASE_FIRMWARE}}      # 发布固件
   WRT_DEFAULT_LANIP: ${{inputs.WRT_DEFAULT_LANIP}}            # 默认lanIP
   WRT_MINE_SAY: ${{inputs.WRT_MINE_SAY}} 
   WRT_DIR_CONFIGS: Config                                     # 自定义配置文件夹
   WRT_DIR_SCRIPTS: Scripts                                    # 脚本文件夹
-  WRT_diy_after_defconfig: 'diy_after_defconfig.sh'
   WRT_THEME_NAME: 'auto'
   UPLOAD_FIRMWARE_DIR: true
   SPLIT_ARTIFACTS: true                                       # 是否将固件和Packages包分开上传到Artifact
   IS_RESET_PASSWORD: true                                     # 是否把密码重置为空
-  UPLOAD_ALL_BIN_DIR: false                                   # 是否上传编译后的bin目录，因整理编译后的文件设置了UPLOAD_FIRMWARE_DIR，所以不上传整个bin目录
   IS_RESIZE_SPACE: true                                      # 是否扩容空间，一般编译内容不多，可以不扩容，减少资源浪费
   FREE_UP_DISK: true                                          # 是否清理磁盘
   CACHE_TOOLCHAIN: true
-  CLASH_KERNEL: amd64
-  UPLOAD_BIN_DIR_FORCE: true                                 # 强制上传bin
   WRT_HAS_WIFI: true
-  WRT_USE_APK: auto
+  WRT_PACKAGE_MANAGER: ${{ inputs.WRT_PACKAGE_MANAGER }}
   INSTALL_LLVM: false                                        # 是否安装 LLVM/Clang 工具链，默认关闭
   OPENWRT_PATH: '/builder/openwrt'
-  DEVICE_TARGET: ''
-  DEVICE_SUBTARGET: ''
-  DEVICE_PROFILE: ''
-  DEVICE_NAME_LIST: ''
-  DEVICE_NAME_LIST_LIAN: ''
-  DEVICE_ARCH: ''
-  REPO_GIT_HASH: ''
-  REPO_GIT_hash_simple: ''
-  system_content: ''
-  release_desc_file: ''
   
 #CI权限
 permissions: write-all
 
 jobs:
   build:
-    name: ${{ inputs.WRT_DEVICE }}-${{ inputs.WRT_FIREWALL == 'auto' && (inputs.SOURCE_TYPE == 'lean' && 'fw3' || 'fw4') || inputs.WRT_FIREWALL }}-${{ inputs.WRT_USE_APK == 'auto' && (inputs.SOURCE_TYPE == 'lean' && 'ipk' || 'apk') || (inputs.WRT_USE_APK == 'true' && 'apk' || 'ipk') }}-${{ inputs.WRT_OVERLAYS != '' && inputs.WRT_OVERLAYS || 'base' }}
+    name: ${{ inputs.WRT_DEVICE }}-${{ inputs.WRT_FIREWALL == 'auto' && (inputs.SOURCE_TYPE == 'lean' && 'fw3' || 'fw4') || inputs.WRT_FIREWALL }}-${{ inputs.WRT_PACKAGE_MANAGER == 'auto' && (inputs.SOURCE_TYPE == 'lean' && 'ipk' || 'apk') || inputs.WRT_PACKAGE_MANAGER }}-${{ inputs.WRT_OVERLAYS != '' && inputs.WRT_OVERLAYS || 'base' }}
     runs-on: ubuntu-24.04
     if: github.repository_owner == github.event.sender.login || github.event_name == 'schedule'
     steps:
@@ -180,21 +156,6 @@ jobs:
       if: env.INSTALL_LLVM == 'true'
       uses: sbwml/actions@install-llvm
 
-    # - name: Initialization Environment (初始化环境)
-    #   env:
-    #     DEBIAN_FRONTEND: noninteractive
-    #   run: |
-    #     docker rmi $(docker images -q)
-    #     sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android $AGENT_TOOLSDIRECTORY
-    #     sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
-    #     sudo -E apt-get -y update
-    #     sudo -E apt -yqq install dos2unix libfuse-dev
-    #     sudo -E apt-get -y install $(curl -fsSL is.gd/depends_ubuntu_2204)
-    #     sudo -E systemctl daemon-reload
-    #     sudo -E apt-get -y autoremove --purge
-    #     sudo -E apt-get -y clean
-    #     sudo timedatectl set-timezone 'Asia/Shanghai'
-
     - name: Checkout (下载当前源码)
       uses: actions/checkout@v6.0.1
 
@@ -231,11 +192,11 @@ jobs:
         echo "WRT_OVERLAYS=$WRT_OVERLAYS" >> $GITHUB_ENV
 
         if printf '%s' ",${WRT_OVERLAYS}," | grep -qi ',apk,'; then
-            echo "WRT_USE_APK=true" >> $GITHUB_ENV
+            echo "WRT_PACKAGE_MANAGER=apk" >> $GITHUB_ENV
         elif printf '%s' ",${WRT_OVERLAYS}," | grep -qi ',ipk,'; then
-            echo "WRT_USE_APK=false" >> $GITHUB_ENV
+            echo "WRT_PACKAGE_MANAGER=ipk" >> $GITHUB_ENV
         fi
-        # 若 overlay 未指定，保持 WRT_USE_APK 原值（auto/手动选择）
+        # 若 overlay 未指定，保持 WRT_PACKAGE_MANAGER 原值（auto/手动选择）
 
         echo "【Lin】读取文件名配置：$(if [ "$WRT_HAS_WIFI" == 'true' ]; then echo '有WIFI'; else echo '无WIFI'; fi)"
         echo "【Lin】读取文件名配置：$(if [ "$WRT_HAS_LITE" == 'true' ]; then echo '[精简版]'; else echo '[常规版]'; fi)"
@@ -279,8 +240,6 @@ jobs:
             WRT_REPO_URL="https://github.com/VIKINGYFY/immortalwrt"
             WRT_REPO_BRANCH="main"
           else
-            # WRT_REPO_URL="https://github.com/VIKINGYFY/immortalwrt"
-            # WRT_REPO_BRANCH="owrt"
             WRT_REPO_URL="https://github.com/immortalwrt/immortalwrt"
             WRT_REPO_BRANCH="master"
           fi
@@ -293,14 +252,14 @@ jobs:
         echo "【Lin】源码信息：[${WRT_REPO_BRANCH}] ${WRT_REPO_URL}"
         echo "【Lin】源码类型：${SOURCE_TYPE}"
 
-    - name: config git (修改git下载缓冲大小)
+    - name: Configure Git (调整 Git 下载参数)
       run: |
         git config --global http.postBuffer 524288000
         git config --global http.lowSpeedLimit 0
         git config --global http.lowSpeedTime 999999
         git config --global advice.detachedHead false
 
-    - name: Clone Openwrt Code (克隆openwrt代码)
+    - name: Clone OpenWrt Source (克隆 OpenWrt 源码)
       id: clone_source
       run: |
         echo "【Lin】源码类型：${SOURCE_TYPE}"
@@ -309,9 +268,9 @@ jobs:
         mkdir -p "$(dirname "$OPENWRT_PATH")"
         git clone --depth=1 --single-branch --branch $WRT_REPO_BRANCH $WRT_REPO_URL $OPENWRT_PATH
         if [ ! -d "$OPENWRT_PATH" ]; then
-          change_branceh=$( [ "$WRT_REPO_BRANCH" = 'main' ] && echo 'owrt' || echo 'main' )
-          echo "【Lin】修改克隆源代码分支：【$change_branceh】$WRT_REPO_URL"
-          git clone --depth=1 --single-branch --branch $change_branceh $WRT_REPO_URL $OPENWRT_PATH
+          fallback_branch=$( [ "$WRT_REPO_BRANCH" = 'main' ] && echo 'owrt' || echo 'main' )
+          echo "【Lin】修改克隆源代码分支：【$fallback_branch】$WRT_REPO_URL"
+          git clone --depth=1 --single-branch --branch $fallback_branch $WRT_REPO_URL $OPENWRT_PATH
         fi
         cd "$OPENWRT_PATH"
         echo "OPENWRT_PATH=$PWD" >> $GITHUB_ENV
@@ -339,13 +298,13 @@ jobs:
         echo "【Lin】源码类型：${SOURCE_TYPE}"
         # 包管理器和防火墙：auto 时根据源码类型自动选择
         # vwrt → fw4 / apk，libwrt → fw4 / ipk，lean → fw3 / ipk
-        WRT_USE_APK="${{ inputs.WRT_USE_APK }}"
+        WRT_PACKAGE_MANAGER="${{ inputs.WRT_PACKAGE_MANAGER }}"
         WRT_FIREWALL="${{ inputs.WRT_FIREWALL }}"
-        if [ "${WRT_USE_APK}" = "auto" ]; then
+        if [ "${WRT_PACKAGE_MANAGER}" = "auto" ]; then
           if [ "$SOURCE_TYPE" = "vwrt" ]; then
-            WRT_USE_APK="true"
+            WRT_PACKAGE_MANAGER="apk"
           else
-            WRT_USE_APK="false"
+            WRT_PACKAGE_MANAGER="ipk"
           fi
         fi
         # vwrt/libwrt 强制使用 fw4（nftables），不支持 fw3
@@ -361,9 +320,9 @@ jobs:
             WRT_FIREWALL="fw3"
           fi
         fi
-        echo "WRT_USE_APK=$WRT_USE_APK" >> $GITHUB_ENV
+        echo "WRT_PACKAGE_MANAGER=$WRT_PACKAGE_MANAGER" >> $GITHUB_ENV
         echo "WRT_FIREWALL=$WRT_FIREWALL" >> $GITHUB_ENV
-        echo "【Lin】防火墙：${WRT_FIREWALL}，apk包管理器：${WRT_USE_APK}"
+        echo "【Lin】防火墙：${WRT_FIREWALL}，包管理器：${WRT_PACKAGE_MANAGER}"
         # 临时导入config，为了获取设备信息
         [ -f ./.config ] && rm -rf ./.config
         EXPORT_ARGS=(
@@ -376,13 +335,6 @@ jobs:
           EXPORT_ARGS+=(--overlay "$WRT_OVERLAYS")
         fi
         bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/export_config.sh" "${EXPORT_ARGS[@]}"
-
-    # - name: ln mnt (合并磁盘mnt)
-    #   if: env.IS_RESIZE_SPACE == true || env.IS_RESIZE_SPACE == 'true'
-    #   run: |
-    #     sudo mkdir -p /mnt/build_wrt
-    #     sudo chown $USER:$USER /mnt/build_wrt
-    #     sudo ln -s /mnt/build_wrt $GITHUB_WORKSPACE/openwrt
 
     - name: Read Variables (读取变量)
       working-directory: ${{ env.OPENWRT_PATH }}
@@ -431,7 +383,7 @@ jobs:
       run: |
         echo "PREP_STAGE_START_TS=$(date +%s)" >> "$GITHUB_ENV"
         
-    - name: diy Feeds (自定义feeds)
+    - name: DIY Feeds (自定义 Feeds)
       working-directory: ${{ env.OPENWRT_PATH }}
       run: |
         bash $GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/$WRT_DIY_FEEDS
@@ -443,7 +395,7 @@ jobs:
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
-    - name: diy Packages (自定义包)
+    - name: DIY Packages (自定义包)
       working-directory: ${{ env.OPENWRT_PATH }}
       run: |
         cd ./package
@@ -456,7 +408,7 @@ jobs:
         echo "【Lin】执行DIY包脚本：$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/$WRT_RESOLVED_DIY_PACKAGES"
         bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/$WRT_RESOLVED_DIY_PACKAGES"
 
-    - name: diy config (自定义配置)
+    - name: DIY Config (导出基础配置)
       working-directory: ${{ env.OPENWRT_PATH }}
       run: |
         echo '【Lin】移除所有.config并添加新的.config'
@@ -475,13 +427,13 @@ jobs:
         bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/export_config.sh" "${EXPORT_ARGS[@]}"
         echo "EXPORT_CONTEXT_FILE=$EXPORT_CONTEXT_FILE" >> "$GITHUB_ENV"
         
-    - name: diy settings (加载自定义设置) 
+    - name: DIY Settings (加载自定义设置)
       working-directory: ${{ env.OPENWRT_PATH }}
       run: |
         # cp $GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/patch/custom_usage.txt $OPENWRT_PATH/custom_usage.txt
         if [ -e "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/$WRT_DIY_SETTING" ]; then
           echo "【Lin】加载自定义配置成功：$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/$WRT_DIY_SETTING"
-          bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/$WRT_DIY_SETTING" -n "Linjw" -i "${{env.WRT_DEFAULT_LANIP}}" -p "${{env.IS_RESET_PASSWORD}}" -t "${{env.WRT_THEME_NAME}}" -m "${{ env.WRT_USE_APK == 'true' && 'apk' || 'ipk' }}" -c "${{ env.WRT_CONFIG_LABEL }}"
+          bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/$WRT_DIY_SETTING" -n "Linjw" -i "${{env.WRT_DEFAULT_LANIP}}" -p "${{env.IS_RESET_PASSWORD}}" -t "${{env.WRT_THEME_NAME}}" -m "${{ env.WRT_PACKAGE_MANAGER }}" -c "${{ env.WRT_CONFIG_LABEL }}"
         else
           echo "【Lin】未找到DIY设置：$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/$WRT_DIY_SETTING"
         fi
@@ -501,7 +453,7 @@ jobs:
 
         echo "WRT_EXTRA_CONFIGS_FILE=$WRT_EXTRA_CONFIGS_FILE" >> "$GITHUB_ENV"
 
-    - name: defconfig (确认配置)
+    - name: Defconfig (确认配置)
       working-directory: ${{ env.OPENWRT_PATH }}
       run: |
         make defconfig > /dev/null 2>&1
@@ -547,7 +499,7 @@ jobs:
         echo "【Lin】LuCI版本：${LUCI_VERSION:-未知}"
         echo "【Lin】默认主题：${DEFAULT_THEME:-源码默认}"
         echo "【Lin】防火墙：$WRT_FIREWALL"
-        echo "【Lin】包管理器：$(if [ "${WRT_USE_APK:-false}" = 'true' ]; then echo apk; else echo ipk; fi)"
+        echo "【Lin】包管理器：${WRT_PACKAGE_MANAGER:-ipk}"
         echo "【Lin】设备主配置：${RESOLVED_DEVICE_CONFIG_PATH:-未知}"
         echo "【Lin】通用配置：${RESOLVED_GENERAL_CONFIG_PATHS:-未知}"
         echo "【Lin】自动 overlays：${RESOLVED_AUTO_OVERLAYS:-无}"
@@ -569,7 +521,7 @@ jobs:
         echo "【Lin】已生成编译开始通知内容"
         sleep 1
 
-    - name: Send dingding notify
+    - name: Send DingTalk Start Notification (发送钉钉开始通知)
       continue-on-error: true
       if: env.WEBHOOK_DINGDING != ''
       env:
@@ -582,7 +534,7 @@ jobs:
           -d "$payload" \
           "${WEBHOOK_DINGDING}"
 
-    - name: Send feishu notify (飞书开始推送)
+    - name: Send Feishu Start Notification (发送飞书开始通知)
       continue-on-error: true
       if: env.WEBHOOK_FEISHU != ''
       run: |
@@ -599,7 +551,7 @@ jobs:
             "elements": [
               {"tag": "markdown", "content": content},
               {"tag": "hr"},
-              {"tag": "note", "elements": [{"tag": "plain_text", "content": "📡 wechatpush"}]}
+              {"tag": "note", "elements": [{"tag": "plain_text", "content": "📡 github"}]}
             ]
           }
         }
@@ -613,15 +565,7 @@ jobs:
         FEISHU_MESSAGE: |
           ${{ env.start_notify_content }}
 
-    # - name: Cache Toolchain (缓存工具链)
-    #   if: env.CACHE_TOOLCHAIN == 'true'
-    #   uses: HiGarfield/cachewrtbuild@main
-    #   with:
-    #     ccache: false
-    #     mixkey: ${{ env.DEVICE_TARGET }}-${{ env.WRT_VER }}-${{ env.DEVICE_SUBTARGET }}
-    #     prefix: ${{ env.OPENWRT_PATH }}
-
-    - name: Download tools (下载工具包) 
+    - name: Download Tools (下载工具包)
       working-directory: ${{ env.OPENWRT_PATH }}
       run: |
         prep_end_ts=$(date +%s)
@@ -644,7 +588,7 @@ jobs:
       run: |
         df -hT $GITHUB_WORKSPACE /builder
 
-    - name: 编译固件 Build firmware
+    - name: Build Firmware (编译固件)
       id: compile
       continue-on-error: true
       working-directory: ${{ env.OPENWRT_PATH }}
@@ -682,7 +626,7 @@ jobs:
         echo "======================="
         
 
-    - name: Organize Files(整理编译后的文件)
+    - name: Organize Files (整理编译后的文件)
       id: organize
       if: steps.finalize_compile.outputs.status == 'success'
       working-directory: ${{ env.OPENWRT_PATH }}
@@ -699,7 +643,7 @@ jobs:
       run: |
         df -hT $GITHUB_WORKSPACE
 
-    - name: Upload Firmware To Artifact(将固件上传到Artifact)
+    - name: Upload Firmware To Artifact (将固件上传到 Artifact)
       id: upload_artifact
       timeout-minutes: 30
       continue-on-error: true
@@ -711,7 +655,7 @@ jobs:
           ${{ env.OPENWRT_PATH }}/upload/*
           !${{ env.OPENWRT_PATH }}/upload/*_Packages.tar.gz
 
-    - name: Upload Packages To Artifact(将Packages包单独上传到Artifact)
+    - name: Upload Packages To Artifact (将 Packages 包单独上传到 Artifact)
       id: upload_packages_artifact
       timeout-minutes: 30
       continue-on-error: true
@@ -729,7 +673,7 @@ jobs:
       run: |
         bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/ci_create_notifications.sh"
 
-    - name: Send dingding notify (推送编译结果消息)
+    - name: Send DingTalk Result Notification (发送钉钉结果通知)
       continue-on-error: true
       if: always() && env.WEBHOOK_DINGDING != '' && steps.finalize_compile.outputs.status != 'cancelled'
       env:
@@ -742,7 +686,7 @@ jobs:
           -d "$payload" \
           "${WEBHOOK_DINGDING}"
 
-    - name: Send feishu notify (推送编译结果消息)
+    - name: Send Feishu Result Notification (发送飞书结果通知)
       continue-on-error: true
       if: always() && env.WEBHOOK_FEISHU != '' && steps.finalize_compile.outputs.status != 'cancelled'
       run: |
@@ -759,7 +703,7 @@ jobs:
             "elements": [
               {"tag": "markdown", "content": content},
               {"tag": "hr"},
-              {"tag": "note", "elements": [{"tag": "plain_text", "content": "📡 wechatpush"}]}
+              {"tag": "note", "elements": [{"tag": "plain_text", "content": "📡 github"}]}
             ]
           }
         }
@@ -803,21 +747,6 @@ jobs:
           echo "【Lin】创建新的 Release：${release_tag}"
           gh release create "${release_tag}" "${release_files[@]}" --title "${release_name}" --notes-file "${{ env.release_desc_file }}"
         fi
-        # body: |
-        #   **This is OpenWrt Firmware for ${{ env.DEVICE_PROFILE }}**
-        #   ### 📒 固件信息(${{ env.WRT_HAS_WIFI_TEXT }})
-        #   - ${{ env.WRT_HAS_WIFI_TEXT }}带有线NSS的${{ env.VERSION_KERNEL }}内核固件
-        #   - 💻 这是 ${{ env.DEVICE_SUBTARGET }} 平台使用的 OpenWrt ${{ env.WRT_HAS_LITE_TEXT }}固件
-        #   - 💻 适配设备: ${{ env.DEVICE_PROFILE }}
-        #   - 💻 设备架构：${{ env.DEVICE_ARCH }}
-        #   - ⚽ 固件源码: ${{ env.WRT_REPO_URL }}
-        #   - 💝 源码分支: ${{ env.WRT_REPO_BRANCH }}
-        #   - 🌐 默认地址: ${{ env.WRT_DEFAULT_LANIP }}
-        #   - 🔑 默认密码: 无 | password
-        #   ### 🧊 固件版本
-        #   - 固件内核：${{ env.VERSION_KERNEL }}
-        #   - 固件编译前最后一次➦[主源码](${{ env.WRT_REPO_URL }})更新记录
-        #   - ${{ env.VERSION_INFO }}
 
     - name: Cleanup Workspace Before Cache Save
       if: always()

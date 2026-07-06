@@ -70,7 +70,10 @@
 | `WRT_DEVICE` | 设备型号 | `CMIOT-AX18-NOWIFI` |
 | `SOURCE_TYPE` | 源码类型 | `lean` / `vwrt` / `libwrt` |
 | `WRT_FIREWALL` | 防火墙栈 | `fw3` / `fw4` |
-| `WRT_OVERLAYS` | 差异层，逗号分隔 | `frps,apk` |
+| `WRT_FRP_MODE` | FRP 模式 | `frpc` / `frps` / `frp` / `none` |
+| `WRT_USB_MODE` | USB 模式 | `default` / `usb` / `nousb` |
+| `WRT_PACKAGE_MANAGER` | 包管理器 overlay | `auto` / `apk` / `ipk` |
+| `WRT_OVERLAYS` | 高级兜底差异层，逗号分隔 | `frps,apk` |
 | `WRT_LUCI_BRANCH` | LuCI feed 分支 | `openwrt-23.05` |
 | `WRT_DIYPackages` | 包脚本选择 | `auto`（默认）/ `Packages.sh` |
 | `WRT_SOURCE_HASH_INFO` | 固定 git 提交 | commit hash |
@@ -79,6 +82,10 @@
 
 - `WRT_LUCI_BRANCH` 留空时使用源码默认 LuCI feed
 - `WRT_DIYPackages` 默认 `auto`：优先使用 `Scripts/Packages-<设备名>.sh` 或短名脚本；填 `Packages.sh` 可强制使用通用包脚本
+- `WRT_FRP_MODE` 默认 `frpc`；`frp` 表示同时启用 `frpc` 与 `frps`，日常切换不再需要手输 overlay
+- `WRT_USB_MODE` 默认 `default`，表示保持设备主配置中的 USB 能力；选 `usb/nousb` 时才额外叠加 overlay
+- `WRT_PACKAGE_MANAGER` 默认 `auto`，表示沿用源码默认包管理器；选 `apk/ipk` 时会直接传给构建主流程，不再重复追加到 `WRT_OVERLAYS`
+- `WRT_OVERLAYS` 仍保留，作为自定义 overlay 的高级兜底输入；它会追加在结构化选项之后
 - overlay 文件可用 `# OVERLAY_GROUP=<组名>` 声明互斥组；同组内按 `WRT_OVERLAYS` 顺序以最后一个为准
 
 ## 配置组织
@@ -115,6 +122,7 @@ Overlay 用于在不修改设备主配置的前提下叠加功能差异。
 | `ipk` | IPK 包管理器（默认） |
 | `frpc` | FRP 内网穿透客户端 |
 | `frps` | FRP 内网穿透服务端 |
+| `frp` | 同时启用 FRP 客户端与服务端 |
 | `usb` | USB 支持 |
 | `nousb` | 移除 USB 支持 |
 | `nowifi-ipq60xx` | IPQ60XX 设备移除 Wi-Fi |
