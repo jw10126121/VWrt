@@ -20,6 +20,10 @@ on:
         required: false
         type: string
         default: ''
+      WRT_EXTRA_CONFIGS:
+        required: false
+        type: string
+        default: ''
       WRT_LUCI_BRANCH:
         required: false
         type: string
@@ -61,6 +65,7 @@ on:
           - jd-ax1800pro-nowifi
           - jd-ax6600-wifi
           - gl-mt6000-wifi
+          - gl-mt6000-nowifi
         default: 'cmiot-ax18-nowifi'
       SOURCE_TYPE:
         description: '源码类型（vwrt=immortalwrt，lean=coolsnowwolf/lede，libwrt=LiBwrt/LibWrt）'
@@ -82,6 +87,11 @@ on:
         default: 'auto'
       WRT_OVERLAYS:
         description: '可选 overlays，逗号分隔，例如 frps'
+        required: false
+        type: string
+        default: ''
+      WRT_EXTRA_CONFIGS:
+        description: '临时附加配置，支持 luci-app-mmw / luci-app-mmw=y / CONFIG_PACKAGE_xxx=y；支持空格、逗号、中文逗号或换行分隔'
         required: false
         type: string
         default: ''
@@ -195,6 +205,8 @@ jobs:
       WRT_USE_APK: ${{ needs.resolve.outputs.use_apk }}
       # overlays，例如 frps
       WRT_OVERLAYS: ${{ inputs.WRT_OVERLAYS }}
+      # 临时附加配置，例如 luci-app-mmw=y
+      WRT_EXTRA_CONFIGS: ${{ inputs.WRT_EXTRA_CONFIGS }}
       # LuCI feed 分支，例如 openwrt-23.05、23.05 或 2305
       WRT_LUCI_BRANCH: ${{ inputs.WRT_LUCI_BRANCH }}
       # DIY脚本，会自动判断源码进行处理

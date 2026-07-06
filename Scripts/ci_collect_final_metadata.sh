@@ -5,6 +5,11 @@
 
 set -euo pipefail
 
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+DEVICE_REGISTRY="${SCRIPT_DIR}/lib/device_registry.sh"
+
+. "$DEVICE_REGISTRY"
+
 # 这三个值的职责不同，取值也故意分开：
 # 1. OP_VERSION：主源码版本。用于描述当前主源码本体版本，也更适合做包兼容性判断。
 # 2. LUCI_VERSION：LuCI feed 版本。仅在 feeds.conf.default 里能解析出明确版本线时单独展示，否则回退到 OP_VERSION。
@@ -52,17 +57,7 @@ choose_preferred_version() {
 map_device_name_alias() {
     local raw_name=$1
 
-    case "${raw_name}" in
-        jdcloud_re-ss-01|jdcloud_ax1800pro)
-            printf '%s\n' 'jd_ax1800pro'
-            ;;
-        jdcloud_re-cs-02)
-            printf '%s\n' 'jd_ax6600'
-            ;;
-        *)
-            printf '%s\n' "${raw_name}"
-            ;;
-    esac
+    device_alias_from_profile_name "${raw_name}"
 }
 
 extract_device_profile_from_config() {
@@ -110,6 +105,14 @@ build_device_name_alias() {
     done
 
     printf '%s\n' "${joined}"
+}
+
+normalize_logical_device_name() {
+    normalize_device_name "${1:-}"
+}
+
+build_logical_device_alias() {
+    device_alias_from_logical_name "${1:-}"
 }
 
 extract_config_version() {
@@ -174,11 +177,8 @@ config_version="$(extract_config_version "${openwrt_path}/.config")"
 include_version="$(extract_include_version "${openwrt_path}/include/version.mk")"
 op_version="$(choose_preferred_version "${config_version}" "${include_version}")"
 luci_version="$(extract_luci_version "${openwrt_path}/feeds.conf.default" "${op_version}" || true)"
-device_profile="$(extract_device_profile_from_config "${openwrt_path}/.config")"
-# 优先使用 WRT_DEVICE（逻辑设备名），.config 解析结果作为后备
-if [ -n "${WRT_DEVICE:-}" ]; then
-    device_profile="${WRT_DEVICE,,}"
-fi
+rendered_device_profile="$(extract_device_profile_from_config "${openwrt_path}/.config")"
+logical_device_name="$(normalize_logical_device_name "${WRT_DEVICE:-}")"
 wrt_has_lite_text='[常规版]'
 wrt_has_wifi_text='有WIFI'
 package_manager='ipk'
@@ -188,8 +188,16 @@ fw_stack_tag='unknown'
 frp_role='未集成'
 frp_role_tag='none'
 source_flavor_tag="$(printf '%s' "${source_flavor}" | tr '[:upper:]' '[:lower:]')"
-device_name_alias="$(build_device_name_alias "${device_profile}")"
+device_name_alias=''
 start_time_tag="${START_TIME:-D000000_T000000}"
+
+if [ -n "${logical_device_name}" ]; then
+    device_name_alias="$(build_logical_device_alias "${logical_device_name}")"
+fi
+
+if [ -z "${device_name_alias}" ]; then
+    device_name_alias="$(build_device_name_alias "${rendered_device_profile}")"
+fi
 
 if [ "${wrt_has_lite}" = "true" ]; then
     wrt_has_lite_text='[精简版]'
@@ -243,19 +251,14 @@ elif grep -q '^CONFIG_PACKAGE_frpc=y$' "${openwrt_path}/.config" 2>/dev/null && 
 fi
 
 build_variant_tag="${source_flavor_tag}_${fw_stack_tag}_${package_manager_tag}_${frp_role_tag}"
-
-if [ "${wrt_has_wifi}" != "true" ] && [[ "${device_name_alias}" != *"nowifi"* ]]; then
-    output_name_prefix="${source_flavor_tag}_${device_name_alias}_nowifi_${fw_stack_tag}_${package_manager_tag}_${frp_role_tag}_${start_time_tag}"
-else
-    output_name_prefix="${source_flavor_tag}_${device_name_alias}_${fw_stack_tag}_${package_manager_tag}_${frp_role_tag}_${start_time_tag}"
-fi
+output_name_prefix="${source_flavor_tag}_${device_name_alias}_${fw_stack_tag}_${package_manager_tag}_${frp_role_tag}_${start_time_tag}"
 
 # 统一拼接给 README / 通知消息使用的固件说明正文。
 # 文案仍保持“内核版本 / LUCI版本 / OP版本”，以兼容现有通知与 README，
 # 但代码层已经把三者的来源和用途拆开，避免把 LuCI feed 版本与主源码版本混为一谈。
 system_content="编译开始：${start_time_tag}
 
-支持设备：${device_profile}
+支持设备：${rendered_device_profile}
 固件类型：${wrt_has_lite_text}
 支持平台：${device_target}-${device_subtarget}
 源码风味：${source_flavor}

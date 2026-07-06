@@ -42,6 +42,10 @@ on:
       WRT_OVERLAYS:
         required: false
         type: string
+      WRT_EXTRA_CONFIGS:
+        required: false
+        type: string
+        default: ''
       WRT_LUCI_BRANCH:
         required: false
         type: string
@@ -90,6 +94,7 @@ env:
   SOURCE_TYPE: ${{inputs.SOURCE_TYPE || 'auto'}}               # 源码类型 vwrt/lean/libwrt/auto
   WRT_FIREWALL: ${{inputs.WRT_FIREWALL}}                      # fw3 / fw4
   WRT_OVERLAYS: ${{inputs.WRT_OVERLAYS || '' }}               # 可选 overlays
+  WRT_EXTRA_CONFIGS: ${{inputs.WRT_EXTRA_CONFIGS || '' }}     # 临时附加配置
   WRT_LUCI_BRANCH: ${{inputs.WRT_LUCI_BRANCH || '' }}         # 可选 LuCI feed 分支
   WRT_CONFIG_LABEL: ''                                        # 组合标签
   WRT_DIY_SETTING: ${{ inputs.WRT_DIY_SETTING }}              # 自定义配置
@@ -221,9 +226,8 @@ jobs:
         WRT_CONFIG_LABEL="${WRT_DEVICE}-${WRT_FIREWALL}"
         echo "WRT_CONFIG_LABEL=$WRT_CONFIG_LABEL" >> $GITHUB_ENV
 
-        if [ -n "$WRT_OVERLAYS" ]; then
-            WRT_OVERLAYS=$(normalize_overlay_list "$GITHUB_WORKSPACE/$WRT_DIR_CONFIGS" "$WRT_OVERLAYS")
-        fi
+        AUTO_OVERLAYS=$(infer_default_overlays_for_device "$GITHUB_WORKSPACE/$WRT_DIR_CONFIGS" "$WRT_DEVICE" "$WRT_FIREWALL")
+        WRT_OVERLAYS=$(merge_overlay_csv_lists "$GITHUB_WORKSPACE/$WRT_DIR_CONFIGS" "$AUTO_OVERLAYS" "$WRT_OVERLAYS")
         echo "WRT_OVERLAYS=$WRT_OVERLAYS" >> $GITHUB_ENV
 
         if printf '%s' ",${WRT_OVERLAYS}," | grep -qi ',apk,'; then
@@ -457,16 +461,19 @@ jobs:
       run: |
         echo '【Lin】移除所有.config并添加新的.config'
         [ -f ./.config ] && rm -rf ./.config
+        EXPORT_CONTEXT_FILE="$OPENWRT_PATH/.linjw-export-context.env"
         EXPORT_ARGS=(
           --config-dir "$GITHUB_WORKSPACE/$WRT_DIR_CONFIGS"
           --device "$WRT_DEVICE"
           --fw "$WRT_FIREWALL"
           --output ".config"
+          --context-output "$EXPORT_CONTEXT_FILE"
         )
         if [ -n "$WRT_OVERLAYS" ]; then
           EXPORT_ARGS+=(--overlay "$WRT_OVERLAYS")
         fi
         bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/export_config.sh" "${EXPORT_ARGS[@]}"
+        echo "EXPORT_CONTEXT_FILE=$EXPORT_CONTEXT_FILE" >> "$GITHUB_ENV"
         
     - name: diy settings (加载自定义设置) 
       working-directory: ${{ env.OPENWRT_PATH }}
@@ -479,6 +486,20 @@ jobs:
           echo "【Lin】未找到DIY设置：$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/$WRT_DIY_SETTING"
         fi
         cp -f .config my_config.txt
+
+    - name: Apply Extra Configs (应用临时附加配置)
+      working-directory: ${{ env.OPENWRT_PATH }}
+      run: |
+        . "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/lib/extra_configs.sh"
+
+        WRT_EXTRA_CONFIGS_FILE="$OPENWRT_PATH/.linjw-extra-configs"
+        : > "$WRT_EXTRA_CONFIGS_FILE"
+
+        if [ -n "${WRT_EXTRA_CONFIGS:-}" ]; then
+          printf '%s\n' "$WRT_EXTRA_CONFIGS" | normalize_extra_config_stream | tee "$WRT_EXTRA_CONFIGS_FILE" >> "$OPENWRT_PATH/.config"
+        fi
+
+        echo "WRT_EXTRA_CONFIGS_FILE=$WRT_EXTRA_CONFIGS_FILE" >> "$GITHUB_ENV"
 
     - name: defconfig (确认配置)
       working-directory: ${{ env.OPENWRT_PATH }}
@@ -496,6 +517,37 @@ jobs:
       run: |
         file_diy="$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/diy_after_defconfig.sh"
         [ -f "${file_diy}" ] && chmod +x "${file_diy}" && bash "${file_diy}"
+
+    - name: Print Build Summary (打印编译条件摘要)
+      working-directory: ${{ env.OPENWRT_PATH }}
+      run: |
+        . "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/lib/device_registry.sh"
+
+        if [ -f "${EXPORT_CONTEXT_FILE:-}" ]; then
+          . "$EXPORT_CONTEXT_FILE"
+        fi
+
+        DEVICE_ALIAS=$(device_alias_from_logical_name "$WRT_DEVICE")
+
+        echo "【Lin】本次编译条件摘要"
+        echo "【Lin】逻辑设备名：$WRT_DEVICE"
+        echo "【Lin】设备别名：${DEVICE_ALIAS:-unknown}"
+        echo "【Lin】源码类型：$SOURCE_TYPE"
+        echo "【Lin】防火墙：$WRT_FIREWALL"
+        echo "【Lin】包管理器：$(if [ "${WRT_USE_APK:-false}" = 'true' ]; then echo apk; else echo ipk; fi)"
+        echo "【Lin】设备主配置：${RESOLVED_DEVICE_CONFIG_PATH:-未知}"
+        echo "【Lin】通用配置：${RESOLVED_GENERAL_CONFIG_PATHS:-未知}"
+        echo "【Lin】自动 overlays：${RESOLVED_AUTO_OVERLAYS:-无}"
+        echo "【Lin】手动 overlays：${RESOLVED_MANUAL_OVERLAYS:-无}"
+        echo "【Lin】最终 overlays：${RESOLVED_FINAL_OVERLAYS:-无}"
+        echo "【Lin】最终 overlay 文件：${RESOLVED_FINAL_OVERLAY_FILES:-无}"
+        echo "【Lin】是否 Wi-Fi：$WRT_HAS_WIFI"
+        echo "【Lin】临时附加配置："
+        if [ -s "${WRT_EXTRA_CONFIGS_FILE:-/dev/null}" ]; then
+          sed 's/^/【Lin】  - /' "$WRT_EXTRA_CONFIGS_FILE"
+        else
+          echo "【Lin】  - 无"
+        fi
 
     - name: Read Variables (读取变量)
       working-directory: ${{ env.OPENWRT_PATH }}

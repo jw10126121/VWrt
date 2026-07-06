@@ -21,7 +21,9 @@ fw=''
 overlay_list=''
 output_config=''
 cleanup_files=''
+context_output=''
 
+# 导出配置时优先复用当前源码目录判断 SOURCE_TYPE；缺少源码目录时退回 lean，保证离线导出也能工作。
 resolve_export_source_type() {
 	local requested_type="${SOURCE_TYPE:-lean}"
 
@@ -36,6 +38,7 @@ resolve_export_source_type() {
 	fi
 }
 
+# 根据源码类型和 FW 栈选择设备主配置；nowifi 设备会回退到对应 wifi 主配置，再由 overlay 去掉无线能力。
 resolve_device_config() {
 	local config_root=$1
 	local device_name=$2
@@ -78,20 +81,24 @@ resolve_device_config() {
 	case "$device_name_lower" in
 		*-nowifi)
 			local short_name=${device_name_lower%-nowifi}
+			local wifi_name="${short_name}-wifi"
 			if [ "$source_family" = "iwrt" ] || [ "$fw_lower" = "fw4" ]; then
-				# iwrt 配置族优先查找 fw4-iwrt 配置，如果不存在则查找 fw3 配置
-				if [ -f "$config_root/${short_name}-fw4-iwrt.txt" ]; then
-					printf '%s\n' "${short_name}-fw4-iwrt.txt"
+				if [ -f "$config_root/${wifi_name}-fw4-iwrt.txt" ]; then
+					printf '%s\n' "${wifi_name}-fw4-iwrt.txt"
 					return 0
-				elif [ -f "$config_root/${short_name}-fw3.txt" ]; then
-					printf '%s\n' "${short_name}-fw3.txt"
+				elif [ -f "$config_root/${wifi_name}-fw3.txt" ]; then
+					printf '%s\n' "${wifi_name}-fw3.txt"
 					return 0
 				fi
 			else
-				if [ -f "$config_root/${short_name}-fw3.txt" ]; then
-					printf '%s\n' "${short_name}-fw3.txt"
+				if [ -f "$config_root/${wifi_name}-fw3.txt" ]; then
+					printf '%s\n' "${wifi_name}-fw3.txt"
 					return 0
 				fi
+			fi
+			if [ -f "$config_root/${wifi_name}.txt" ]; then
+				printf '%s\n' "${wifi_name}.txt"
+				return 0
 			fi
 			if [ -f "$config_root/${short_name}.txt" ]; then
 				printf '%s\n' "${short_name}.txt"
@@ -103,6 +110,7 @@ resolve_device_config() {
 	return 1
 }
 
+# 通用配置按“设备专用 > 设备简写 > 源码类型/配置族 > 通用基线”的优先级解析。
 resolve_general_configs() {
 	local config_root=$1
 	local device_name=$2
@@ -287,6 +295,79 @@ dedupe_config_assignments() {
 	mv "$deduped_config" "$config_path"
 }
 
+overlay_csv_to_file_paths() {
+	local config_root=$1
+	local overlay_csv=${2:-}
+	local old_ifs overlay_name joined_paths
+
+	[ -n "$overlay_csv" ] || {
+		printf '\n'
+		return 0
+	}
+
+	old_ifs=$IFS
+	IFS=','
+	set -- $overlay_csv
+	IFS=$old_ifs
+
+	joined_paths=''
+	for overlay_name in "$@"; do
+		overlay_name=$(normalize_overlay_name "$overlay_name")
+		[ -n "$overlay_name" ] || continue
+		if [ -n "$joined_paths" ]; then
+			joined_paths="${joined_paths} $(resolve_overlay_file "$config_root" "$overlay_name")"
+		else
+			joined_paths=$(resolve_overlay_file "$config_root" "$overlay_name")
+		fi
+	done
+
+	printf '%s\n' "$joined_paths"
+}
+
+context_config_root_label() {
+	local config_root=$1
+
+	case "$config_root" in
+		*/Config|Config)
+			printf '%s\n' 'Config'
+			;;
+		*)
+			printf '%s\n' "$config_root"
+			;;
+	esac
+}
+
+general_config_list_to_paths() {
+	local config_root=$1
+	local general_list=${2:-}
+	local old_ifs general_name joined_paths
+	local config_root_label
+
+	config_root_label=$(context_config_root_label "$config_root")
+
+	[ -n "$general_list" ] || {
+		printf '\n'
+		return 0
+	}
+
+	old_ifs=$IFS
+	IFS=' '
+	set -- $general_list
+	IFS=$old_ifs
+
+	joined_paths=''
+	for general_name in "$@"; do
+		[ -n "$general_name" ] || continue
+		if [ -n "$joined_paths" ]; then
+			joined_paths="${joined_paths} ${config_root_label}/${general_name}"
+		else
+			joined_paths="${config_root_label}/${general_name}"
+		fi
+	done
+
+	printf '%s\n' "$joined_paths"
+}
+
 show_help() {
 	cat <<'EOF'
 用法：
@@ -304,9 +385,10 @@ show_help() {
   --fw          防火墙栈，fw3 或 fw4
   --overlay     可选 overlay 列表，逗号分隔，例如 frps,apk
                 同一 OVERLAY_GROUP 内按传入顺序以最后一个为准
-  --output      输出文件路径
-  --config-dir  配置目录，默认 Config
-  -h, --help    显示帮助
+	  --output      输出文件路径
+	  --config-dir  配置目录，默认 Config
+	  --context-output  可选，输出解析后的配置上下文变量
+	  -h, --help    显示帮助
 EOF
 }
 
@@ -330,6 +412,10 @@ while [ $# -gt 0 ]; do
 			;;
 		--config-dir)
 			config_dir=${2:?missing value for --config-dir}
+			shift 2
+			;;
+		--context-output)
+			context_output=${2:?missing value for --context-output}
 			shift 2
 			;;
 		-h|--help)
@@ -370,9 +456,10 @@ case "${fw}" in
 		;;
 esac
 
-if [ -n "$overlay_list" ]; then
-	overlay_list=$(normalize_overlay_list "$config_dir" "$overlay_list")
-fi
+manual_overlay_list=$overlay_list
+auto_overlay_list=$(infer_default_overlays_for_device "$config_dir" "$device" "$fw")
+overlay_list=$(merge_overlay_csv_lists "$config_dir" "$auto_overlay_list" "$overlay_list")
+final_overlay_file_paths=$(overlay_csv_to_file_paths "$config_dir" "$overlay_list")
 
 device_config=$(resolve_device_config "$config_dir" "$device" "$fw" || true)
 if [ -z "$device_config" ]; then
@@ -425,5 +512,19 @@ if [ -n "$overlay_list" ]; then
 fi
 
 dedupe_config_assignments "$output_config"
+
+if [ -n "$context_output" ]; then
+	context_config_root=$(context_config_root_label "$config_dir")
+	{
+		printf 'RESOLVED_DEVICE_CONFIG=%s\n' "$device_config"
+		printf 'RESOLVED_DEVICE_CONFIG_PATH=%s/%s\n' "$context_config_root" "$device_config"
+		printf 'RESOLVED_GENERAL_CONFIGS=%s\n' "$resolved_general_configs"
+		printf 'RESOLVED_GENERAL_CONFIG_PATHS=%s\n' "$(general_config_list_to_paths "$config_dir" "$resolved_general_configs")"
+		printf 'RESOLVED_AUTO_OVERLAYS=%s\n' "$auto_overlay_list"
+		printf 'RESOLVED_MANUAL_OVERLAYS=%s\n' "$manual_overlay_list"
+		printf 'RESOLVED_FINAL_OVERLAYS=%s\n' "$overlay_list"
+		printf 'RESOLVED_FINAL_OVERLAY_FILES=%s\n' "$(printf '%s' "$final_overlay_file_paths" | sed "s#${config_dir}/overlays#${context_config_root}/overlays#g")"
+	} > "$context_output"
+fi
 
 echo "导出完成：$output_config"
