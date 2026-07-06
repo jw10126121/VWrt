@@ -30,6 +30,14 @@ on:
         required: false
         type: string
         default: 'auto'
+      WRT_FRP_MODE:
+        required: false
+        type: string
+        default: 'none'
+      WRT_USB_MODE:
+        required: false
+        type: string
+        default: 'default'
       WRT_OVERLAYS:
         required: false
         type: string
@@ -84,6 +92,8 @@ env:
   WRT_DEVICE: ${{inputs.WRT_DEVICE}}                          # 设备名
   SOURCE_TYPE: ${{inputs.SOURCE_TYPE}}                        # 源码类型 vwrt/lean/libwrt/auto
   WRT_FIREWALL: ${{inputs.WRT_FIREWALL}}                      # fw3 / fw4
+  WRT_FRP_MODE: ${{inputs.WRT_FRP_MODE || 'none' }}
+  WRT_USB_MODE: ${{inputs.WRT_USB_MODE || 'default' }}
   WRT_OVERLAYS: ${{inputs.WRT_OVERLAYS || '' }}               # 可选 overlays
   WRT_EXTRA_CONFIGS: ${{inputs.WRT_EXTRA_CONFIGS || '' }}     # 临时附加配置
   WRT_LUCI_BRANCH: ${{inputs.WRT_LUCI_BRANCH || '' }}         # 可选 LuCI feed 分支
@@ -187,16 +197,44 @@ jobs:
         WRT_CONFIG_LABEL="${WRT_DEVICE}-${WRT_FIREWALL}"
         echo "WRT_CONFIG_LABEL=$WRT_CONFIG_LABEL" >> $GITHUB_ENV
 
-        AUTO_OVERLAYS=$(infer_default_overlays_for_device "$GITHUB_WORKSPACE/$WRT_DIR_CONFIGS" "$WRT_DEVICE" "$WRT_FIREWALL")
-        WRT_OVERLAYS=$(merge_overlay_csv_lists "$GITHUB_WORKSPACE/$WRT_DIR_CONFIGS" "$AUTO_OVERLAYS" "$WRT_OVERLAYS")
-        echo "WRT_OVERLAYS=$WRT_OVERLAYS" >> $GITHUB_ENV
+        manual_overlays="${WRT_OVERLAYS:-}"
+        auto_overlays=$(infer_default_overlays_for_device "$GITHUB_WORKSPACE/$WRT_DIR_CONFIGS" "$WRT_DEVICE" "$WRT_FIREWALL")
+        frp_overlays=''
+        usb_overlays=''
+        combined_overlays=''
 
-        if printf '%s' ",${WRT_OVERLAYS}," | grep -qi ',apk,'; then
-            echo "WRT_PACKAGE_MANAGER=apk" >> $GITHUB_ENV
-        elif printf '%s' ",${WRT_OVERLAYS}," | grep -qi ',ipk,'; then
-            echo "WRT_PACKAGE_MANAGER=ipk" >> $GITHUB_ENV
+        case "$WRT_FRP_MODE" in
+          frpc|frps|frp)
+            frp_overlays="$WRT_FRP_MODE"
+            ;;
+        esac
+
+        case "$WRT_USB_MODE" in
+          usb|nousb)
+            usb_overlays="$WRT_USB_MODE"
+            ;;
+        esac
+
+        combined_overlays="$frp_overlays"
+
+        if [ -n "$usb_overlays" ]; then
+          if [ -n "$combined_overlays" ]; then
+            combined_overlays="${combined_overlays},${usb_overlays}"
+          else
+            combined_overlays="$usb_overlays"
+          fi
         fi
-        # 若 overlay 未指定，保持 WRT_PACKAGE_MANAGER 原值（auto/手动选择）
+
+        if [ -n "$manual_overlays" ]; then
+          if [ -n "$combined_overlays" ]; then
+            combined_overlays="${combined_overlays},${manual_overlays}"
+          else
+            combined_overlays="$manual_overlays"
+          fi
+        fi
+
+        WRT_OVERLAYS=$(merge_overlay_csv_lists "$GITHUB_WORKSPACE/$WRT_DIR_CONFIGS" "$auto_overlays" "$combined_overlays")
+        echo "WRT_OVERLAYS=$WRT_OVERLAYS" >> $GITHUB_ENV
 
         echo "【Lin】读取文件名配置：$(if [ "$WRT_HAS_WIFI" == 'true' ]; then echo '有WIFI'; else echo '无WIFI'; fi)"
         echo "【Lin】读取文件名配置：$(if [ "$WRT_HAS_LITE" == 'true' ]; then echo '[精简版]'; else echo '[常规版]'; fi)"
@@ -207,6 +245,8 @@ jobs:
 
         echo "【Lin】读取设备参数：${{env.WRT_DEVICE}}"
         echo "【Lin】读取防火墙参数：${WRT_FIREWALL}"
+        echo "【Lin】读取 FRP 模式：${WRT_FRP_MODE}"
+        echo "【Lin】读取 USB 模式：${WRT_USB_MODE}"
         echo "【Lin】读取 overlays：${{env.WRT_OVERLAYS != '' && env.WRT_OVERLAYS || '无' }}"
         echo "【Lin】读取 LuCI 分支：${{env.WRT_LUCI_BRANCH != '' && env.WRT_LUCI_BRANCH || '源码默认' }}"
         START_DATE=$(date +"D%y%m%d")

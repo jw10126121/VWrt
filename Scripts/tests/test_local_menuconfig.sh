@@ -9,6 +9,9 @@ test -f "$TARGET_SCRIPT"
 grep -Fq 'OPENWRT_PATH=${OPENWRT_PATH:-/Volumes/OpenWrt/lede}' "$TARGET_SCRIPT"
 grep -Fq 'WRT_DIY_FEEDS=${WRT_DIY_FEEDS:-diy_feeds.sh}' "$TARGET_SCRIPT"
 grep -Fq 'WRT_FIREWALL=${WRT_FIREWALL:-auto}' "$TARGET_SCRIPT"
+grep -Fq 'WRT_FRP_MODE=${WRT_FRP_MODE:-none}' "$TARGET_SCRIPT"
+grep -Fq 'WRT_USB_MODE=${WRT_USB_MODE:-default}' "$TARGET_SCRIPT"
+grep -Fq 'WRT_PACKAGE_MANAGER=${WRT_PACKAGE_MANAGER:-auto}' "$TARGET_SCRIPT"
 grep -Fq 'WRT_DIYPackages=${WRT_DIYPackages:-auto}' "$TARGET_SCRIPT"
 grep -Fq 'WRT_THEME_NAME=${WRT_THEME_NAME:-auto}' "$TARGET_SCRIPT"
 grep -Fq 'resolve_device_script.sh' "$TARGET_SCRIPT"
@@ -17,7 +20,8 @@ grep -Fq '实际自定义包脚本：$WRT_RESOLVED_DIY_PACKAGES' "$TARGET_SCRIPT
 grep -Fq 'LOCAL_SKIP_MENUCONFIG=${LOCAL_SKIP_MENUCONFIG:-false}' "$TARGET_SCRIPT"
 grep -Fq 'LOCAL_CLEAN_GENERATED=${LOCAL_CLEAN_GENERATED:-true}' "$TARGET_SCRIPT"
 grep -Fq 'infer_default_overlays_for_device "$CONFIG_ROOT" "$WRT_DEVICE" "$WRT_FIREWALL"' "$TARGET_SCRIPT"
-grep -Fq 'merge_overlay_csv_lists "$CONFIG_ROOT" "$auto_overlays" "$WRT_OVERLAYS"' "$TARGET_SCRIPT"
+grep -Fq 'manual_overlays=${WRT_OVERLAYS:-}' "$TARGET_SCRIPT"
+grep -Fq 'merge_overlay_csv_lists "$CONFIG_ROOT" "$auto_overlays" "$combined_overlays"' "$TARGET_SCRIPT"
 grep -Fq 'git fetch --depth=1 origin "${WRT_SOURCE_HASH_INFO}"' "$TARGET_SCRIPT"
 grep -Fq 'rm -rf ./staging_dir ./tmp ./logs ./package/feeds ./bin ./build_dir ./toolchain ./feeds' "$TARGET_SCRIPT"
 grep -Fq 'mkdir -p ./feeds' "$TARGET_SCRIPT"
@@ -31,6 +35,7 @@ grep -Fq 'WRT_CONFIG_LABEL="${WRT_DEVICE}-${WRT_FIREWALL}"' "$TARGET_SCRIPT"
 grep -Fq '. "$SOURCE_TYPE_LIB"' "$TARGET_SCRIPT"
 grep -Fq 'SOURCE_TYPE=$(resolve_source_type "${SOURCE_TYPE:-auto}" "$OPENWRT_PATH")' "$TARGET_SCRIPT"
 grep -Fq 'SOURCE_CONFIG_FAMILY=$(source_config_family "$SOURCE_TYPE")' "$TARGET_SCRIPT"
+grep -Fq 'package_manager="$WRT_PACKAGE_MANAGER"' "$TARGET_SCRIPT"
 if grep -Fq '支持 lean、iwrt、vwrt、libwrt' "$TARGET_SCRIPT"; then
 	echo "local_menuconfig.sh should not expose iwrt as a SOURCE_TYPE option" >&2
 	exit 1
@@ -39,6 +44,10 @@ grep -Fq 'PATH="${LOCAL_COMPAT_DIR}:$PATH"' "$TARGET_SCRIPT"
 grep -Fq 'exec /usr/bin/sed -i "" "$@"' "$TARGET_SCRIPT"
 if grep -Fq 'apk 与 ipk 不能同时启用' "$TARGET_SCRIPT"; then
 	echo "local_menuconfig.sh should normalize mutually exclusive overlays instead of erroring" >&2
+	exit 1
+fi
+if grep -Fq 'if has_overlay apk; then' "$TARGET_SCRIPT"; then
+	echo "local_menuconfig.sh should not derive package manager from apk overlay anymore" >&2
 	exit 1
 fi
 if grep -Fq 'WRT_FIREWALL^^' "$TARGET_SCRIPT"; then

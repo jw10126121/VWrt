@@ -337,6 +337,15 @@ context_config_root_label() {
 	esac
 }
 
+write_context_assignment() {
+	local key=$1
+	local value=${2-}
+
+	printf '%s=' "$key"
+	printf '%q' "$value"
+	printf '\n'
+}
+
 general_config_list_to_paths() {
 	local config_root=$1
 	local general_list=${2:-}
@@ -516,14 +525,14 @@ dedupe_config_assignments "$output_config"
 if [ -n "$context_output" ]; then
 	context_config_root=$(context_config_root_label "$config_dir")
 	{
-		printf 'RESOLVED_DEVICE_CONFIG=%s\n' "$device_config"
-		printf 'RESOLVED_DEVICE_CONFIG_PATH=%s/%s\n' "$context_config_root" "$device_config"
-		printf 'RESOLVED_GENERAL_CONFIGS=%s\n' "$resolved_general_configs"
-		printf 'RESOLVED_GENERAL_CONFIG_PATHS=%s\n' "$(general_config_list_to_paths "$config_dir" "$resolved_general_configs")"
-		printf 'RESOLVED_AUTO_OVERLAYS=%s\n' "$auto_overlay_list"
-		printf 'RESOLVED_MANUAL_OVERLAYS=%s\n' "$manual_overlay_list"
-		printf 'RESOLVED_FINAL_OVERLAYS=%s\n' "$overlay_list"
-		printf 'RESOLVED_FINAL_OVERLAY_FILES=%s\n' "$(printf '%s' "$final_overlay_file_paths" | sed "s#${config_dir}/overlays#${context_config_root}/overlays#g")"
+		write_context_assignment 'RESOLVED_DEVICE_CONFIG' "$device_config"
+		write_context_assignment 'RESOLVED_DEVICE_CONFIG_PATH' "${context_config_root}/${device_config}"
+		write_context_assignment 'RESOLVED_GENERAL_CONFIGS' "$resolved_general_configs"
+		write_context_assignment 'RESOLVED_GENERAL_CONFIG_PATHS' "$(general_config_list_to_paths "$config_dir" "$resolved_general_configs")"
+		write_context_assignment 'RESOLVED_AUTO_OVERLAYS' "$auto_overlay_list"
+		write_context_assignment 'RESOLVED_MANUAL_OVERLAYS' "$manual_overlay_list"
+		write_context_assignment 'RESOLVED_FINAL_OVERLAYS' "$overlay_list"
+		write_context_assignment 'RESOLVED_FINAL_OVERLAY_FILES' "$(printf '%s' "$final_overlay_file_paths" | sed "s#${config_dir}/overlays#${context_config_root}/overlays#g")"
 	} > "$context_output"
 fi
 

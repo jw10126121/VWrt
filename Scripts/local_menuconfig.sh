@@ -16,15 +16,19 @@ show_help() {
   直接通过环境变量传参后执行脚本，例如：
 
   WRT_DEVICE=cmiot-ax18-nowifi \
-  WRT_FIREWALL=fw3 \
-  WRT_OVERLAYS=frps,apk \
+  WRT_FRP_MODE=frps \
+  WRT_USB_MODE=usb \
+  WRT_PACKAGE_MANAGER=ipk \
   bash Scripts/local_menuconfig.sh
 
 主要参数（尽量对齐 DEFAULT.yml）：
   OPENWRT_PATH           本地 OpenWrt 源码目录，默认 /Volumes/OpenWrt/lede
   WRT_DEVICE             设备名，必填，例如 cmiot-ax18-nowifi、jd-ax1800pro-wifi
   WRT_FIREWALL           防火墙栈，默认 auto；支持 auto、fw3、fw4
-  WRT_OVERLAYS           可选 overlays，逗号分隔，例如 frps,apk
+  WRT_FRP_MODE           FRP 模式，默认 none；支持 frpc、frps、frp、none
+  WRT_USB_MODE           USB 模式，默认 default；支持 default、usb、nousb
+  WRT_PACKAGE_MANAGER    包管理器，默认 auto；支持 auto、apk、ipk
+  WRT_OVERLAYS           可选 overlays，逗号分隔，例如 lucky
                          同一 OVERLAY_GROUP 内按传入顺序以最后一个为准
   WRT_LUCI_BRANCH        可选 LuCI 分支，例如 openwrt-23.05
   WRT_DIY_SETTING        自定义设置脚本，默认 diy_config.sh
@@ -88,13 +92,6 @@ EOF
 	export PATH
 }
 
-# 本地入口复用 CI 的 overlay 判断方式，供包管理器与 nowifi 自动补全共用同一结果。
-has_overlay() {
-	local overlay_name=$1
-
-	printf '%s' ",${WRT_OVERLAYS}," | grep -qi ",${overlay_name},"
-}
-
 if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
 	show_help
 	exit 0
@@ -104,6 +101,9 @@ OPENWRT_PATH=${OPENWRT_PATH:-/Volumes/OpenWrt/lede}
 WRT_DEVICE=${WRT_DEVICE:-}
 WRT_FIREWALL=${WRT_FIREWALL:-auto}
 WRT_OVERLAYS=${WRT_OVERLAYS:-}
+WRT_FRP_MODE=${WRT_FRP_MODE:-none}
+WRT_USB_MODE=${WRT_USB_MODE:-default}
+WRT_PACKAGE_MANAGER=${WRT_PACKAGE_MANAGER:-auto}
 WRT_LUCI_BRANCH=${WRT_LUCI_BRANCH:-}
 WRT_DIY_SETTING=${WRT_DIY_SETTING:-diy_config.sh}
 WRT_DIYPackages=${WRT_DIYPackages:-auto}
@@ -149,7 +149,6 @@ WRT_CONFIG_LABEL="${WRT_DEVICE}-${WRT_FIREWALL}"
 
 export OPENWRT_PATH
 export WRT_LUCI_BRANCH
-export WRT_USE_APK
 
 setup_local_compat_bin
 
@@ -178,14 +177,48 @@ elif [ "$SOURCE_CONFIG_FAMILY" = "iwrt" ] && [ "$WRT_FIREWALL" = "fw3" ]; then
 fi
 
 auto_overlays=$(infer_default_overlays_for_device "$CONFIG_ROOT" "$WRT_DEVICE" "$WRT_FIREWALL")
-WRT_OVERLAYS=$(merge_overlay_csv_lists "$CONFIG_ROOT" "$auto_overlays" "$WRT_OVERLAYS")
+manual_overlays=${WRT_OVERLAYS:-}
+frp_overlays=''
+usb_overlays=''
+combined_overlays=''
 
-if has_overlay apk; then
-	WRT_USE_APK=true
-	package_manager=apk
-else
-	WRT_USE_APK=false
-	package_manager=ipk
+case "$WRT_FRP_MODE" in
+	frpc|frps|frp)
+		frp_overlays="$WRT_FRP_MODE"
+		;;
+esac
+
+case "$WRT_USB_MODE" in
+	usb|nousb)
+		usb_overlays="$WRT_USB_MODE"
+		;;
+esac
+
+combined_overlays="$frp_overlays"
+if [ -n "$usb_overlays" ]; then
+	if [ -n "$combined_overlays" ]; then
+		combined_overlays="${combined_overlays},${usb_overlays}"
+	else
+		combined_overlays="$usb_overlays"
+	fi
+fi
+if [ -n "$manual_overlays" ]; then
+	if [ -n "$combined_overlays" ]; then
+		combined_overlays="${combined_overlays},${manual_overlays}"
+	else
+		combined_overlays="$manual_overlays"
+	fi
+fi
+
+WRT_OVERLAYS=$(merge_overlay_csv_lists "$CONFIG_ROOT" "$auto_overlays" "$combined_overlays")
+
+package_manager="$WRT_PACKAGE_MANAGER"
+if [ "$package_manager" = "auto" ]; then
+	if [ "$SOURCE_TYPE" = "vwrt" ]; then
+		package_manager=apk
+	else
+		package_manager=ipk
+	fi
 fi
 
 if [ "$LOCAL_CLEAN_GENERATED" = 'true' ]; then
@@ -200,6 +233,9 @@ echo "【Lin】本地 menuconfig 入口"
 echo "【Lin】源码目录：$OPENWRT_PATH"
 echo "【Lin】设备：$WRT_DEVICE"
 echo "【Lin】防火墙：$WRT_FIREWALL"
+echo "【Lin】FRP 模式：$WRT_FRP_MODE"
+echo "【Lin】USB 模式：$WRT_USB_MODE"
+echo "【Lin】包管理器：$package_manager"
 echo "【Lin】overlays：${WRT_OVERLAYS:-无}"
 echo "【Lin】LuCI 分支：${WRT_LUCI_BRANCH:-源码默认}"
 

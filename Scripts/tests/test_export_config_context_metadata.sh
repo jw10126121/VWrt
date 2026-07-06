@@ -29,4 +29,17 @@ grep -qx 'RESOLVED_AUTO_OVERLAYS=nowifi-ipq60xx' "$META_OUT"
 grep -qx 'RESOLVED_FINAL_OVERLAYS=nowifi-ipq60xx' "$META_OUT"
 grep -qx 'RESOLVED_FINAL_OVERLAY_FILES=Config/overlays/nowifi-ipq60xx.txt' "$META_OUT"
 
+SOURCE_TYPE=vwrt bash "$EXPORT_SCRIPT" \
+	--config-dir "$SCRIPT_DIR/../Config" \
+	--device "jd-ax1800pro-nowifi" \
+	--fw "fw4" \
+	--overlay "frpc" \
+	--output "$CONFIG_OUT" \
+	--context-output "$META_OUT" >/dev/null
+
+FINAL_OVERLAY_FILES=$(
+	bash -eu -c '. "$1"; printf "%s\n" "$RESOLVED_FINAL_OVERLAY_FILES"' _ "$META_OUT"
+)
+test "$FINAL_OVERLAY_FILES" = 'Config/overlays/nowifi-ipq60xx.txt Config/overlays/frpc.txt'
+
 echo "test_export_config_context_metadata: ok"

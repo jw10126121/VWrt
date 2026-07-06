@@ -1,6 +1,6 @@
 #CI项目
 name: DEFAULT
-run-name: ${{ inputs.WRT_DEVICE }}-${{ inputs.SOURCE_TYPE }}-${{ inputs.WRT_FIREWALL == 'auto' && (inputs.SOURCE_TYPE == 'lean' && 'fw3' || 'fw4') || inputs.WRT_FIREWALL }}-${{ inputs.WRT_FRP_MODE }}-${{ inputs.WRT_USB_MODE }}-${{ inputs.WRT_PACKAGE_MANAGER }}-${{ inputs.WRT_OVERLAYS != '' && inputs.WRT_OVERLAYS || 'base' }}
+run-name: ${{ inputs.WRT_DEVICE }}-${{ inputs.SOURCE_TYPE }}-${{ inputs.WRT_FIREWALL == 'auto' && (inputs.SOURCE_TYPE == 'lean' && 'fw3' || 'fw4') || inputs.WRT_FIREWALL }}-${{ inputs.WRT_FRP_MODE }}-${{ inputs.WRT_USB_MODE == 'nousb' && 'nousb' || 'usb' }}-${{ inputs.WRT_PACKAGE_MANAGER == 'auto' && (inputs.SOURCE_TYPE == 'vwrt' && 'apk' || 'ipk') || inputs.WRT_PACKAGE_MANAGER }}${{ inputs.WRT_OVERLAYS != '' && format('-{0}', inputs.WRT_OVERLAYS) || '' }}
 
 on:
   workflow_call:
@@ -193,8 +193,9 @@ jobs:
     outputs:
       firewall: ${{ steps.resolve.outputs.firewall }}
       package_manager: ${{ steps.resolve.outputs.package_manager }}
-      overlays: ${{ steps.resolve.outputs.overlays }}
-      overlay_label: ${{ steps.resolve.outputs.overlay_label }}
+      frp_mode: ${{ steps.resolve.outputs.frp_mode }}
+      usb_mode: ${{ steps.resolve.outputs.usb_mode }}
+      usb_label: ${{ steps.resolve.outputs.usb_label }}
     steps:
       - name: Resolve auto values
         id: resolve
@@ -206,21 +207,9 @@ jobs:
           firewall="${{ inputs.WRT_FIREWALL }}"
           package_manager_input="${{ inputs.WRT_PACKAGE_MANAGER }}"
           resolved_package_manager="$package_manager_input"
-          manual_overlays="${{ inputs.WRT_OVERLAYS }}"
           frp_mode="${{ inputs.WRT_FRP_MODE }}"
           usb_mode="${{ inputs.WRT_USB_MODE }}"
-          structured_overlays=''
-          overlays=''
-
-          append_csv() {
-            local overlay_name=${1:-}
-            [ -n "$overlay_name" ] || return 0
-            if [ -n "$structured_overlays" ]; then
-              structured_overlays="${structured_overlays},${overlay_name}"
-            else
-              structured_overlays="$overlay_name"
-            fi
-          }
+          usb_label='usb'
 
           # 配置防火墙版本：vwrt → fw4 / apk，libwrt → fw4 / ipk，lean → fw3 / ipk
           if [ "$firewall" = "auto" ]; then
@@ -240,41 +229,23 @@ jobs:
             fi
           fi
 
-          # 配置frp_mode的结构化overlays
-          if [ "$frp_mode" = "frpc" ] || [ "$frp_mode" = "frps" ] || [ "$frp_mode" = "frp" ]; then
-            append_csv "$frp_mode"
+          if [ "$usb_mode" = "nousb" ]; then
+            usb_label='nousb'
           fi
-
-          # 配置usb_mode的结构化overlays
-          if [ "$usb_mode" = "usb" ] || [ "$usb_mode" = "nousb" ]; then
-            append_csv "$usb_mode"
-          fi
-
-          manual_overlays=$(printf '%s' "$manual_overlays" | sed 's/^[[:space:],]*//; s/[[:space:],]*$//')
-
-          if [ -n "$structured_overlays" ] && [ -n "$manual_overlays" ]; then
-            overlays="${structured_overlays},${manual_overlays}"
-          elif [ -n "$structured_overlays" ]; then
-            overlays="$structured_overlays"
-          else
-            overlays="$manual_overlays"
-          fi
-
-          overlay_label="${overlays:-base}"
 
           echo "firewall=$firewall" >> $GITHUB_OUTPUT
           echo "package_manager=$resolved_package_manager" >> $GITHUB_OUTPUT
-          echo "overlays=$overlays" >> "$GITHUB_OUTPUT"
-          echo "overlay_label=$overlay_label" >> "$GITHUB_OUTPUT"
+          echo "frp_mode=$frp_mode" >> "$GITHUB_OUTPUT"
+          echo "usb_mode=$usb_mode" >> "$GITHUB_OUTPUT"
+          echo "usb_label=$usb_label" >> "$GITHUB_OUTPUT"
           echo "【Lin】源码类型：${source_type}"
           echo "【Lin】FRP 模式：${frp_mode:-none}"
-          echo "【Lin】USB 模式：${usb_mode:-default}"
+          echo "【Lin】USB 模式：${usb_mode:-default}（标签：${usb_label}）"
           echo "【Lin】解析结果：fw=${firewall}, pkg=${resolved_package_manager}"
-          echo "【Lin】结构化 overlays：${overlay_label}"
 
   config:
     needs: resolve
-    name: ${{ inputs.WRT_DEVICE }}-${{ needs.resolve.outputs.firewall }}-${{ needs.resolve.outputs.package_manager }}-${{ needs.resolve.outputs.overlay_label }}
+    name: ${{ inputs.WRT_DEVICE }}-${{ needs.resolve.outputs.firewall }}-${{ needs.resolve.outputs.frp_mode }}-${{ needs.resolve.outputs.usb_label }}-${{ needs.resolve.outputs.package_manager }}${{ inputs.WRT_OVERLAYS != '' && format('-{0}', inputs.WRT_OVERLAYS) || '' }}
     # 调用公用编译核心ALL-CORE.yml
     uses: ./.github/workflows/CORE-ALL.yml
     with:
@@ -288,8 +259,12 @@ jobs:
       WRT_FIREWALL: ${{ needs.resolve.outputs.firewall }}
       # 包管理器：apk 或 ipk，从SOURCE_TYPE获取
       WRT_PACKAGE_MANAGER: ${{ needs.resolve.outputs.package_manager }}
+      # FRP 模式：结构化参数透传给 CORE-ALL
+      WRT_FRP_MODE: ${{ needs.resolve.outputs.frp_mode }}
+      # USB 模式：结构化参数透传给 CORE-ALL
+      WRT_USB_MODE: ${{ needs.resolve.outputs.usb_mode }}
       # overlays，例如 frps
-      WRT_OVERLAYS: ${{ needs.resolve.outputs.overlays }}
+      WRT_OVERLAYS: ${{ inputs.WRT_OVERLAYS }}
       # 临时附加配置，例如 luci-app-mmw=y
       WRT_EXTRA_CONFIGS: ${{ inputs.WRT_EXTRA_CONFIGS }}
       # LuCI feed 分支，例如 openwrt-23.05、23.05 或 2305
