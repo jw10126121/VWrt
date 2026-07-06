@@ -386,13 +386,13 @@ show_help() {
   bash Scripts/export_config.sh \
     --device cmiot-ax18-nowifi \
     --fw fw3 \
-    --overlay frps,apk \
-    --output /tmp/cmiot-ax18-nowifi-fw3-frps-apk.txt
+    --overlay frps,nousb \
+    --output /tmp/cmiot-ax18-nowifi-fw3-frps-nousb.txt
 
 参数：
   --device      设备名，例如 cmiot-ax18-nowifi、jd-ax1800pro-wifi
   --fw          防火墙栈，fw3 或 fw4
-  --overlay     可选 overlay 列表，逗号分隔，例如 frps,apk
+  --overlay     可选 overlay 列表，逗号分隔，例如 frps,nousb
                 同一 OVERLAY_GROUP 内按传入顺序以最后一个为准
 	  --output      输出文件路径
 	  --config-dir  配置目录，默认 Config

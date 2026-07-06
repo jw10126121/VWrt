@@ -48,17 +48,13 @@ cat > "$TMPDIR/overlays/frps.txt" <<'EOF'
 CONFIG_FRP_ROLE=server
 EOF
 
-cat > "$TMPDIR/overlays/apk.txt" <<'EOF'
-CONFIG_PKG_FORMAT=apk
-EOF
-
 OUT="$TMPDIR/merged.txt"
 
 bash "$EXPORT_SCRIPT" \
 	--config-dir "$TMPDIR" \
 	--device "DEVICE-A" \
 	--fw "fw3" \
-	--overlay "frps,apk" \
+	--overlay "frps" \
 	--output "$OUT"
 
 grep -q '^CONFIG_COMMON=y$' "$OUT"
@@ -66,7 +62,7 @@ grep -q '^CONFIG_FW=fw3$' "$OUT"
 grep -q '^CONFIG_DEVICE=device-a$' "$OUT"
 grep -q '^CONFIG_DEVICE_FW=device-a-fw3$' "$OUT"
 grep -n '^CONFIG_FRP_ROLE=' "$OUT" | tail -n 1 | grep -q 'CONFIG_FRP_ROLE=server'
-grep -n '^CONFIG_PKG_FORMAT=' "$OUT" | tail -n 1 | grep -q 'CONFIG_PKG_FORMAT=apk'
+grep -n '^CONFIG_PKG_FORMAT=' "$OUT" | tail -n 1 | grep -q 'CONFIG_PKG_FORMAT=ipk'
 
 OUT_MINI="$TMPDIR/merged-mini.txt"
 

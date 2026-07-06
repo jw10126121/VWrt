@@ -38,7 +38,7 @@ current_script_dir="$MOCK_SCRIPT_ROOT"
 openwrt_workdir="$TMPDIR/openwrt"
 mkdir -p "$openwrt_workdir"
 
-output=$(WRT_USE_APK=true apply_lang_node_prebuilt_fix 2>&1)
+output=$(WRT_PACKAGE_MANAGER=apk apply_lang_node_prebuilt_fix 2>&1)
 
 printf '%s\n' "$output" | grep -Fq '【Lin】APK 模式跳过 sbwml lang_node 预编译，继续使用官方 lang/node'
 [ ! -f "$MARKER_FILE" ] || {

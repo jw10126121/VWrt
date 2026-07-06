@@ -14,7 +14,7 @@ test "$(infer_default_overlays_for_device "$SCRIPT_DIR/../Config" "jd-ax6600-now
 test "$(infer_default_overlays_for_device "$SCRIPT_DIR/../Config" "gl-mt6000-nowifi" "fw4")" = "nowifi-filogic"
 test "$(infer_default_overlays_for_device "$SCRIPT_DIR/../Config" "gl-mt6000-wifi" "fw4")" = ""
 
-MERGED=$(merge_overlay_csv_lists "$SCRIPT_DIR/../Config" "nowifi-ipq60xx" "frps,apk")
-test "$MERGED" = "nowifi-ipq60xx,frps,apk"
+MERGED=$(merge_overlay_csv_lists "$SCRIPT_DIR/../Config" "nowifi-ipq60xx" "frps,usb")
+test "$MERGED" = "nowifi-ipq60xx,frps,usb"
 
 echo "test_auto_nowifi_overlay_inference: ok"

@@ -17,6 +17,7 @@ make_openwrt_tree() {
     local include_version_line=$3
     local feeds_content=$4
     local firewall_mode=${5:-fw4}
+    local package_format=${6:-ipk}
 
     mkdir -p "$root_dir"
 
@@ -36,6 +37,7 @@ make_openwrt_tree() {
 cat > "$root_dir/.config" <<EOF
 CONFIG_TARGET_ARCH_PACKAGES="aarch64_cortex-a53"
 CONFIG_VERSION_NUMBER="${config_version}"
+CONFIG_PKG_FORMAT=${package_format}
 ${firewall_line}
 ${firewall4_line}
 CONFIG_PACKAGE_frpc=y
@@ -60,6 +62,8 @@ run_case() {
     local has_wifi=${3:-true}
     local device_profile=${4:-cmiot_ax18}
     local wrt_device=${5:-}
+    local source_type=${6:-lean}
+    local package_manager=${7:-auto}
 
     OPENWRT_PATH="$root_dir" \
     WRT_DEFAULT_LANIP="192.168.0.1" \
@@ -67,7 +71,8 @@ run_case() {
     WRT_HAS_WIFI="$has_wifi" \
     WRT_REPO_URL="https://github.com/example/openwrt" \
     WRT_REPO_BRANCH="main" \
-    SOURCE_FLAVOR="lean" \
+    SOURCE_TYPE="$source_type" \
+    WRT_PACKAGE_MANAGER="$package_manager" \
     DEVICE_TARGET="qualcommax" \
     DEVICE_SUBTARGET="ipq60xx" \
     DEVICE_PROFILE="$device_profile" \
@@ -224,5 +229,30 @@ grep -q '^OUTPUT_NAME_PREFIX=lean_mt6000_nowifi_fw4_ipk_frpc_D260514_T003050$' "
 }
 grep -q '支持设备：glinet_gl-mt6000' "$TMPDIR/case7.env"
 grep -q '是否wifi：无WIFI' "$TMPDIR/case7.env"
+
+CASE_DIR8="$TMPDIR/vwrt-apk"
+make_openwrt_tree \
+    "$CASE_DIR8" \
+    "OpenWrt 24.10.5" \
+    "VERSION_NUMBER:= OpenWrt, 24.10.5" \
+    "src-git luci https://github.com/openwrt/luci.git;openwrt-24.10" \
+    "fw4" \
+    "apk"
+
+mv "$CASE_DIR8/include.version.mk" "$CASE_DIR8/version.mk.tmp"
+mkdir -p "$CASE_DIR8/include"
+mv "$CASE_DIR8/version.mk.tmp" "$CASE_DIR8/include/version.mk"
+
+run_case "$CASE_DIR8" "$TMPDIR/case8.env" "true" "cmiot_ax18" "cmiot-ax18-wifi" "vwrt" "apk"
+
+grep -q '^SOURCE_FLAVOR_TAG=vwrt$' "$TMPDIR/case8.env"
+grep -q '^PACKAGE_MANAGER_TAG=apk$' "$TMPDIR/case8.env"
+grep -q '^BUILD_VARIANT_TAG=vwrt_fw4_apk_frpc$' "$TMPDIR/case8.env"
+grep -q '^OUTPUT_NAME_PREFIX=vwrt_cmiot_ax18_fw4_apk_frpc_D260514_T003050$' "$TMPDIR/case8.env" || {
+    echo "case8 should emit the vwrt_cmiot_ax18 fw4 apk output prefix" >&2
+    exit 1
+}
+grep -q '源码风味：vwrt' "$TMPDIR/case8.env"
+grep -q '包管理器：apk' "$TMPDIR/case8.env"
 
 echo "test_ci_collect_metadata_version_priority: ok"

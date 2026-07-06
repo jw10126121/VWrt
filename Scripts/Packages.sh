@@ -523,7 +523,13 @@ fix_quickfile_makefile() {
 
 # 统一调用外部 helper 处理 node 预编译包兼容问题，避免主脚本继续膨胀。
 apply_lang_node_prebuilt_fix() {
-    if [ "${WRT_USE_APK:-false}" = "true" ]; then
+    local resolved_package_manager="${WRT_PACKAGE_MANAGER:-${package_manager:-auto}}"
+
+    if [ "${resolved_package_manager}" = "auto" ] && [ "${WRT_USE_APK:-false}" = "true" ]; then
+        resolved_package_manager="apk"
+    fi
+
+    if [ "${resolved_package_manager}" = "apk" ]; then
         echo "【Lin】APK 模式跳过 sbwml lang_node 预编译，继续使用官方 lang/node"
         return 0
     fi

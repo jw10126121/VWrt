@@ -1,8 +1,0 @@
-# OVERLAY_GROUP=package-manager
-CONFIG_PKG_FORMAT=ipk
-CONFIG_USE_APK=n
-CONFIG_PACKAGE_luci-app-package-manager=n
-CONFIG_PACKAGE_luci-i18n-package-manager-zh-cn=n
-CONFIG_PACKAGE_luci-app-opkg=y
-CONFIG_PACKAGE_luci-lib-ipkg=y
-CONFIG_PACKAGE_luci-i18n-opkg-zh-cn=y

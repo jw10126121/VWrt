@@ -187,6 +187,34 @@ extract_default_theme() {
     return 1
 }
 
+extract_package_manager() {
+    local config_path=$1
+    local config_format
+    local requested_manager=${WRT_PACKAGE_MANAGER:-}
+
+    config_format="$(sed -n 's/^CONFIG_PKG_FORMAT=\([^"]*\)$/\1/p' "${config_path}" | head -n1 || true)"
+    case "${config_format}" in
+        apk|ipk)
+            printf '%s\n' "${config_format}"
+            return 0
+            ;;
+    esac
+
+    case "${requested_manager}" in
+        apk|ipk)
+            printf '%s\n' "${requested_manager}"
+            return 0
+            ;;
+    esac
+
+    if [ "${WRT_USE_APK:-false}" = "true" ]; then
+        printf '%s\n' 'apk'
+        return 0
+    fi
+
+    printf '%s\n' 'ipk'
+}
+
 openwrt_path="${OPENWRT_PATH:?OPENWRT_PATH is required}"
 wrt_default_lanip="${WRT_DEFAULT_LANIP:?WRT_DEFAULT_LANIP is required}"
 wrt_has_lite="${WRT_HAS_LITE:-false}"
@@ -233,10 +261,8 @@ if [ "${wrt_has_wifi}" != "true" ]; then
     wrt_has_wifi_text='无WIFI'
 fi
 
-if [ "${WRT_USE_APK:-false}" = "true" ]; then
-    package_manager='apk'
-    package_manager_tag='apk'
-fi
+package_manager="$(extract_package_manager "${openwrt_path}/.config")"
+package_manager_tag="${package_manager}"
 
 if grep -q '^CONFIG_PACKAGE_firewall4=y$' "${openwrt_path}/.config" 2>/dev/null && \
    grep -q '^CONFIG_PACKAGE_firewall=y$' "${openwrt_path}/.config" 2>/dev/null; then
