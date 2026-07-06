@@ -222,4 +222,3 @@ CONFIG_TARGET_DEVICE_qualcommax_ipq60xx_DEVICE_xiaomi_rm1800=n      # 小米RM18
 #CONFIG_PACKAGE_ath11k-firmware-qcn9074=n     # 关闭 QCN9074 固件
 #CONFIG_PACKAGE_wpad-openssl=y                # 启用 AP 认证组件
 #CONFIG_PACKAGE_hostapd-common=y              # 启用 hostapd 公共库
-#CONFIG_PACKAGE_ipq-wifi-jdcloud_ax1800pro=y  # 亚瑟 AX1800 Pro 板级校准包

@@ -8,7 +8,7 @@ SCRIPT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
 
 CONFIG_FILES="
-$REPO_ROOT/Config/cmiot-ax18-nowifi-fw3.txt
+$REPO_ROOT/Config/cmiot-ax18-wifi-fw3.txt
 $REPO_ROOT/Config/jd-ax1800pro-wifi-fw3.txt
 $REPO_ROOT/Config/jd-ax6600-wifi-fw3.txt
 $REPO_ROOT/Config/gl-mt6000-wifi-fw3.txt

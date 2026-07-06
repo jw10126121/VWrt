@@ -96,10 +96,12 @@ Config/overlays/<overlay>.txt  # 自定义差异层（按 WRT_OVERLAYS 顺序叠
 
 | 设备 | fw3 配置 | fw4 配置 |
 |------|----------|----------|
-| CMIOT-AX18-NOWIFI | `Config/cmiot-ax18-nowifi-fw3.txt` | `Config/cmiot-ax18-nowifi-fw4-iwrt.txt` |
+| CMIOT-AX18 | `Config/cmiot-ax18-wifi-fw3.txt` | `Config/cmiot-ax18-wifi-fw4-iwrt.txt` |
+| JD-AX1800PRO | `Config/jd-ax1800pro-wifi-fw3.txt` | `Config/jd-ax1800pro-wifi-fw4-iwrt.txt` |
 | GL-MT6000-WIFI | `Config/gl-mt6000-wifi-fw3.txt` | `Config/gl-mt6000-wifi-fw4-iwrt.txt` |
-| JD-AX1800PRO-WIFI | `Config/jd-ax1800pro-wifi-fw3.txt` | `Config/jd-ax1800pro-wifi-fw4-iwrt.txt` |
 | JD-AX6600-WIFI | `Config/jd-ax6600-wifi-fw3.txt` | `Config/jd-ax6600-wifi-fw4-iwrt.txt` |
+
+`*-nowifi` 构建目标会自动复用对应 `*-wifi` 主配置，并追加 `nowifi-*` overlay。
 
 ## Overlay 系统
 

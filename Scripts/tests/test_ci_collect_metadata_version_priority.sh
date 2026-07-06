@@ -56,6 +56,7 @@ run_case() {
     local output_file=$2
     local has_wifi=${3:-true}
     local device_profile=${4:-cmiot_ax18}
+    local wrt_device=${5:-}
 
     OPENWRT_PATH="$root_dir" \
     WRT_DEFAULT_LANIP="192.168.0.1" \
@@ -67,6 +68,7 @@ run_case() {
     DEVICE_TARGET="qualcommax" \
     DEVICE_SUBTARGET="ipq60xx" \
     DEVICE_PROFILE="$device_profile" \
+    WRT_DEVICE="$wrt_device" \
     VERSION_KERNEL="6.12.80" \
     REPO_GIT_HASH="test-hash" \
     START_TIME="D260514_T003050" \
@@ -132,7 +134,7 @@ mv "$CASE_DIR3/version.mk.tmp" "$CASE_DIR3/include/version.mk"
 run_case "$CASE_DIR3" "$TMPDIR/case3.env"
 
 grep -q '^FW_STACK_TAG=mixed$' "$TMPDIR/case3.env"
-grep -q 'FW环境：FW3+FW4(冲突)' "$TMPDIR/case3.env"
+grep -q 'FW环境：fw3+fw4(冲突)' "$TMPDIR/case3.env"
 grep -q '^BUILD_VARIANT_TAG=lean_mixed_ipk_frpc$' "$TMPDIR/case3.env"
 
 CASE_DIR4="$TMPDIR/nowifi-ax18"
@@ -147,13 +149,15 @@ mv "$CASE_DIR4/include.version.mk" "$CASE_DIR4/version.mk.tmp"
 mkdir -p "$CASE_DIR4/include"
 mv "$CASE_DIR4/version.mk.tmp" "$CASE_DIR4/include/version.mk"
 
-run_case "$CASE_DIR4" "$TMPDIR/case4.env" "false" "cmiot_ax18"
+run_case "$CASE_DIR4" "$TMPDIR/case4.env" "false" "cmiot_ax18" "cmiot-ax18-nowifi"
 
-grep -q '^DEVICE_NAME_ALIAS=cmiot_ax18$' "$TMPDIR/case4.env"
+grep -q '^DEVICE_NAME_ALIAS=cmiot_ax18_nowifi$' "$TMPDIR/case4.env"
 grep -q '^OUTPUT_NAME_PREFIX=lean_cmiot_ax18_nowifi_fw3_ipk_frpc_D260514_T003050$' "$TMPDIR/case4.env" || {
     echo "case4 should emit the lean_cmiot_ax18_nowifi fw3 output prefix" >&2
     exit 1
 }
+grep -q '支持设备：cmiot_ax18' "$TMPDIR/case4.env"
+grep -q '是否wifi：无WIFI' "$TMPDIR/case4.env"
 
 CASE_DIR5="$TMPDIR/jd-ax1800pro-wifi"
 make_openwrt_tree \
@@ -167,12 +171,54 @@ mv "$CASE_DIR5/include.version.mk" "$CASE_DIR5/version.mk.tmp"
 mkdir -p "$CASE_DIR5/include"
 mv "$CASE_DIR5/version.mk.tmp" "$CASE_DIR5/include/version.mk"
 
-run_case "$CASE_DIR5" "$TMPDIR/case5.env" "true" "jdcloud_re-ss-01"
+run_case "$CASE_DIR5" "$TMPDIR/case5.env" "true" "jdcloud_re-ss-01" "jd-ax1800pro-wifi"
 
 grep -q '^DEVICE_NAME_ALIAS=jd_ax1800pro$' "$TMPDIR/case5.env"
 grep -q '^OUTPUT_NAME_PREFIX=lean_jd_ax1800pro_fw3_ipk_frpc_D260514_T003050$' "$TMPDIR/case5.env" || {
     echo "case5 should emit the lean_jd_ax1800pro fw3 output prefix" >&2
     exit 1
 }
+grep -q '支持设备：jdcloud_re-ss-01' "$TMPDIR/case5.env"
+
+CASE_DIR6="$TMPDIR/mt6000-wifi"
+make_openwrt_tree \
+    "$CASE_DIR6" \
+    "OpenWrt 24.10.5" \
+    "VERSION_NUMBER:= OpenWrt, 24.10.5" \
+    "src-git luci https://github.com/openwrt/luci.git;openwrt-23.05"
+
+mv "$CASE_DIR6/include.version.mk" "$CASE_DIR6/version.mk.tmp"
+mkdir -p "$CASE_DIR6/include"
+mv "$CASE_DIR6/version.mk.tmp" "$CASE_DIR6/include/version.mk"
+
+run_case "$CASE_DIR6" "$TMPDIR/case6.env" "true" "glinet_gl-mt6000" "gl-mt6000-wifi"
+
+grep -q '^DEVICE_NAME_ALIAS=mt6000$' "$TMPDIR/case6.env"
+grep -q '^OUTPUT_NAME_PREFIX=lean_mt6000_fw4_ipk_frpc_D260514_T003050$' "$TMPDIR/case6.env" || {
+    echo "case6 should emit the lean_mt6000 fw4 output prefix" >&2
+    exit 1
+}
+grep -q '支持设备：glinet_gl-mt6000' "$TMPDIR/case6.env"
+
+CASE_DIR7="$TMPDIR/mt6000-nowifi"
+make_openwrt_tree \
+    "$CASE_DIR7" \
+    "OpenWrt 24.10.5" \
+    "VERSION_NUMBER:= OpenWrt, 24.10.5" \
+    "src-git luci https://github.com/openwrt/luci.git;openwrt-23.05"
+
+mv "$CASE_DIR7/include.version.mk" "$CASE_DIR7/version.mk.tmp"
+mkdir -p "$CASE_DIR7/include"
+mv "$CASE_DIR7/version.mk.tmp" "$CASE_DIR7/include/version.mk"
+
+run_case "$CASE_DIR7" "$TMPDIR/case7.env" "false" "glinet_gl-mt6000" "gl-mt6000-nowifi"
+
+grep -q '^DEVICE_NAME_ALIAS=mt6000_nowifi$' "$TMPDIR/case7.env"
+grep -q '^OUTPUT_NAME_PREFIX=lean_mt6000_nowifi_fw4_ipk_frpc_D260514_T003050$' "$TMPDIR/case7.env" || {
+    echo "case7 should emit the lean_mt6000_nowifi fw4 output prefix" >&2
+    exit 1
+}
+grep -q '支持设备：glinet_gl-mt6000' "$TMPDIR/case7.env"
+grep -q '是否wifi：无WIFI' "$TMPDIR/case7.env"
 
 echo "test_ci_collect_metadata_version_priority: ok"

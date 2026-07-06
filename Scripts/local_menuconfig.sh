@@ -41,6 +41,7 @@ show_help() {
 EOF
 }
 
+# 本地 menuconfig 会改写临时文件，先校验关键脚本存在，避免运行到一半才发现入口缺失。
 require_file() {
 	local file_path=$1
 
@@ -50,6 +51,7 @@ require_file() {
 	}
 }
 
+# 与 require_file 配套，提前校验源码目录和配置目录是否齐备。
 require_dir() {
 	local dir_path=$1
 
@@ -65,6 +67,7 @@ cleanup() {
 	fi
 }
 
+# macOS 自带 sed 的 -i 参数与 GNU sed 不兼容，这里用临时 shim 统一本地 menuconfig 体验。
 setup_local_compat_bin() {
 	LOCAL_COMPAT_DIR=$(mktemp -d "${TMPDIR:-/tmp}/local-menuconfig.XXXXXX")
 	trap cleanup EXIT
@@ -85,6 +88,7 @@ EOF
 	export PATH
 }
 
+# 本地入口复用 CI 的 overlay 判断方式，供包管理器与 nowifi 自动补全共用同一结果。
 has_overlay() {
 	local overlay_name=$1
 
@@ -141,18 +145,6 @@ require_file "$SOURCE_TYPE_LIB"
 . "$OVERLAY_UTILS"
 . "$SOURCE_TYPE_LIB"
 
-if [ -n "$WRT_OVERLAYS" ]; then
-	WRT_OVERLAYS=$(normalize_overlay_list "$CONFIG_ROOT" "$WRT_OVERLAYS")
-fi
-
-if has_overlay apk; then
-	WRT_USE_APK=true
-	package_manager=apk
-else
-	WRT_USE_APK=false
-	package_manager=ipk
-fi
-
 WRT_CONFIG_LABEL="${WRT_DEVICE}-${WRT_FIREWALL}"
 
 export OPENWRT_PATH
@@ -183,6 +175,17 @@ if [ "$WRT_FIREWALL" = "auto" ]; then
 elif [ "$SOURCE_CONFIG_FAMILY" = "iwrt" ] && [ "$WRT_FIREWALL" = "fw3" ]; then
 	echo "【Lin】警告：${SOURCE_TYPE} 使用 iwrt 配置族，已将 fw3 自动切换为 fw4"
 	WRT_FIREWALL="fw4"
+fi
+
+auto_overlays=$(infer_default_overlays_for_device "$CONFIG_ROOT" "$WRT_DEVICE" "$WRT_FIREWALL")
+WRT_OVERLAYS=$(merge_overlay_csv_lists "$CONFIG_ROOT" "$auto_overlays" "$WRT_OVERLAYS")
+
+if has_overlay apk; then
+	WRT_USE_APK=true
+	package_manager=apk
+else
+	WRT_USE_APK=false
+	package_manager=ipk
 fi
 
 if [ "$LOCAL_CLEAN_GENERATED" = 'true' ]; then

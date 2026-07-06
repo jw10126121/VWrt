@@ -77,7 +77,7 @@ grep -q '^PKG_VERSION:=2.6.4$' "$TEST_REPO/easytier-noweb/Makefile"
 grep -Fxq 'PKG_VERSION:=$(or $(EASYTIER_VERSION),2.6.2)' "$TEST_REPO/luci-app-easytier/Makefile"
 
 for config_file in \
-	"$SCRIPT_DIR/../Config/cmiot-ax18-nowifi-fw3.txt" \
+	"$SCRIPT_DIR/../Config/cmiot-ax18-wifi-fw3.txt" \
 	"$SCRIPT_DIR/../Config/jd-ax1800pro-wifi-fw3.txt" \
 	"$SCRIPT_DIR/../Config/gl-mt6000-wifi-fw3.txt"
 do
