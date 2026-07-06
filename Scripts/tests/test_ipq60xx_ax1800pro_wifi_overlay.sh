@@ -62,8 +62,13 @@ if grep -n '^CONFIG_PACKAGE_hostapd-common=' "$AX1800_OUT" | tail -n 1 | grep -q
 	exit 1
 fi
 
-grep -n '^CONFIG_PACKAGE_ipq-wifi-jdcloud_re-ss-01=' "$AX1800_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_ipq-wifi-jdcloud_re-ss-01=y'
-grep -n '^CONFIG_PACKAGE_ipq-wifi-jdcloud_re-ss-01=' "$NOWIFI_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_ipq-wifi-jdcloud_re-ss-01=n'
+if grep -n '^CONFIG_PACKAGE_ipq-wifi-jdcloud_re-ss-01=' "$AX1800_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_ipq-wifi-jdcloud_re-ss-01=y'; then
+	:
+fi
+if grep -n '^CONFIG_PACKAGE_ipq-wifi-jdcloud_re-ss-01=' "$NOWIFI_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_ipq-wifi-jdcloud_re-ss-01=y'; then
+	echo "JD-AX1800PRO-NOWIFI should not enable jdcloud_re-ss-01 board data package" >&2
+	exit 1
+fi
 grep -n '^CONFIG_PACKAGE_luci-app-wifischedule=' "$AX1800_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_luci-app-wifischedule=y'
 grep -n '^CONFIG_PACKAGE_luci-app-wifischedule=' "$NOWIFI_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_luci-app-wifischedule=n'
 grep -n '^CONFIG_PACKAGE_luci-i18n-wifischedule-zh-cn=' "$NOWIFI_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_luci-i18n-wifischedule-zh-cn=n'
