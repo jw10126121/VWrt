@@ -518,6 +518,13 @@ jobs:
         file_diy="$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/diy_after_defconfig.sh"
         [ -f "${file_diy}" ] && chmod +x "${file_diy}" && bash "${file_diy}"
 
+    - name: Read Variables (读取变量)
+      working-directory: ${{ env.OPENWRT_PATH }}
+      run: |
+        bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/ci_collect_final_metadata.sh" >> "$GITHUB_ENV"
+        echo "【Lin】构建元数据：架构=${DEVICE_ARCH}，OP=${OP_VERSION}，LuCI=${LUCI_VERSION}"
+        echo "【Lin】输出前缀：${OUTPUT_NAME_PREFIX}"
+
     - name: Print Build Summary (打印编译条件摘要)
       working-directory: ${{ env.OPENWRT_PATH }}
       run: |
@@ -533,6 +540,12 @@ jobs:
         echo "【Lin】逻辑设备名：$WRT_DEVICE"
         echo "【Lin】设备别名：${DEVICE_ALIAS:-unknown}"
         echo "【Lin】源码类型：$SOURCE_TYPE"
+        echo "【Lin】源码仓库：$WRT_REPO_URL"
+        echo "【Lin】源码分支：$WRT_REPO_BRANCH"
+        echo "【Lin】源码提交：${REPO_GIT_HASH:-未知}"
+        echo "【Lin】OP版本：${OP_VERSION:-未知}"
+        echo "【Lin】LuCI版本：${LUCI_VERSION:-未知}"
+        echo "【Lin】默认主题：${DEFAULT_THEME:-源码默认}"
         echo "【Lin】防火墙：$WRT_FIREWALL"
         echo "【Lin】包管理器：$(if [ "${WRT_USE_APK:-false}" = 'true' ]; then echo apk; else echo ipk; fi)"
         echo "【Lin】设备主配置：${RESOLVED_DEVICE_CONFIG_PATH:-未知}"
@@ -548,13 +561,6 @@ jobs:
         else
           echo "【Lin】  - 无"
         fi
-
-    - name: Read Variables (读取变量)
-      working-directory: ${{ env.OPENWRT_PATH }}
-      run: |
-        bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/ci_collect_final_metadata.sh" >> "$GITHUB_ENV"
-        echo "【Lin】构建元数据：架构=${DEVICE_ARCH}，OP=${OP_VERSION}，LuCI=${LUCI_VERSION}"
-        echo "【Lin】输出前缀：${OUTPUT_NAME_PREFIX}"
 
     - name: Prepare Start Notification (准备开始推送内容)
       working-directory: ${{ env.OPENWRT_PATH }}

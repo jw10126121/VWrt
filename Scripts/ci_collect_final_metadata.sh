@@ -162,6 +162,31 @@ extract_luci_version() {
     return 1
 }
 
+extract_default_theme() {
+    local config_path=$1
+    local builtin_theme
+    local requested_theme=${WRT_THEME_NAME:-}
+
+    builtin_theme="$(
+        grep '^CONFIG_PACKAGE_luci-theme-.*=y$' "${config_path}" 2>/dev/null | \
+            grep -v '_INCLUDE_' | \
+            sed 's/^CONFIG_PACKAGE_luci-theme-//' | \
+            sed 's/=y$//' | \
+            head -n1
+    )"
+    if [ -n "${builtin_theme}" ]; then
+        printf '%s\n' "${builtin_theme}"
+        return 0
+    fi
+
+    if [ -n "${requested_theme}" ] && [ "${requested_theme}" != 'auto' ]; then
+        printf '%s\n' "${requested_theme}"
+        return 0
+    fi
+
+    return 1
+}
+
 openwrt_path="${OPENWRT_PATH:?OPENWRT_PATH is required}"
 wrt_default_lanip="${WRT_DEFAULT_LANIP:?WRT_DEFAULT_LANIP is required}"
 wrt_has_lite="${WRT_HAS_LITE:-false}"
@@ -179,6 +204,7 @@ op_version="$(choose_preferred_version "${config_version}" "${include_version}")
 luci_version="$(extract_luci_version "${openwrt_path}/feeds.conf.default" "${op_version}" || true)"
 rendered_device_profile="$(extract_device_profile_from_config "${openwrt_path}/.config")"
 logical_device_name="$(normalize_logical_device_name "${WRT_DEVICE:-}")"
+default_theme="$(extract_default_theme "${openwrt_path}/.config" || true)"
 wrt_has_lite_text='[常规版]'
 wrt_has_wifi_text='有WIFI'
 package_manager='ipk'
@@ -286,6 +312,7 @@ FW_STACK_TAG=${fw_stack_tag}
 FRP_ROLE_TAG=${frp_role_tag}
 BUILD_VARIANT_TAG=${build_variant_tag}
 DEVICE_NAME_ALIAS=${device_name_alias}
+DEFAULT_THEME=${default_theme}
 OUTPUT_NAME_PREFIX=${output_name_prefix}
 system_content<<EOF_SYSTEM
 ${system_content}

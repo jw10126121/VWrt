@@ -33,13 +33,16 @@ make_openwrt_tree() {
             ;;
     esac
 
-    cat > "$root_dir/.config" <<EOF
+cat > "$root_dir/.config" <<EOF
 CONFIG_TARGET_ARCH_PACKAGES="aarch64_cortex-a53"
 CONFIG_VERSION_NUMBER="${config_version}"
 ${firewall_line}
 ${firewall4_line}
 CONFIG_PACKAGE_frpc=y
 CONFIG_PACKAGE_frps=m
+CONFIG_PACKAGE_luci-theme-aurora=y
+CONFIG_PACKAGE_luci-theme-argon=m
+CONFIG_PACKAGE_luci-theme-noobwrt=m
 EOF
 
     cat > "$root_dir/include.version.mk" <<EOF
@@ -93,6 +96,7 @@ grep -q '^LUCI_VERSION=24.10.5$' "$TMPDIR/case1.env"
 grep -q '^PACKAGE_MANAGER_TAG=ipk$' "$TMPDIR/case1.env"
 grep -q '^BUILD_VARIANT_TAG=lean_fw4_ipk_frpc$' "$TMPDIR/case1.env"
 grep -q '^DEVICE_NAME_ALIAS=cmiot_ax18$' "$TMPDIR/case1.env"
+grep -q '^DEFAULT_THEME=aurora$' "$TMPDIR/case1.env"
 grep -q '^OUTPUT_NAME_PREFIX=lean_cmiot_ax18_fw4_ipk_frpc_D260514_T003050$' "$TMPDIR/case1.env" || {
     echo "case1 should emit the lean_cmiot_ax18 fw4 output prefix" >&2
     exit 1
