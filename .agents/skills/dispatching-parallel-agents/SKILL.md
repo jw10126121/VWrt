@@ -1,6 +1,11 @@
 ---
 name: dispatching-parallel-agents
 description: 当面对 2 个以上可以独立进行、无共享状态或顺序依赖的任务时使用
+version: "1.0.0"
+license: MIT
+metadata:
+  hermes:
+    tags: [agents, parallel]
 ---
 
 # 并行分派智能体
@@ -66,7 +71,7 @@ digraph when_to_use {
 ### 3. 并行分派
 
 ```typescript
-// 在 Codex / AI 环境中
+// 在 Claude Code / AI 环境中
 Task("修复 agent-tool-abort.test.ts 的失败")
 Task("修复 batch-completion-behavior.test.ts 的失败")
 Task("修复 tool-approval-race-conditions.test.ts 的失败")

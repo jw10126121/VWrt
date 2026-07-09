@@ -1,6 +1,11 @@
 ---
 name: executing-plans
 description: 当你有一份书面实现计划需要在单独的会话中执行，并设有审查检查点时使用
+version: "1.0.0"
+license: MIT
+metadata:
+  hermes:
+    tags: [execution, planning]
 ---
 
 # 执行计划
@@ -11,7 +16,7 @@ description: 当你有一份书面实现计划需要在单独的会话中执行�
 
 **开始时宣布：** "我正在使用 executing-plans 技能来实现此计划。"
 
-**注意：** 告诉你的人类伙伴，Superpowers 在有子代理支持时效果好得多。如果在支持子代理的平台上运行（如 Codex 或 Codex），其工作质量会显著提高。如果子代理可用，请使用 superpowers:subagent-driven-development 而非此技能。
+**注意：** 告诉你的人类伙伴，Superpowers 在有子代理支持时效果好得多。如果在支持子代理的平台上运行（如 Claude Code 或 Codex），其工作质量会显著提高。如果子代理可用，请使用 superpowers:subagent-driven-development 而非此技能。
 
 ## 流程
 
@@ -80,8 +85,8 @@ $ git commit -m "feat: 添加用户输入验证（任务 2/5）"
 --- 任务 2/5 完成 ---
 ```
 
-**批量审查检查点：**
-- 每完成 3 个任务后，暂停回顾：整体方向还对吗？有没有偏离计划？
+**持续自查：**
+- 执行过程中持续留意：整体方向还对吗？有没有偏离计划？
 - 如果发现前面的实现有问题，先修复再继续，不要带着问题往下走
 
 ### 步骤 3：处理常见异常
