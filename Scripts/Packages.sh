@@ -488,6 +488,9 @@ apply_lean_package_overrides() {
     
     # update_package_list "luci-app-wolplus" "sundaqiang/openwrt-packages" "master"
     update_package_list "luci-app-netspeedtest speedtest-cli" "sbwml/openwrt_pkgs" "main"
+
+    update_package_list "luci-app-verysync verysync" "coolsnowwolf/luci" "openwrt-23.05"
+
 }
 
 # iwrt 配置族源码风格：vwrt/libwrt 共用。
@@ -525,8 +528,8 @@ apply_iwrt_package_overrides() {
     UPDATE_PACKAGE "viking" "VIKINGYFY/packages" "main" "" "gecoosac luci-app-timewol luci-app-wolplus"
     UPDATE_PACKAGE "vnt" "lmq8267/luci-app-vnt" "main"
 
-    # 从 coolsnowwolf/openwrt 获取 verysync
-    update_package_list "luci-app-verysync verysync" "coolsnowwolf/openwrt" "master"
+    update_package_list "luci-app-verysync verysync" "immortalwrt/luci" "openwrt-23.05"
+
 }
 
 # OpenWrt 25.12 的 LuCI 菜单机制与语言包状态和旧分支不同，这里统一补一层兼容：
