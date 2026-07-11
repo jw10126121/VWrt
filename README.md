@@ -50,7 +50,7 @@
 ## CI 工作流
 
 [![CUSTOM-LWRT](https://github.com/jw10126121/VWrt/actions/workflows/CUSTOM-LWRT.yml/badge.svg)](https://github.com/jw10126121/VWrt/actions/workflows/CUSTOM-LWRT.yml)
-[![CUSTOM-IWRT](https://github.com/jw10126121/VWrt/actions/workflows/CUSTOM-IWRT.yml/badge.svg)](https://github.com/jw10126121/VWrt/actions/workflows/CUSTOM-IWRT.yml)
+[![CUSTOM-IWRT](https://github.com/jw10126121/VWrt/actions/workflows/CUSTOM-iwrt.yml/badge.svg)](https://github.com/jw10126121/VWrt/actions/workflows/CUSTOM-iwrt.yml)
 [![DEFAULT](https://github.com/jw10126121/VWrt/actions/workflows/DEFAULT.yml/badge.svg)](https://github.com/jw10126121/VWrt/actions/workflows/DEFAULT.yml)
 
 ### 预设工作流
