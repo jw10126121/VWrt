@@ -44,75 +44,6 @@ get_config_value() {
     grep -m 1 "^${key}=" ./.config | awk -F'=' '{print $2}' | tr -d '"'
 }
 
-# 保留第三方 src-git feed 用于编译，但修正 APK 固件中的运行时软件源：
-# - 妙妙屋使用上游独立签名源，而不是默认固件镜像。
-# - iStore 没有对应的 APK 二进制源，保留编译 feed 但注释运行时条目。
-configure_third_party_apk_feeds() {
-    local config_file="${THIRD_PARTY_CONFIG_FILE:-./.config}"
-    local feeds_mk="${THIRD_PARTY_FEEDS_MK:-./include/feeds.mk}"
-    local base_files_root="${THIRD_PARTY_BASE_FILES_ROOT:-./package/base-files/files}"
-    local repo_base='https://miaomiaowu-openwrt.445568.xyz'
-    local original_apk_path='%U/packages/%A/$(feed)/packages.adb'
-    local mapped_apk_path='$(if $(filter istore,$(feed)),# %U/packages/%A/$(feed)/packages.adb,$(if $(filter miaomiaowu,$(feed)),https://miaomiaowu-openwrt.445568.xyz/openwrt-25.12/%A/packages.adb,%U/packages/%A/$(feed)/packages.adb))'
-    local arch
-    local repo_url
-    local key_url="${repo_base}/miaomiaowu-apk.pem"
-    local key_dir="${base_files_root}/etc/apk/keys"
-    local key_file="${key_dir}/miaomiaowu-apk.pem"
-    local key_tmp="${key_file}.tmp.$$"
-    local feeds_tmp="${feeds_mk}.tmp.$$"
-
-    if ! grep -q '^CONFIG_USE_APK=y$' "${config_file}" 2>/dev/null; then
-        echo "【Lin】非 APK 模式，跳过第三方 APK 软件源配置"
-        return 0
-    fi
-
-    arch=$(sed -n 's/^CONFIG_TARGET_ARCH_PACKAGES="\([^"]*\)"/\1/p' "${config_file}" | head -n 1)
-    if [ -z "${arch}" ]; then
-        echo "【Lin】错误：无法从最终 .config 获取妙妙屋 APK 软件源架构" >&2
-        return 1
-    fi
-
-    if [ ! -f "${feeds_mk}" ]; then
-        echo "【Lin】错误：找不到 OpenWrt feed 源生成文件：${feeds_mk}" >&2
-        return 1
-    fi
-
-    repo_url="${repo_base}/openwrt-25.12/${arch}/packages.adb"
-    if ! curl -fsSL -o /dev/null "${repo_url}"; then
-        echo "【Lin】错误：妙妙屋 APK 软件源不支持架构 ${arch}：${repo_url}" >&2
-        return 1
-    fi
-
-    mkdir -p "${key_dir}"
-    rm -f "${key_tmp}"
-    if ! curl -fsSL -o "${key_tmp}" "${key_url}"; then
-        rm -f "${key_tmp}"
-        echo "【Lin】错误：妙妙屋 APK 软件源公钥下载失败：${key_url}" >&2
-        return 1
-    fi
-
-    if ! grep -Fq "${mapped_apk_path}" "${feeds_mk}"; then
-        rm -f "${feeds_tmp}"
-        if ! sed "s|${original_apk_path}|${mapped_apk_path}|" "${feeds_mk}" > "${feeds_tmp}"; then
-            rm -f "${key_tmp}" "${feeds_tmp}"
-            echo "【Lin】错误：无法处理 OpenWrt APK 软件源生成规则：${feeds_mk}" >&2
-            return 1
-        fi
-        mv -f "${feeds_tmp}" "${feeds_mk}"
-    fi
-
-    if ! grep -Fq "${mapped_apk_path}" "${feeds_mk}"; then
-        rm -f "${key_tmp}"
-        echo "【Lin】错误：无法修补 OpenWrt APK 软件源生成规则：${feeds_mk}" >&2
-        return 1
-    fi
-
-    mv -f "${key_tmp}" "${key_file}"
-    echo "【Lin】妙妙屋 APK 软件源：${repo_url}"
-    echo "【Lin】iStore 仅保留编译 feed，不生成运行时 APK 软件源"
-}
-
 configure_ecm_accel_delay_fix() {
     local ecm_init_file="./package/qca/qca-nss-ecm/files/qca-nss-ecm.init"
     local ax18_device_config='^CONFIG_TARGET_DEVICE_qualcommax_ipq60xx_DEVICE_cmiot_ax18=y$'
@@ -263,8 +194,6 @@ preload_homeproxy_resources() {
 }
 
 cd "${openwrt_workdir}"
-
-configure_third_party_apk_feeds
 
 # preload_openclash_meta_core
 preload_homeproxy_resources
