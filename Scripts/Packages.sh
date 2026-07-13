@@ -388,7 +388,7 @@ resolve_packages_luci_feed_branch() {
 apply_common_package_overrides() {
     # UPDATE_PACKAGE "luci-theme-kucat" "sirpdboy/luci-theme-kucat" "master"
     UPDATE_PACKAGE "luci-theme-noobwrt" "nooblk-98/luci-theme-noobwrt" "master"
-
+    UPDATE_PACKAGE "luci-theme-fluent" "LazuliKao/luci-theme-fluent" "main"
     UPDATE_PACKAGE "aurora" "eamonxg/luci-theme-aurora" "master"
     UPDATE_PACKAGE "aurora-config" "eamonxg/luci-app-aurora-config" "master"
     
