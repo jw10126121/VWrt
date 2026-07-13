@@ -7,6 +7,11 @@ set -eu
 
 SCRIPT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 TARGET_SCRIPT="$SCRIPT_DIR/diy_config.sh"
+SETUP_CONFIG_TEMPLATE="$SCRIPT_DIR/patch/99-setup_config.txt"
+
+grep -Fq 'if [ -x /etc/init.d/subconverter ]; then' "$SETUP_CONFIG_TEMPLATE"
+grep -Fq '/etc/init.d/subconverter disable' "$SETUP_CONFIG_TEMPLATE"
+grep -Fq '/etc/init.d/subconverter stop' "$SETUP_CONFIG_TEMPLATE"
 
 TMPDIR=$(mktemp -d)
 TEST_BIN="$TMPDIR/test-bin"
