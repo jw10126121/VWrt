@@ -53,6 +53,32 @@ minor_version_to_number() {
     printf '%d\n' "$((10#${major} * 100 + 10#${minor}))"
 }
 
+# 当源码树还没有生成 .config / include/version.mk，且 luci feed 没写分支时，
+# 根据工作流传入的源码类型或包管理器选择一个更接近真实分支的兜底版本。
+default_openwrt_minor_fallback() {
+    local source_type=${SOURCE_TYPE:-}
+    local package_manager=${WRT_PACKAGE_MANAGER:-${package_manager:-}}
+
+    if [ -n "${LANG_NODE_DEFAULT_FALLBACK_VERSION:-}" ]; then
+        printf '%s\n' "${LANG_NODE_DEFAULT_FALLBACK_VERSION}"
+        return 0
+    fi
+
+    case "${source_type}" in
+        vwrt|iwrt|immortalwrt|vikingyfy)
+            printf '%s\n' '25.12'
+            return 0
+            ;;
+    esac
+
+    if [ "${package_manager}" = "apk" ] || [ "${WRT_USE_APK:-false}" = "true" ]; then
+        printf '%s\n' '25.12'
+        return 0
+    fi
+
+    printf '%s\n' '24.10'
+}
+
 # 从本地 OpenWrt 源码里尽量推导出当前版本。
 # 读取顺序：
 # 1. .config 中的 CONFIG_VERSION_NUMBER
@@ -83,7 +109,7 @@ resolve_openwrt_versions() {
 
     if [ -z "${OPENWRT_VERSION_MINOR}" ] && \
        grep -Eq '^[^#]*src-[^[:space:]]+[[:space:]]+luci([[:space:]]|$)' "${version_workdir}/feeds.conf.default" 2>/dev/null; then
-        OPENWRT_VERSION_MINOR="${LANG_NODE_DEFAULT_FALLBACK_VERSION:-24.10}"
+        OPENWRT_VERSION_MINOR=$(default_openwrt_minor_fallback)
     fi
 }
 
