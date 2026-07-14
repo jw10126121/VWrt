@@ -520,15 +520,16 @@ apply_iwrt_package_overrides() {
     UPDATE_PACKAGE "netspeedtest" "sirpdboy/netspeedtest" "main" "" "homebox ookla-speedtest"
     UPDATE_PACKAGE "netwizard" "sirpdboy/luci-app-netwizard" "main"
     UPDATE_PACKAGE "openlist2" "sbwml/luci-app-openlist2" "main"
-    UPDATE_PACKAGE "partexp" "sirpdboy/luci-app-partexp" "main"
+    # UPDATE_PACKAGE "partexp" "sirpdboy/luci-app-partexp" "main"
     UPDATE_PACKAGE "qbittorrent" "sbwml/luci-app-qbittorrent" "master" "" "qt6base qt6tools rblibtorrent"
     UPDATE_PACKAGE "qmodem" "FUjr/QModem" "main"
     UPDATE_PACKAGE "luci-app-quickfile" "sbwml/luci-app-quickfile" "main"
     UPDATE_PACKAGE "timecontrol" "sirpdboy/luci-app-timecontrol" "main"
     UPDATE_PACKAGE "viking" "VIKINGYFY/packages" "main" "" "gecoosac luci-app-timewol luci-app-wolplus"
-    UPDATE_PACKAGE "vnt" "lmq8267/luci-app-vnt" "main"
+    # UPDATE_PACKAGE "vnt" "lmq8267/luci-app-vnt" "main"
 
     update_package_list "luci-app-verysync verysync" "immortalwrt/luci" "openwrt-23.05"
+    # update_package_list "luci-app-quickstart quickstart" "sbwml/package_new_istore" "main"
 
 }
 
