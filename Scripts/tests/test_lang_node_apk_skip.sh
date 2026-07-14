@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 说明：验证 Packages.sh 外层在 APK 模式下会直接跳过 sbwml lang_node 预编译 helper。
+# 说明：验证 Packages.sh 外层在 APK 模式下也会尝试 sbwml lang_node 预编译 helper。
 
 set -euo pipefail
 
@@ -40,9 +40,10 @@ mkdir -p "$openwrt_workdir"
 
 output=$(WRT_PACKAGE_MANAGER=apk apply_lang_node_prebuilt_fix 2>&1)
 
-printf '%s\n' "$output" | grep -Fq '【Lin】APK 模式跳过 sbwml lang_node 预编译，继续使用官方 lang/node'
-[ ! -f "$MARKER_FILE" ] || {
-	echo "APK mode should not invoke the sbwml lang_node helper" >&2
+printf '%s\n' "$output" | grep -Fq '【Lin】尝试使用 sbwml/feeds_packages_lang_node 加速 lang_node 编译'
+printf '%s\n' "$output" | grep -Fq '【Lin】未命中可用的 sbwml lang_node 预编译分支，继续使用官方 lang/node'
+[ -f "$MARKER_FILE" ] || {
+	echo "APK mode should invoke the sbwml lang_node helper" >&2
 	exit 1
 }
 

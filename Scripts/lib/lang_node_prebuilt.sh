@@ -2,7 +2,7 @@
 
 # 用途：
 # 1. 检测当前 OpenWrt 源码实际对应的主次版本，例如 24.10、25.12。
-# 2. 查询 sbwml/feeds_packages_lang_node-prebuilt 仓库里实际存在的 packages-x.y 分支。
+# 2. 查询 sbwml/feeds_packages_lang_node 仓库里实际存在的 packages-x.y 分支。
 # 3. 选择一个“最兼容”的预编译分支，替换 feeds/packages/lang/node，规避 Node.js 原生编译失败。
 # 4. 如果替换失败，则自动恢复原始 lang/node 目录，避免把 feeds 目录弄坏。
 #
@@ -99,8 +99,8 @@ list_lang_node_prebuilt_versions() {
     local repo=$2
 
     "${git_bin}" ls-remote --heads "${repo}" 2>/dev/null | \
-        sed -n 's#.*refs/heads/packages-\([0-9]\+\.[0-9]\+\)$#\1#p' | \
-        sort -uV
+        sed -nE 's#.*refs/heads/packages-([0-9]+\.[0-9]+)$#\1#p' | \
+        sort -u
 }
 
 # 在“当前源码版本”和“远端支持版本列表”之间挑一个最合适的预编译版本。
@@ -226,7 +226,7 @@ clone_lang_node_branch() {
 #
 # 可通过以下环境变量调整行为：
 #   LANG_NODE_PREBUILT_REPO
-#     预编译仓库地址，默认 sbwml/feeds_packages_lang_node-prebuilt
+#     预编译仓库地址，默认 sbwml/feeds_packages_lang_node
 #   LANG_NODE_SUPPORTED_PREBUILT_VERSIONS
 #     当无法查询远端分支时，手工提供支持版本列表，例如 "24.10 25.12"
 #   LANG_NODE_DEFAULT_FALLBACK_VERSION
@@ -235,13 +235,14 @@ clone_lang_node_branch() {
 #     指定 git 可执行文件，便于测试中替换
 replace_lang_node_with_prebuilt() {
     local version_workdir=$1
-    local node_prebuilt_repo=${LANG_NODE_PREBUILT_REPO:-https://github.com/sbwml/feeds_packages_lang_node-prebuilt}
+    local node_prebuilt_repo=${LANG_NODE_PREBUILT_REPO:-https://github.com/sbwml/feeds_packages_lang_node}
     local configured_supported_versions=${LANG_NODE_SUPPORTED_PREBUILT_VERSIONS:-}
     local fallback_version=${LANG_NODE_DEFAULT_FALLBACK_VERSION:-}
     local git_bin=${LANG_NODE_GIT_BIN:-git}
     local node_dir="${version_workdir}/feeds/packages/lang/node"
     local node_dir_bak="${version_workdir}/feeds/packages/lang/node.bak"
     local supported_versions=""
+    local supported_versions_display=""
     local selected_version=""
 
     log_phase "开始处理 lang_node 预编译替换"
@@ -258,8 +259,9 @@ replace_lang_node_with_prebuilt() {
 
     # 第三步：基于“当前版本 + 可用分支”选一个兼容版本。
     selected_version=$(pick_lang_node_prebuilt_version "${OPENWRT_VERSION_MINOR:-}" "${supported_versions}" "${fallback_version}" || true)
+    supported_versions_display=$(printf '%s\n' "${supported_versions}" | tr '\n' ' ' | sed -E 's/[[:space:]]+$//')
 
-    log_info "主源码版本号：${OPENWRT_VERSION_MINOR:-未知}；config_version：${CONFIG_VERSION_MINOR:-无}；include_version：${INCLUDE_VERSION_MINOR:-无}；luci_feed_version：${LUCI_FEED_VERSION_MINOR:-无}；supported_versions：${supported_versions:-无}；prebuilt_version：${selected_version:-无}"
+    log_info "主源码版本号：${OPENWRT_VERSION_MINOR:-未知}；config_version：${CONFIG_VERSION_MINOR:-无}；include_version：${INCLUDE_VERSION_MINOR:-无}；luci_feed_version：${LUCI_FEED_VERSION_MINOR:-无}；supported_versions：${supported_versions_display:-无}；prebuilt_version：${selected_version:-无}"
 
     if [ ! -d "${node_dir}" ]; then
         log_info "未找到原始 lang_node 目录：${node_dir}"

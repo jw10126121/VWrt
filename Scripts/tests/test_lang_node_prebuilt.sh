@@ -54,6 +54,15 @@ EOF
     git -C "$repo_dir" commit -m "packages-24.10" >/dev/null 2>&1
 
     git -C "$repo_dir" checkout master >/dev/null 2>&1 || git -C "$repo_dir" checkout main >/dev/null 2>&1
+    git -C "$repo_dir" checkout -b packages-25.12 >/dev/null 2>&1
+    printf 'packages-25.12\n' > "$repo_dir/SOURCE.txt"
+    cat > "$repo_dir/Makefile" <<'EOF'
+PKG_BASE:=packages-24.10
+EOF
+    git -C "$repo_dir" add SOURCE.txt Makefile
+    git -C "$repo_dir" commit -m "packages-25.12" >/dev/null 2>&1
+
+    git -C "$repo_dir" checkout master >/dev/null 2>&1 || git -C "$repo_dir" checkout main >/dev/null 2>&1
 }
 
 WORKDIR_SUCCESS="$TMPDIR/openwrt-success"
@@ -77,8 +86,8 @@ make_openwrt_tree "$WORKDIR_COMPAT" "25.12.1"
 LANG_NODE_PREBUILT_REPO="$REPO_DIR" \
 bash "$TARGET_SCRIPT" "$WORKDIR_COMPAT"
 
-grep -Fxq 'packages-24.10' "$WORKDIR_COMPAT/feeds/packages/lang/node/SOURCE.txt"
-grep -Fxq 'PKG_BASE:=packages-24.10' "$WORKDIR_COMPAT/feeds/packages/lang/node/Makefile"
+grep -Fxq 'packages-25.12' "$WORKDIR_COMPAT/feeds/packages/lang/node/SOURCE.txt"
+grep -Fxq 'PKG_BASE:=packages-25.12' "$WORKDIR_COMPAT/feeds/packages/lang/node/Makefile"
 [ ! -d "$WORKDIR_COMPAT/feeds/packages/lang/node.bak" ] || {
     echo "Backup directory should be removed after compatible replacement" >&2
     exit 1
