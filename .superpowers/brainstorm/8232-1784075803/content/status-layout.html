@@ -1,0 +1,76 @@
+<h2>IPv6 开关：当前状态布局</h2>
+<p class="subtitle">请选择更适合 OpenWrt LuCI 的 WAN/LAN 地址展示方式。示例包含 IPv4、IPv6 全局地址和 IPv6 链路本地地址。</p>
+
+<div class="cards">
+  <div class="card" data-choice="cards" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 18px; background: #f7f9fb;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;">
+        <div>
+          <strong style="font-size:16px;">IPv6 总开关</strong>
+          <div style="font-size:12px;color:#668;margin-top:3px;">当前状态：IPv6 已启用</div>
+        </div>
+        <div style="background:#2e7d32;color:white;border-radius:16px;padding:6px 13px;font-size:12px;">已启用</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="background:white;border:1px solid #dce3ea;border-radius:8px;padding:13px;min-width:0;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+            <strong>WAN</strong><span style="font-size:11px;color:#68758a;">wan / wan6</span>
+          </div>
+          <div style="font-size:11px;color:#68758a;">IPv4</div>
+          <div style="font:12px monospace;margin:3px 0 10px;overflow-wrap:anywhere;">100.64.12.34/24</div>
+          <div style="font-size:11px;color:#68758a;">IPv6</div>
+          <div style="font:12px monospace;margin-top:3px;overflow-wrap:anywhere;">240e:3b0:1234:5678::2/64</div>
+          <div style="font:12px monospace;margin-top:5px;color:#68758a;overflow-wrap:anywhere;">fe80::1234:56ff:fe78:9abc/64</div>
+        </div>
+        <div style="background:white;border:1px solid #dce3ea;border-radius:8px;padding:13px;min-width:0;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+            <strong>LAN</strong><span style="font-size:11px;color:#68758a;">br-lan</span>
+          </div>
+          <div style="font-size:11px;color:#68758a;">IPv4</div>
+          <div style="font:12px monospace;margin:3px 0 10px;overflow-wrap:anywhere;">192.168.0.1/24</div>
+          <div style="font-size:11px;color:#68758a;">IPv6</div>
+          <div style="font:12px monospace;margin-top:3px;overflow-wrap:anywhere;">240e:3b0:1234:9000::1/64</div>
+          <div style="font:12px monospace;margin-top:5px;color:#68758a;overflow-wrap:anywhere;">fd12:3456:789a::1/60</div>
+          <div style="font:12px monospace;margin-top:5px;color:#68758a;overflow-wrap:anywhere;">fe80::1/64</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A：WAN/LAN 分卡片（推荐）</h3>
+      <p>地址分组清楚，多个 IPv6 地址也容易辨认；窄屏时可自动改为上下排列。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="table" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:18px;background:#f7f9fb;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;">
+        <div>
+          <strong style="font-size:16px;">IPv6 总开关</strong>
+          <div style="font-size:12px;color:#668;margin-top:3px;">当前状态：IPv6 已启用</div>
+        </div>
+        <div style="background:#2e7d32;color:white;border-radius:16px;padding:6px 13px;font-size:12px;">已启用</div>
+      </div>
+      <div style="background:white;border:1px solid #dce3ea;border-radius:8px;overflow:hidden;font-size:12px;">
+        <div style="display:grid;grid-template-columns:58px 58px 1fr;background:#eef2f6;padding:9px 10px;font-weight:600;">
+          <span>区域</span><span>协议</span><span>地址</span>
+        </div>
+        <div style="display:grid;grid-template-columns:58px 58px 1fr;padding:9px 10px;border-top:1px solid #edf0f3;">
+          <strong>WAN</strong><span>IPv4</span><code style="overflow-wrap:anywhere;">100.64.12.34/24</code>
+        </div>
+        <div style="display:grid;grid-template-columns:58px 58px 1fr;padding:9px 10px;border-top:1px solid #edf0f3;">
+          <strong>WAN</strong><span>IPv6</span><code style="overflow-wrap:anywhere;">240e:3b0:1234:5678::2/64<br>fe80::1234:56ff:fe78:9abc/64</code>
+        </div>
+        <div style="display:grid;grid-template-columns:58px 58px 1fr;padding:9px 10px;border-top:1px solid #edf0f3;">
+          <strong>LAN</strong><span>IPv4</span><code style="overflow-wrap:anywhere;">192.168.0.1/24</code>
+        </div>
+        <div style="display:grid;grid-template-columns:58px 58px 1fr;padding:9px 10px;border-top:1px solid #edf0f3;">
+          <strong>LAN</strong><span>IPv6</span><code style="overflow-wrap:anywhere;">240e:3b0:1234:9000::1/64<br>fd12:3456:789a::1/60<br>fe80::1/64</code>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B：紧凑表格</h3>
+      <p>占用空间较少，适合快速扫描；但 IPv6 地址较多时信息会更拥挤。</p>
+    </div>
+  </div>
+</div>

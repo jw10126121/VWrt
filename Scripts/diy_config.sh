@@ -612,6 +612,7 @@ configure_base_package_options() {
     # 第三方 feed 仅用于编译，不加入固件的 APK/IPK 运行时软件源
     set_kconfig_value "CONFIG_FEED_miaomiaowu" "n"
     set_kconfig_value "CONFIG_FEED_istore" "n"
+    set_kconfig_value "CONFIG_FEED_sqm_scripts_nss" "n"
     # 设置编译加入luci
     set_kconfig_value "CONFIG_PACKAGE_luci" "y"
     # 设置编译中文语言包

@@ -1,0 +1,60 @@
+<h2>IPv6 开关：状态页布局 V2</h2>
+<p class="subtitle">“是否启用”已调整为顶部独立一行，WAN/LAN 地址放在下方独立的“当前网络地址”区域。</p>
+
+<div class="mockup">
+  <div class="mockup-header">预览：网络 → IPv6 开关</div>
+  <div class="mockup-body" style="background:#f7f9fb;padding:18px;">
+    <div style="background:white;border:1px solid #dce3ea;border-radius:8px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;">
+      <div>
+        <div style="font-weight:600;font-size:15px;">IPv6 状态</div>
+        <div style="font-size:12px;color:#68758a;margin-top:4px;">控制 WAN IPv6、LAN RA、DHCPv6 和 NDP</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+        <strong style="color:#2e7d32;font-size:13px;">已启用</strong>
+        <div style="width:42px;height:23px;border-radius:14px;background:#2e7d32;padding:3px;box-sizing:border-box;">
+          <div style="width:17px;height:17px;border-radius:50%;background:white;margin-left:19px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-weight:600;font-size:15px;margin-bottom:10px;">当前网络地址</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div style="background:white;border:1px solid #dce3ea;border-radius:8px;padding:14px;min-width:0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <strong>WAN</strong>
+          <span style="font-size:11px;color:#68758a;background:#eef2f6;border-radius:10px;padding:3px 8px;">wan / wan6</span>
+        </div>
+        <div style="font-size:11px;color:#68758a;">IPv4 地址</div>
+        <div style="font:12px monospace;margin:4px 0 12px;overflow-wrap:anywhere;">100.64.12.34/24</div>
+        <div style="font-size:11px;color:#68758a;">IPv6 地址</div>
+        <div style="font:12px monospace;margin-top:4px;overflow-wrap:anywhere;">240e:3b0:1234:5678::2/64</div>
+        <div style="font:12px monospace;margin-top:6px;color:#68758a;overflow-wrap:anywhere;">fe80::1234:56ff:fe78:9abc/64</div>
+      </div>
+
+      <div style="background:white;border:1px solid #dce3ea;border-radius:8px;padding:14px;min-width:0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <strong>LAN</strong>
+          <span style="font-size:11px;color:#68758a;background:#eef2f6;border-radius:10px;padding:3px 8px;">br-lan</span>
+        </div>
+        <div style="font-size:11px;color:#68758a;">IPv4 地址</div>
+        <div style="font:12px monospace;margin:4px 0 12px;overflow-wrap:anywhere;">192.168.0.1/24</div>
+        <div style="font-size:11px;color:#68758a;">IPv6 地址</div>
+        <div style="font:12px monospace;margin-top:4px;overflow-wrap:anywhere;">240e:3b0:1234:9000::1/64</div>
+        <div style="font:12px monospace;margin-top:6px;color:#68758a;overflow-wrap:anywhere;">fd12:3456:789a::1/60</div>
+        <div style="font:12px monospace;margin-top:6px;color:#68758a;overflow-wrap:anywhere;">fe80::1/64</div>
+      </div>
+    </div>
+
+    <div style="margin-top:14px;font-size:11px;color:#68758a;">地址由 netifd 实时读取；不存在的地址显示“未获取”。</div>
+  </div>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="approve-v2" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content">
+      <h3>采用这个层级</h3>
+      <p>顶部单独显示开关状态，下方用 WAN/LAN 卡片显示 IPv4 和 IPv6。</p>
+    </div>
+  </div>
+</div>

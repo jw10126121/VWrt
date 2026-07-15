@@ -79,3 +79,5 @@ dedupe_active_feeds
 append_feed_if_missing "miaomiaowu" "src-git miaomiaowu https://github.com/xiaohai77/OpenWrt-MMW.git"
 # 添加istore
 append_feed_if_missing "istore" "src-git istore https://github.com/linkease/istore;main"
+# 添加sqm_scripts_nss
+append_feed_if_missing "sqm_scripts_nss" "src-git sqm_scripts_nss https://github.com/qosmio/sqm-scripts-nss.git"

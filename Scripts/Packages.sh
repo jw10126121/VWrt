@@ -443,7 +443,7 @@ apply_common_package_overrides() {
 
     # Guest-WIFI
     # UPDATE_PACKAGE "luci-app-guest-wifi" "kenzok78/luci-app-guest-wifi" "main" # 不可用
-    # 3频可用,20260604编译报错
+    # 3频可用，但20260604编译报错
     # update_package_list "luci-app-guestwifi" "yufanpin/luci-app-guestwifi" "master"
 
 
@@ -512,7 +512,6 @@ apply_iwrt_package_overrides() {
 
     UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
 
-    # UPDATE_PACKAGE "luci-app-athena-led" "unraveloop/JDC-AX6600-Athena-LED-Controller" "main"
     UPDATE_PACKAGE "luci-app-ddns-go" "sirpdboy/luci-app-ddns-go" "main"
     UPDATE_PACKAGE "luci-app-diskman" "sbwml/luci-app-diskman" "main"
     UPDATE_PACKAGE "luci-app-diskmanager" "4IceG/luci-app-mini-diskmanager" "main"
