@@ -59,7 +59,7 @@ CONFIG_PACKAGE_firewall=n                   # 关闭 FW3
 #  菜单整理：网络
 # ------------------------------------------------------------------------
 #  维护提示：流控、端口转发、网络协议相关集中在这里。
-CONFIG_PACKAGE_sqm-scripts-nss=y            # 支持nss的sqm，慎重使用，lean源码不可用，会导致拨号断开
+CONFIG_PACKAGE_sqm-scripts-nss=y            # 支持nss的sqm，选fq_codel - nss-zk.qos。慎重使用，lean源码不可用，会导致拨号断开
 CONFIG_PACKAGE_luci-app-sqm=y               # SQM QoS 流量整形
 CONFIG_PACKAGE_luci-i18n-sqm-zh-cn=y        # SQM 中文语言包
 CONFIG_PACKAGE_luci-app-upnp=y              # UPnP 端口映射
