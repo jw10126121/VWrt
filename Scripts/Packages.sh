@@ -446,8 +446,8 @@ apply_common_package_overrides() {
     # 3频可用，但20260604编译报错
     # update_package_list "luci-app-guestwifi" "yufanpin/luci-app-guestwifi" "master"
 
-
-    UPDATE_PACKAGE "luci-app-sqm" "https://git.cooluc.com/sbwml/luci-app-sqm" "main"
+    # 使用sbwml/luci-app-sqm
+    # UPDATE_PACKAGE "luci-app-sqm" "https://git.cooluc.com/sbwml/luci-app-sqm" "main"
     # 以下为sqm备用，未测试
     # UPDATE_PACKAGE "luci-app-sqm" "gitbruc/luci-app-sqm" "main"
     # update_package_list "luci-app-sqm-controller" "Natduki/luci-app-sqm-controller" "main"
@@ -501,9 +501,6 @@ apply_iwrt_package_overrides() {
     UPDATE_PACKAGE "kucat" "sirpdboy/luci-theme-kucat" "master"
     UPDATE_PACKAGE "kucat-config" "sirpdboy/luci-app-kucat-config" "master"
 
-    # UPDATE_PACKAGE "homeproxy" "VIKINGYFY/homeproxy" "main"
-    # UPDATE_VERSION "sing-box" # 升级sing-box到最新版本
-
     UPDATE_PACKAGE "momo" "nikkinikki-org/OpenWrt-momo" "main"
     UPDATE_PACKAGE "nikki" "nikkinikki-org/OpenWrt-nikki" "main"
     # UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev" "pkg"
@@ -530,6 +527,8 @@ apply_iwrt_package_overrides() {
     update_package_list "luci-app-verysync verysync" "immortalwrt/luci" "openwrt-23.05"
     # update_package_list "luci-app-quickstart quickstart" "sbwml/package_new_istore" "main"
 
+    UPDATE_PACKAGE "homeproxy" "VIKINGYFY/homeproxy" "main"
+    UPDATE_VERSION "sing-box" # 升级sing-box到最新版本
 }
 
 # OpenWrt 25.12 的 LuCI 菜单机制与语言包状态和旧分支不同，这里统一补一层兼容：

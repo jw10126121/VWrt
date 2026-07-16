@@ -42,7 +42,7 @@ jobs:
       WRT_DIYPackages: Packages.sh
       WRT_DIY_FEEDS: diy_feeds.sh
       WRT_DEFAULT_LANIP: 192.168.0.1
-      WRT_RELEASE_FIRMWARE: ${{ inputs.WRT_RELEASE_FIRMWARE }}
+      WRT_RELEASE_FIRMWARE: ${{ github.event_name == 'workflow_dispatch' && inputs.WRT_RELEASE_FIRMWARE }}
       WRT_MINE_SAY: ${{ inputs.WHAT_MY_SAY }}
     secrets: inherit
 
@@ -76,7 +76,7 @@ jobs:
       WRT_DIYPackages: Packages.sh
       WRT_DIY_FEEDS: diy_feeds.sh
       WRT_DEFAULT_LANIP: 192.168.0.1
-      WRT_RELEASE_FIRMWARE: ${{ inputs.WRT_RELEASE_FIRMWARE }}
+      WRT_RELEASE_FIRMWARE: ${{ github.event_name == 'workflow_dispatch' && inputs.WRT_RELEASE_FIRMWARE }}
       WRT_MINE_SAY: ${{ inputs.WHAT_MY_SAY }}
     secrets: inherit
 
@@ -93,6 +93,6 @@ jobs:
       WRT_DIYPackages: Packages.sh
       WRT_DIY_FEEDS: diy_feeds.sh
       WRT_DEFAULT_LANIP: 192.168.0.1
-      WRT_RELEASE_FIRMWARE: ${{ inputs.WRT_RELEASE_FIRMWARE }}
+      WRT_RELEASE_FIRMWARE: ${{ github.event_name == 'workflow_dispatch' && inputs.WRT_RELEASE_FIRMWARE }}
       WRT_MINE_SAY: ${{ inputs.WHAT_MY_SAY }}
     secrets: inherit
