@@ -392,8 +392,7 @@ apply_common_package_overrides() {
     UPDATE_PACKAGE "aurora" "eamonxg/luci-theme-aurora" "master"
     UPDATE_PACKAGE "aurora-config" "eamonxg/luci-app-aurora-config" "master"
     
-    # v0.47.110 编译异常，暂时固定到 v0.47.096。
-    UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "v0.47.096" "pkg"
+    UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "v0.47.116" "pkg"
     # UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "master" "pkg"
 
     # 订阅转换
