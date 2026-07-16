@@ -527,7 +527,7 @@ apply_iwrt_package_overrides() {
     update_package_list "luci-app-verysync verysync" "immortalwrt/luci" "openwrt-23.05"
     # update_package_list "luci-app-quickstart quickstart" "sbwml/package_new_istore" "main"
 
-    UPDATE_PACKAGE "luci-app-homeproxy" "VIKINGYFY/homeproxy" "main"
+    UPDATE_PACKAGE "luci-app-homeproxy" "VIKINGYFY/homeproxy" "main" "name"
     UPDATE_VERSION "sing-box" # 升级sing-box到最新版本
 }
 

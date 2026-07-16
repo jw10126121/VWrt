@@ -34,6 +34,7 @@ extract_function_body "apply_lean_package_overrides" | grep -q 'luci-theme-argon
 extract_function_body "apply_lean_package_overrides" | grep -q 'if ! is_luci_feed_25_12 "${openwrt_workdir}/feeds.conf.default"; then'
 extract_function_body "apply_lean_package_overrides" | grep -q 'update_package_list "luci-app-3cat" "coolsnowwolf/luci" "openwrt-25.12"'
 extract_function_body "UPDATE_PACKAGE" | grep -q '成功clone插件：${package_name} \[库：${repo_name} | 分支：${package_branch}\]'
+extract_function_body "apply_iwrt_package_overrides" | grep -q 'UPDATE_PACKAGE "luci-app-homeproxy" "VIKINGYFY/homeproxy" "main" "name"'
 extract_function_body "apply_luci_feed_25_12_package_overrides" | grep -q 'is_luci_feed_25_12'
 extract_function_body "apply_luci_feed_25_12_package_overrides" | grep -q 'update_package_list "luci-app-accesscontrol luci-app-filetransfer" "coolsnowwolf/luci" "openwrt-23.05"'
 grep -q 'find "./${list_repo}" -mindepth 1 -maxdepth 2 -type d -iname "${package_name}" -print | head -n 1' "$TARGET_SCRIPT"
