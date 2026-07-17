@@ -593,6 +593,8 @@ ensure_luci_app_frp_init_permissions() {
 ensure_luci_app_ddns_acl() {
     local acl_file
 
+    [ "${SOURCE_CONFIG_FAMILY:-}" = "iwrt" ] || return 0
+
     for acl_file in \
         "./luci-app-ddns/root/usr/share/rpcd/acl.d/luci-app-ddns.json" \
         "../feeds/luci/applications/luci-app-ddns/root/usr/share/rpcd/acl.d/luci-app-ddns.json"; do

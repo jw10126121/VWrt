@@ -50,11 +50,22 @@ cat > "$ACL_FILE" <<'EOF'
 }
 EOF
 
+cp "$ACL_FILE" "$TMPDIR/luci-app-ddns.json.original"
+
 (
 	cd "$TEST_REPO"
 	# shellcheck disable=SC1090
 	. "$FUNCTIONS_FILE"
-	ensure_luci_app_ddns_acl
+	SOURCE_CONFIG_FAMILY=lean ensure_luci_app_ddns_acl
+)
+
+cmp -s "$ACL_FILE" "$TMPDIR/luci-app-ddns.json.original"
+
+(
+	cd "$TEST_REPO"
+	# shellcheck disable=SC1090
+	. "$FUNCTIONS_FILE"
+	SOURCE_CONFIG_FAMILY=iwrt ensure_luci_app_ddns_acl
 )
 
 grep -Fq '"/etc/init.d/ddns": [ "exec" ]' "$ACL_FILE"
