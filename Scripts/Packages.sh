@@ -589,6 +589,29 @@ ensure_luci_app_frp_init_permissions() {
     done
 }
 
+# LuCI 的单服务重载会直接执行 /etc/init.d/ddns；补齐对应 rpcd ACL。
+ensure_luci_app_ddns_acl() {
+    local acl_file
+
+    for acl_file in \
+        "./luci-app-ddns/root/usr/share/rpcd/acl.d/luci-app-ddns.json" \
+        "../feeds/luci/applications/luci-app-ddns/root/usr/share/rpcd/acl.d/luci-app-ddns.json"; do
+        [ -f "${acl_file}" ] || continue
+
+        if grep -Fq '"/etc/init.d/ddns": [ "exec" ]' "${acl_file}"; then
+            continue
+        fi
+
+        if ! grep -Fq '"file": {' "${acl_file}"; then
+            echo "【Lin】跳过 DDNS ACL 修补，未找到 file 权限块：${acl_file}"
+            continue
+        fi
+
+        perl -0pi -e 's|("file": \{\n)|$1                "/etc/init.d/ddns": [ "exec" ],\n|' "${acl_file}"
+        echo "【Lin】已补齐 LuCI DDNS 重载权限：${acl_file}"
+    done
+}
+
 fix_luci_app_subconverter_postinst() {
     local subconverter_makefile="./luci-app-subconverter/Makefile"
 
@@ -740,6 +763,7 @@ fix_athena_led_makefile() {
 # 先修 Makefile / 依赖，再修运行时脚本，再补资源文件。
 # 这样可以减少后面的修补建立在“包还没准备好”的状态上。
 apply_post_update_fixes() {
+    ensure_luci_app_ddns_acl
     fix_quickfile_makefile
     apply_lang_node_prebuilt_fix
     update_openvpn_easy_rsa_version
