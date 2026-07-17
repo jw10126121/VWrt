@@ -16,7 +16,7 @@ openwrt_workdir="${current_dir}"
 target_label_marker_file="./.linjw-target-label"
 
 # 配置
-PRELOAD_HOMEPROXY_RESOURCES=true  # 是否预置 HomeProxy 规则资源，true/false，默认false
+PRELOAD_HOMEPROXY_RESOURCES=false # 是否预置 HomeProxy 规则资源，true/false，默认false
 
 # 获取CPU架构
 cputype=$(grep -m 1 "^CONFIG_TARGET_ARCH_PACKAGES=" ./.config | awk -F'=' '{print $2}' | tr -d '"')
@@ -152,6 +152,10 @@ preload_homeproxy_resources() {
     local hp_rules
     local hp_patch
     local resource_version
+    local staging_dir
+    local staged_resources
+    local previous_resources
+    local failed_resources
 
     if [ "${PRELOAD_HOMEPROXY_RESOURCES:-false}" != "true" ]; then
         echo "【Lin】HomeProxy 规则资源预置已关闭"
@@ -173,22 +177,83 @@ preload_homeproxy_resources() {
     hp_patch="${homeproxy_dir}/root/etc/homeproxy"
 
     chmod +x "${hp_patch}"/scripts/* 2>/dev/null || true
-    rm -rf "${hp_patch}/resources"/*
-    [ -d "${hp_rules}" ] && rm -fr "${hp_rules}"
-    mkdir -p "${hp_rules}"
 
-    git clone -q --depth=1 --single-branch --branch "release" "https://github.com/Loyalsoldier/surge-rules.git" "${hp_rules}"
-    cd "${hp_rules}" && resource_version=$(git log -1 --pretty=format:'%s' | grep -o "[0-9]*")
+    staging_dir=$(mktemp -d "${homeproxy_dir}/.homeproxy-resources.XXXXXX") || {
+        echo "【Lin】警告：无法创建 HomeProxy 规则资源暂存目录"
+        return 1
+    }
+    hp_rules="${staging_dir}/surge-rules"
+    staged_resources="${staging_dir}/resources"
 
-    echo "${resource_version}" | tee china_ip4.ver china_ip6.ver china_list.ver gfw_list.ver
-    awk -F, '/^IP-CIDR,/{print $2 > "china_ip4.txt"} /^IP-CIDR6,/{print $2 > "china_ip6.txt"}' cncidr.txt
-    sed 's/^\.//g' direct.txt > china_list.txt
-    sed 's/^\.//g' gfw.txt > gfw_list.txt
+    if ! git clone -q --depth=1 --single-branch --branch "release" "https://github.com/Loyalsoldier/surge-rules.git" "${hp_rules}"; then
+        echo "【Lin】警告：HomeProxy 规则资源下载失败，保留现有资源"
+        rm -rf "${staging_dir}"
+        return 1
+    fi
 
-    mv -f ./{china_*,gfw_list}.{ver,txt} "${hp_patch}/resources/"
+    resource_version=$(cd "${hp_rules}" && git log -1 --pretty=format:'%s' | grep -o '[0-9][0-9]*' | head -n 1)
+    if [ -z "${resource_version}" ] || [ ! -s "${hp_rules}/cncidr.txt" ] || [ ! -s "${hp_rules}/direct.txt" ] || [ ! -s "${hp_rules}/gfw.txt" ]; then
+        echo "【Lin】警告：HomeProxy 规则资源不完整，保留现有资源"
+        rm -rf "${staging_dir}"
+        return 1
+    fi
 
-    cd "${openwrt_workdir}"
-    rm -rf "${hp_rules}"
+    mkdir -p "${staged_resources}"
+    printf '%s\n' "${resource_version}" > "${staged_resources}/china_ip4.ver"
+    printf '%s\n' "${resource_version}" > "${staged_resources}/china_ip6.ver"
+    printf '%s\n' "${resource_version}" > "${staged_resources}/china_list.ver"
+    printf '%s\n' "${resource_version}" > "${staged_resources}/gfw_list.ver"
+
+    if ! awk -F, '$1 == "IP-CIDR" {print $2}' "${hp_rules}/cncidr.txt" > "${staged_resources}/china_ip4.txt" ||
+        ! awk -F, '$1 == "IP-CIDR6" {print $2}' "${hp_rules}/cncidr.txt" > "${staged_resources}/china_ip6.txt" ||
+        ! sed 's/^\.//g' "${hp_rules}/direct.txt" > "${staged_resources}/china_list.txt" ||
+        ! sed 's/^\.//g' "${hp_rules}/gfw.txt" > "${staged_resources}/gfw_list.txt"; then
+        echo "【Lin】警告：HomeProxy 规则资源转换失败，保留现有资源"
+        rm -rf "${staging_dir}"
+        return 1
+    fi
+
+    for resource in china_ip4 china_ip6 china_list gfw_list; do
+        if [ ! -s "${staged_resources}/${resource}.ver" ] || [ ! -s "${staged_resources}/${resource}.txt" ]; then
+            echo "【Lin】警告：HomeProxy 规则资源转换结果为空，保留现有资源"
+            rm -rf "${staging_dir}"
+            return 1
+        fi
+    done
+
+    previous_resources="${homeproxy_dir}/.homeproxy-resources.previous.$$"
+    rm -rf "${previous_resources}"
+    if [ -d "${hp_patch}/resources" ] && ! mv "${hp_patch}/resources" "${previous_resources}"; then
+        echo "【Lin】警告：无法备份现有 HomeProxy 规则资源"
+        rm -rf "${staging_dir}"
+        return 1
+    fi
+
+    if ! mv "${staged_resources}" "${hp_patch}/resources"; then
+        echo "【Lin】警告：无法安装新的 HomeProxy 规则资源，尝试恢复现有资源"
+        failed_resources="${homeproxy_dir}/.homeproxy-resources.failed.$$"
+        rm -rf "${failed_resources}"
+        if [ -e "${hp_patch}/resources" ]; then
+            if ! mv "${hp_patch}/resources" "${failed_resources}"; then
+                echo "【Lin】错误：HomeProxy 规则资源恢复失败，原资源备份保留在 ${previous_resources}"
+                rm -rf "${staging_dir}"
+                return 1
+            fi
+        fi
+        if [ -d "${previous_resources}" ] && ! mv "${previous_resources}" "${hp_patch}/resources"; then
+            echo "【Lin】错误：HomeProxy 规则资源恢复失败，原资源备份保留在 ${previous_resources}"
+            [ -e "${failed_resources}" ] && mv "${failed_resources}" "${hp_patch}/resources"
+            rm -rf "${staging_dir}"
+            return 1
+        fi
+        if [ -e "${failed_resources}" ]; then
+            echo "【Lin】警告：安装冲突的 HomeProxy 规则资源保留在 ${failed_resources}"
+        fi
+        rm -rf "${staging_dir}"
+        return 1
+    fi
+
+    rm -rf "${previous_resources}" "${staging_dir}"
 
     echo "【Lin】homeproxy data has been updated!"
 }
