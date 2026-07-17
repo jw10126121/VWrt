@@ -525,8 +525,8 @@ apply_iwrt_package_overrides() {
 
     update_package_list "luci-app-verysync verysync" "immortalwrt/luci" "openwrt-23.05"
     # update_package_list "luci-app-quickstart quickstart" "sbwml/package_new_istore" "main"
-    update_package_list "luci-app-homeproxy" "VIKINGYFY/packages" "main"
-    UPDATE_VERSION "sing-box" # 升级sing-box到最新版本
+    update_package_list "luci-app-homeproxy sing-box" "VIKINGYFY/packages" "main"
+    # UPDATE_VERSION "sing-box" # 升级sing-box到最新release版本，如果使用VIKINGYFY/packages/luci-app-homeproxy，要求sing-box版本>=1.14.0，否则luci-app-homeproxy无法编译成功
 }
 
 # OpenWrt 25.12 的 LuCI 菜单机制与语言包状态和旧分支不同，这里统一补一层兼容：
@@ -711,30 +711,30 @@ fix_athena_led_makefile() {
 
 # homeproxy 这里不是简单替换包，而是预先把规则资源准备到包目录中。
 # 这样最终编译出来的镜像会自带一套规则资源，减少首次使用时的初始化成本。
-preload_homeproxy_resources() {
-    local homeproxy_dir
-    local homeproxy_path
-    local homeproxy_rule_dir="./surge"
-    local resource_version
+# preload_homeproxy_resources() {
+#     local homeproxy_dir
+#     local homeproxy_path
+#     local homeproxy_rule_dir="./surge"
+#     local resource_version
 
-    homeproxy_dir=$(find . -maxdepth 3 -type d -iname "homeproxy" -prune | head -n 1)
-    [ -n "${homeproxy_dir}" ] || return 0
+#     homeproxy_dir=$(find . -maxdepth 3 -type d -iname "homeproxy" -prune | head -n 1)
+#     [ -n "${homeproxy_dir}" ] || return 0
 
-    homeproxy_path="${homeproxy_dir}/root/etc/homeproxy"
-    rm -rf "${homeproxy_path}/resources/"*
-    git clone -q --depth=1 --single-branch --branch "release" "https://github.com/Loyalsoldier/surge-rules.git" "${homeproxy_rule_dir}"
-    cd "${homeproxy_rule_dir}" && resource_version=$(git log -1 --pretty=format:'%s' | grep -o "[0-9]*")
+#     homeproxy_path="${homeproxy_dir}/root/etc/homeproxy"
+#     rm -rf "${homeproxy_path}/resources/"*
+#     git clone -q --depth=1 --single-branch --branch "release" "https://github.com/Loyalsoldier/surge-rules.git" "${homeproxy_rule_dir}"
+#     cd "${homeproxy_rule_dir}" && resource_version=$(git log -1 --pretty=format:'%s' | grep -o "[0-9]*")
 
-    echo "${resource_version}" | tee china_ip4.ver china_ip6.ver china_list.ver gfw_list.ver
-    awk -F, '/^IP-CIDR,/{print $2 > "china_ip4.txt"} /^IP-CIDR6,/{print $2 > "china_ip6.txt"}' cncidr.txt
-    sed 's/^\.//g' direct.txt > china_list.txt
-    sed 's/^\.//g' gfw.txt > gfw_list.txt
-    mv -f ./{china_*,gfw_list}.{ver,txt} "../${homeproxy_path}/resources/"
+#     echo "${resource_version}" | tee china_ip4.ver china_ip6.ver china_list.ver gfw_list.ver
+#     awk -F, '/^IP-CIDR,/{print $2 > "china_ip4.txt"} /^IP-CIDR6,/{print $2 > "china_ip6.txt"}' cncidr.txt
+#     sed 's/^\.//g' direct.txt > china_list.txt
+#     sed 's/^\.//g' gfw.txt > gfw_list.txt
+#     mv -f ./{china_*,gfw_list}.{ver,txt} "../${homeproxy_path}/resources/"
 
-    cd ..
-    rm -rf "${homeproxy_rule_dir}"
-    echo "【Lin】homeproxy date has been updated!"
-}
+#     cd ..
+#     rm -rf "${homeproxy_rule_dir}"
+#     echo "【Lin】homeproxy date has been updated!"
+# }
 
 # 后置修补链的顺序很重要：
 # 先修 Makefile / 依赖，再修运行时脚本，再补资源文件。
