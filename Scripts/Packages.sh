@@ -392,8 +392,8 @@ apply_common_package_overrides() {
     UPDATE_PACKAGE "aurora" "eamonxg/luci-theme-aurora" "master"
     UPDATE_PACKAGE "aurora-config" "eamonxg/luci-app-aurora-config" "master"
     
-    UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "v0.47.116" "pkg"
-    # UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "master" "pkg"
+    # UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "v0.47.116" "pkg"
+    UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "master" "pkg"
 
     # 订阅转换
     # update_package_list "luci-app-miaomiaowu miaomiaowu" "xiaohai77/OpenWrt-mmw" "main" # 已在feeds.conf.default中启用miaomiaowu
