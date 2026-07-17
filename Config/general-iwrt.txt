@@ -49,6 +49,7 @@ CONFIG_PACKAGE_kmod-sched-dummy=y          # 虚拟调度器
 CONFIG_PACKAGE_kmod-sched-pifo=y           # PIFO 调度器
 CONFIG_PACKAGE_kmod-sched-red=y            # RED 主动队列管理
 CONFIG_PACKAGE_kmod-sched-wingnut=y        # Wingnut 调度器
+CONFIG_PACKAGE_bind-host=y                 # ddns tcp解析插件
 
 
 # ------------------------------------------------------------------------
