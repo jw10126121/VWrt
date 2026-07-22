@@ -28,7 +28,12 @@ POST_FIX_BODY=$(awk '
 ' "$TARGET_SCRIPT")
 
 printf '%s\n' "$COMMON_BODY" | grep -q 'UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "master" "pkg"'
-printf '%s\n' "$COMMON_BODY" | grep -q '^    prepare_ninjaconnector2_package$'
+printf '%s\n' "$COMMON_BODY" | grep -q 'UPDATE_PACKAGE "luci-app-ninjaconnector2" "jw10126121/luci-app-ninjaconnector2" "main"'
+printf '%s\n' "$COMMON_BODY" | grep -q '^    # prepare_ninjaconnector2_package$'
+if printf '%s\n' "$COMMON_BODY" | grep -q '^    prepare_ninjaconnector2_package$'; then
+	echo "prepare_ninjaconnector2_package should be kept as a commented fallback, not executed" >&2
+	exit 1
+fi
 grep -q '^prepare_ninjaconnector2_package() {$' "$TARGET_SCRIPT"
 grep -q 'local package_file="${package_name}_${package_version}-${package_release}_all.ipk"' "$TARGET_SCRIPT"
 grep -q 'PKG_VERSION:=${package_version}' "$TARGET_SCRIPT"

@@ -245,6 +245,8 @@ UPDATE_LANSPEED() {
     echo "【Lin】成功导入 luci-app-lanspeed / lanspeedd"
 }
 
+# 备用方案：当单独维护的 luci-app-ninjaconnector2 包仓库不可用时，
+# 可临时改回这个函数，从上游 release ipk 解包生成本地 OpenWrt 包。
 prepare_ninjaconnector2_package() {
     local package_name="luci-app-ninjaconnector2"
     local package_version="1.1.0"
@@ -467,7 +469,8 @@ apply_common_package_overrides() {
     
     # UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "v0.47.116" "pkg"
     UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "master" "pkg"
-    prepare_ninjaconnector2_package
+    UPDATE_PACKAGE "luci-app-ninjaconnector2" "jw10126121/luci-app-ninjaconnector2" "main"
+    # prepare_ninjaconnector2_package
 
     # 订阅转换
     # update_package_list "luci-app-miaomiaowu miaomiaowu" "xiaohai77/OpenWrt-mmw" "main" # 已在feeds.conf.default中启用miaomiaowu
