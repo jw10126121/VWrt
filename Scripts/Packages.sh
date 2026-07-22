@@ -245,6 +245,79 @@ UPDATE_LANSPEED() {
     echo "【Lin】成功导入 luci-app-lanspeed / lanspeedd"
 }
 
+prepare_ninjaconnector2_package() {
+    local package_name="luci-app-ninjaconnector2"
+    local package_version="1.1.0"
+    local package_release="4"
+    local package_file="${package_name}_${package_version}-${package_release}_all.ipk"
+    local package_url="https://github.com/kachetong1314/ninja/releases/download/0.1.13/${package_file}"
+    local package_sha256="067872b03de0f5fc214fc1c5ea840502a93faa8b1f44454230661b3d677eb315"
+    local tmp_dir
+
+    tmp_dir=$(mktemp -d) || {
+        echo "【Lin】无法创建 ${package_name} 临时目录" >&2
+        return 1
+    }
+
+    DELETE_PACKAGE "${package_name}"
+    mkdir -p "${package_name}/files"
+
+    # 只把上游 ipk 当作 LuCI 文件载体；最终仍由当前源码树按 ipk/apk 模式重新打包。
+    if ! curl -L -o "${tmp_dir}/${package_file}" "${package_url}"; then
+        rm -rf "${tmp_dir}"
+        return 1
+    fi
+
+    if ! printf '%s  %s\n' "${package_sha256}" "${tmp_dir}/${package_file}" | sha256sum -c -; then
+        rm -rf "${tmp_dir}" "${package_name}"
+        return 1
+    fi
+
+    if ! gzip -dc "${tmp_dir}/${package_file}" | tar -xf - -C "${tmp_dir}" ./data.tar.gz; then
+        rm -rf "${tmp_dir}" "${package_name}"
+        return 1
+    fi
+
+    if ! tar -xzf "${tmp_dir}/data.tar.gz" -C "${package_name}/files"; then
+        rm -rf "${tmp_dir}" "${package_name}"
+        return 1
+    fi
+
+    chmod +x "${package_name}"/files/usr/share/ninjaconnector2/*.sh "${package_name}"/files/etc/uci-defaults/* 2>/dev/null || true
+
+    cat > "${package_name}/Makefile" <<EOF
+include \$(TOPDIR)/rules.mk
+
+PKG_NAME:=${package_name}
+PKG_VERSION:=${package_version}
+PKG_RELEASE:=${package_release}
+PKG_MAINTAINER:=Ninja
+PKGARCH:=all
+
+include \$(INCLUDE_DIR)/package.mk
+
+define Package/${package_name}
+  SECTION:=luci
+  CATEGORY:=LuCI
+  SUBMENU:=3. Applications
+  TITLE:=Ninja core and subscription support for OpenClash
+  DEPENDS:=+luci-base +luci-compat +luci-app-openclash +curl +ca-bundle +jsonfilter
+endef
+
+define Build/Compile
+endef
+
+define Package/${package_name}/install
+	\$(CP) ./files/* \$(1)/
+endef
+
+\$(eval \$(call BuildPackage,${package_name}))
+EOF
+
+    rm -rf "${tmp_dir}"
+    echo "【Lin】成功导入 ${package_name} ${package_version}-${package_release}"
+}
+
 pin_easytier_binary_version() {
     local package_dir=$1
     local target_version=${2:-}
@@ -394,6 +467,7 @@ apply_common_package_overrides() {
     
     # UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "v0.47.116" "pkg"
     UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "master" "pkg"
+    prepare_ninjaconnector2_package
 
     # 订阅转换
     # update_package_list "luci-app-miaomiaowu miaomiaowu" "xiaohai77/OpenWrt-mmw" "main" # 已在feeds.conf.default中启用miaomiaowu

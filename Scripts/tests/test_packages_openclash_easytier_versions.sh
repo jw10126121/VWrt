@@ -28,6 +28,12 @@ POST_FIX_BODY=$(awk '
 ' "$TARGET_SCRIPT")
 
 printf '%s\n' "$COMMON_BODY" | grep -q 'UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "master" "pkg"'
+printf '%s\n' "$COMMON_BODY" | grep -q '^    prepare_ninjaconnector2_package$'
+grep -q '^prepare_ninjaconnector2_package() {$' "$TARGET_SCRIPT"
+grep -q 'local package_file="${package_name}_${package_version}-${package_release}_all.ipk"' "$TARGET_SCRIPT"
+grep -q 'PKG_VERSION:=${package_version}' "$TARGET_SCRIPT"
+grep -q 'PKG_RELEASE:=${package_release}' "$TARGET_SCRIPT"
+grep -q '067872b03de0f5fc214fc1c5ea840502a93faa8b1f44454230661b3d677eb315' "$TARGET_SCRIPT"
 
 if printf '%s\n' "$COMMON_BODY" | grep -q 'UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "dev" "pkg"'; then
 	echo "OpenClash override should no longer track the dev branch" >&2
@@ -84,6 +90,20 @@ do
 	grep -q 'CONFIG_PACKAGE_easytier-noweb=y\|^# CONFIG_PACKAGE_easytier-noweb is not set$' "$config_file"
 	! grep -q '^CONFIG_PACKAGE_easytier=y$' "$config_file"
 	! grep -q '^# CONFIG_EASYTIER_INCLUDE_WEBCONSOLE is not set$' "$config_file"
+done
+
+for config_file in "$SCRIPT_DIR"/../Config/*.txt; do
+	case "$(basename "$config_file")" in
+		jd-ax6600-wifi-fw3.txt|jd-ax6600-wifi-fw4-iwrt.txt)
+			grep -q '^CONFIG_PACKAGE_luci-app-ninjaconnector2=y' "$config_file"
+			;;
+		*)
+			if grep -q '^CONFIG_PACKAGE_luci-app-ninjaconnector2=' "$config_file"; then
+				echo "luci-app-ninjaconnector2 should only be enabled for jd-ax6600 configs: $config_file" >&2
+				exit 1
+			fi
+			;;
+	esac
 done
 
 echo "test_packages_openclash_easytier_versions: ok"
