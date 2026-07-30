@@ -522,11 +522,13 @@ apply_common_package_overrides() {
     # 3频可用，但20260604编译报错
     # update_package_list "luci-app-guestwifi" "yufanpin/luci-app-guestwifi" "master"
 
-    # 使用sbwml/luci-app-sqm
+    # 使用sbwml/luci-app-sqm，这个配合sqm-scripts会报错
     # UPDATE_PACKAGE "luci-app-sqm" "https://git.cooluc.com/sbwml/luci-app-sqm" "main"
     # 以下为sqm备用，未测试
     # UPDATE_PACKAGE "luci-app-sqm" "gitbruc/luci-app-sqm" "main"
     # update_package_list "luci-app-sqm-controller" "Natduki/luci-app-sqm-controller" "main"
+
+    # update_package_list "sqm-scripts-nss" "JuliusBairaktaris/sqm-scripts-nss" "master"
 
     # quickfile 当前按需保留，默认不导入。
     # 如果后续重新启用，需要同时确认设备侧是否改成 luci-nginx 路线。
@@ -537,6 +539,7 @@ apply_common_package_overrides() {
     update_package_list "luci-app-adguardhome luci-app-easymesh" "kenzok8/openwrt-packages" "master"
 
     update_package_list "luci-app-wolplus" "sundaqiang/openwrt-packages" "master"
+    
 }
 
 # lean 风味额外覆盖。

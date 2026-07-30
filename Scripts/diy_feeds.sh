@@ -80,4 +80,4 @@ append_feed_if_missing "miaomiaowu" "src-git miaomiaowu https://github.com/xiaoh
 # 添加istore
 append_feed_if_missing "istore" "src-git istore https://github.com/linkease/istore;main"
 # 添加sqm_scripts_nss
-append_feed_if_missing "sqm_scripts_nss" "src-git sqm_scripts_nss https://github.com/qosmio/sqm-scripts-nss.git"
+append_feed_if_missing "sqm_scripts_nss" "src-git sqm_scripts_nss https://github.com/JuliusBairaktaris/sqm-scripts-nss.git"
