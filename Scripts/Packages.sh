@@ -528,6 +528,7 @@ apply_common_package_overrides() {
     # UPDATE_PACKAGE "luci-app-sqm" "gitbruc/luci-app-sqm" "main"
     # update_package_list "luci-app-sqm-controller" "Natduki/luci-app-sqm-controller" "main"
 
+    # 只支持ipq807x，不支持ipq60xx
     # update_package_list "sqm-scripts-nss" "JuliusBairaktaris/sqm-scripts-nss" "master"
 
     # quickfile 当前按需保留，默认不导入。
