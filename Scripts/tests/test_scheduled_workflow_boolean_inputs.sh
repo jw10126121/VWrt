@@ -28,5 +28,6 @@ assert_scheduled_boolean_inputs() {
 
 assert_scheduled_boolean_inputs ".github/workflows/CUSTOM-LWRT.yml" 3
 assert_scheduled_boolean_inputs ".github/workflows/CUSTOM-iwrt.yml" 3
+assert_scheduled_boolean_inputs ".github/workflows/ForCache.yml" 4
 
 echo "test_scheduled_workflow_boolean_inputs: ok"
