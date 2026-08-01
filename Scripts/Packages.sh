@@ -772,13 +772,15 @@ fix_wechatpush_runtime() {
     wechatpush_bin="${wechatpush_dir}/root/usr/share/wechatpush/wechatpush"
     if [ -n "${wechatpush_dir}" ] && [ -f "${wechatpush_bin}" ]; then
         sed -i '/^#/!{/^[[:blank:]]*\[ -z "\$1" \] && get_disk/s/^[[:blank:]]*/#&/;}' "${wechatpush_bin}" && echo "【Lin】微信推送去掉硬盘检查"
-        sed -i '\|>"\$output_dir/cputemp"|s/soc_temp/tempinfo/g' "${wechatpush_bin}"
-        sed -i 's/$(translate "CPU:") ${cputemp}℃/${cputemp}/g' "${wechatpush_bin}"
-        echo "【Lin】微信推送添加CPU和WIFI显示"
-
+        sed -i '\|>"\$output_dir/cputemp"|s/soc_temp/tempinfo/g' "${wechatpush_bin}" && echo "【Lin】微信推送添加CPU和WIFI读取"
+        sed -i 's/$(translate "CPU:") ${cputemp}℃/${cputemp}/g' "${wechatpush_bin}" && echo "【Lin】微信推送添加CPU和WIFI显示"
+        
         wechatpush_config="${current_script_dir}/patch/wechatpush_diy.json"
         [ -f "${wechatpush_config}" ] && cp -p "${wechatpush_config}" "${wechatpush_dir}/root/usr/share/wechatpush/api/diy.json" && \
             echo "【Lin】wechatpush的diy.json成功！"
+        wechatpush_diy_feishu="${current_script_dir}/patch/feishu.json"
+        [ -f "${wechatpush_diy_feishu}" ] && cp -p "${wechatpush_diy_feishu}" "${wechatpush_dir}/root/usr/share/wechatpush/api/diy_feishu.json" && \
+            echo "【Lin】wechatpush的diy_feishu.json备用成功！"
     fi
 
     if [ -f "${wechatpush_bin}" ]; then
