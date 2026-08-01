@@ -608,7 +608,8 @@ apply_iwrt_package_overrides() {
     # update_package_list "luci-app-quickstart quickstart" "sbwml/package_new_istore" "main"
     # update_package_list "luci-app-homeproxy sing-box" "VIKINGYFY/packages" "main"
     # UPDATE_VERSION "sing-box" # 升级sing-box到最新release版本，如果使用VIKINGYFY/packages/luci-app-homeproxy，要求sing-box版本>=1.14.0，否则luci-app-homeproxy无法编译成功
-    update_package_list "luci-app-homeproxy sing-box" "XiaoHaiSly/luci-app-homeproxy2" "main"
+    #update_package_list "luci-app-homeproxy sing-box" "XiaoHaiSly/luci-app-homeproxy2" "main"
+    update_package_list "luci-app-homeproxy sing-box" "XiaoHaiSly/OpenWrt-HomeProxy" "main"
 
 }
 
