@@ -491,8 +491,8 @@ apply_common_package_overrides() {
     update_package_list "luci-app-frpc luci-app-frps" "superzjg/luci-app-frpc_frps" "main"
     ensure_luci_app_frp_init_permissions
     
-    UPDATE_PACKAGE "luci-app-wechatpush" "peiban666/luci-app-wechatpush" "master"
-    #UPDATE_PACKAGE "luci-app-wechatpush" "tty228/luci-app-wechatpush" "master"
+    # UPDATE_PACKAGE "luci-app-wechatpush" "peiban666/luci-app-wechatpush" "master"
+    UPDATE_PACKAGE "luci-app-wechatpush" "tty228/luci-app-wechatpush" "master"
     fix_wechatpush_runtime
     UPDATE_PACKAGE "luci-app-pushbot" "zzsj0928/luci-app-pushbot" "master"
     fix_pushbot_runtime
