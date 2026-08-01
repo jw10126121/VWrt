@@ -610,7 +610,7 @@ apply_iwrt_package_overrides() {
     # UPDATE_VERSION "sing-box" # 升级sing-box到最新release版本，如果使用VIKINGYFY/packages/luci-app-homeproxy，要求sing-box版本>=1.14.0，否则luci-app-homeproxy无法编译成功
     #update_package_list "luci-app-homeproxy sing-box" "XiaoHaiSly/luci-app-homeproxy2" "main"
     update_package_list "luci-app-homeproxy sing-box" "XiaoHaiSly/OpenWrt-HomeProxy" "main"
-
+    # update_package_list "luci-app-homeproxy sing-box" "XiaoHaiSly/OpenWRT-packages" "main"
 }
 
 # OpenWrt 25.12 的 LuCI 菜单机制与语言包状态和旧分支不同，这里统一补一层兼容：
