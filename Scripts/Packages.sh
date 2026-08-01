@@ -793,15 +793,11 @@ fix_wechatpush_runtime() {
 
     dingtalk_json="${current_script_dir}/patch/dingtalk.json"
     to_dingtalk_json="${wechatpush_dir}/root/usr/share/wechatpush/api/dingtalk.json"
-    if [ -f "${dingtalk_json}" ]; then
-        cp -p "${dingtalk_json}" "${to_dingtalk_json}" && echo "【Lin】dingtalk.json已更新"
-    fi
+    [ -f "${dingtalk_json}" ] && cp -p "${dingtalk_json}" "${to_dingtalk_json}" && echo "【Lin】dingtalk.json已更新"
 
     feishu_json="${current_script_dir}/patch/feishu.json"
     to_feishu_json="${wechatpush_dir}/root/usr/share/wechatpush/api/feishu.json"
-    if [ -f "${feishu_json}" ]; then
-        cp -p "${feishu_json}" "${to_feishu_json}" && echo "【Lin】feishu.json已更新"
-    fi
+    [ -f "${feishu_json}" ] && cp -p "${feishu_json}" "${to_feishu_json}" && echo "【Lin】feishu.json已更新"
     
 }
 
