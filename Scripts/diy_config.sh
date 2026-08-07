@@ -53,8 +53,8 @@ is_reset_password=true
 default_theme_name=''
 package_manager='ipk'
 config_name=''
-WRT_SSID='OpenWrtAP'
-WRT_WORD=''
+WRT_SSID='OpenwrtAP'
+WRT_WORD='88886666'
 
 # 解析外部传入的定制参数，后续所有修改都围绕这些参数展开。
 while getopts "hi:n:p:t:m:c:s:w:" opt; do
