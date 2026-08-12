@@ -56,5 +56,13 @@ grep -n '^CONFIG_PACKAGE_hostapd-common=' "$FW4_NOWIFI_OUT" | tail -n 1 | grep -
 grep -n '^CONFIG_PACKAGE_kmod-mt7915e=' "$FW4_NOWIFI_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_kmod-mt7915e=n'
 grep -n '^CONFIG_PACKAGE_kmod-mt7986-firmware=' "$FW4_NOWIFI_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_kmod-mt7986-firmware=n'
 grep -n '^CONFIG_PACKAGE_mt7986-wo-firmware=' "$FW4_NOWIFI_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_mt7986-wo-firmware=n'
+grep -n '^CONFIG_TARGET_DEVICE_PACKAGES_mediatek_filogic_DEVICE_glinet_gl-mt6000=' "$FW3_NOWIFI_OUT" | tail -n 1 | grep -q -- '-kmod-mt7915e'
+grep -n '^CONFIG_TARGET_DEVICE_PACKAGES_mediatek_filogic_DEVICE_glinet_gl-mt6000=' "$FW4_NOWIFI_OUT" | tail -n 1 | grep -q -- '-kmod-mt7915e'
+grep -n '^CONFIG_TARGET_DEVICE_PACKAGES_mediatek_filogic_DEVICE_glinet_gl-mt6000=' "$FW4_NOWIFI_OUT" | tail -n 1 | grep -q -- '-kmod-mt76-core'
+grep -n '^CONFIG_TARGET_DEVICE_PACKAGES_mediatek_filogic_DEVICE_glinet_gl-mt6000=' "$FW4_NOWIFI_OUT" | tail -n 1 | grep -q -- '-kmod-mt76-connac'
+grep -n '^CONFIG_TARGET_DEVICE_PACKAGES_mediatek_filogic_DEVICE_glinet_gl-mt6000=' "$FW4_NOWIFI_OUT" | tail -n 1 | grep -q -- '-kmod-mac80211'
+grep -n '^CONFIG_TARGET_DEVICE_PACKAGES_mediatek_filogic_DEVICE_glinet_gl-mt6000=' "$FW4_NOWIFI_OUT" | tail -n 1 | grep -q -- '-cfg80211'
+grep -n '^CONFIG_TARGET_DEVICE_PACKAGES_mediatek_filogic_DEVICE_glinet_gl-mt6000=' "$FW4_NOWIFI_OUT" | tail -n 1 | grep -q -- '-kmod-mt7986-firmware'
+grep -n '^CONFIG_TARGET_DEVICE_PACKAGES_mediatek_filogic_DEVICE_glinet_gl-mt6000=' "$FW4_NOWIFI_OUT" | tail -n 1 | grep -q -- '-wpad-basic-mbedtls'
 
 echo "test_gl_mt6000_nowifi_overlay: ok"
