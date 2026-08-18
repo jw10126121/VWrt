@@ -4,8 +4,8 @@ run-name: CUSTOM-LWRT-${{ inputs.WRT_RELEASE_FIRMWARE && 'release' || 'test' }}
 
 #CI计划
 on:
-  schedule:
-    - cron: '0 3 2,16 * *'  # 每月1日 03:00 UTC
+  # schedule:
+  #   - cron: '0 3 2,16 * *'  # 每月1日 03:00 UTC
   workflow_dispatch:
     inputs:
       WHAT_MY_SAY:

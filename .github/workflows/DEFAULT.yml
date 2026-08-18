@@ -78,7 +78,7 @@ on:
           - jd-ax6600-wifi
           - gl-mt6000-wifi
           - gl-mt6000-nowifi
-        default: 'gl-mt6000-wifi'
+        default: 'gl-mt6000-nowifi'
       # 源码类型：vwrt = immortalwrt，lean = coolsnowwolf/lede，libwrt = LiBwrt/LibWrt
       SOURCE_TYPE:
         description: '源码类型'
