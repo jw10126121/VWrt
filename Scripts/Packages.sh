@@ -611,7 +611,7 @@ apply_iwrt_package_overrides() {
     
     #update_package_list "luci-app-homeproxy sing-box" "XiaoHaiSly/OpenWrt-HomeProxy" "main"
     #update_package_list "luci-app-substore node" "XiaoHaiSly/OpenWRT-packages" "main"
-    update_package_list "luci-app-homeproxy sing-box luci-app-substore node" "XiaoHaiSly/OpenWRT-packages" "main"
+    update_package_list "luci-app-homeproxy sing-box luci-app-substore node luci-app-adguardhome" "XiaoHaiSly/OpenWRT-packages" "main"
 }
 
 # OpenWrt 25.12 的 LuCI 菜单机制与语言包状态和旧分支不同，这里统一补一层兼容：
