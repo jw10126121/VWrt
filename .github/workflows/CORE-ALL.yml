@@ -703,7 +703,8 @@ jobs:
         name: ${{ env.OUTPUT_NAME_PREFIX }}
         path: |
           ${{ env.OPENWRT_PATH }}/upload/*
-          !${{ env.OPENWRT_PATH }}/upload/*_Packages.tar.gz
+          !${{ env.OPENWRT_PATH }}/upload/*_Packages.zip
+          !${{ env.OPENWRT_PATH }}/upload/*_Packages/**
 
     - name: Upload Packages To Artifact (将 Packages 包单独上传到 Artifact)
       id: upload_packages_artifact
@@ -713,7 +714,7 @@ jobs:
       uses: actions/upload-artifact@v6.0.0
       with:
         name: ${{ env.OUTPUT_NAME_PREFIX }}-packages
-        path: ${{ env.OPENWRT_PATH }}/upload/*_Packages.tar.gz
+        path: ${{ env.OPENWRT_PATH }}/upload/${{ env.OUTPUT_NAME_PREFIX }}_Packages
         if-no-files-found: ignore
 
     - name: Create Notification Content (创建推送结果内容)

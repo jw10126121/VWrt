@@ -15,30 +15,6 @@ trap cleanup EXIT
 
 OPENWRT_PATH="$TMPDIR/openwrt"
 mkdir -p "$OPENWRT_PATH/bin/packages" "$OPENWRT_PATH/bin/targets/qualcommax/ipq60xx"
-TEST_BIN="$TMPDIR/test-bin"
-mkdir -p "$TEST_BIN"
-
-cat > "$TEST_BIN/tar" <<'EOF'
-#!/bin/sh
-
-args=""
-skip_next=0
-for arg in "$@"; do
-	if [ "$skip_next" = "1" ]; then
-		skip_next=0
-		continue
-	fi
-	if [ "$arg" = "--transform" ]; then
-		skip_next=1
-		continue
-	fi
-	args="$args '$arg'"
-done
-
-eval "exec /usr/bin/tar $args"
-EOF
-chmod +x "$TEST_BIN/tar"
-
 cat > "$OPENWRT_PATH/.config" <<'EOF'
 CONFIG_PACKAGE_luci-app-accesscontrol=y
 EOF
@@ -48,6 +24,7 @@ CONFIG_TEST=y
 EOF
 
 touch "$OPENWRT_PATH/bin/targets/qualcommax/ipq60xx/openwrt-qualcommax-ipq60xx-cmiot_ax18-squashfs-sysupgrade.bin"
+touch "$OPENWRT_PATH/bin/packages/luci-app-accesscontrol_1.0.0_all.apk"
 
 GITHUB_WORKSPACE="$TMPDIR/workspace"
 mkdir -p "$GITHUB_WORKSPACE"
@@ -74,12 +51,20 @@ DEVICE_NAME_LIST="cmiot_ax18" \
 DEVICE_NAME_LIST_LIAN="cmiot_ax18" \
 WRT_VER="lede-master" \
 START_TIME="D260419_T120000" \
-PATH="$TEST_BIN:$PATH" \
 bash "$TARGET_SCRIPT" >/dev/null
 
 test -f "$OPENWRT_PATH/upload/config_lean_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000.txt"
 test -f "$OPENWRT_PATH/upload/readme_lean_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000.txt"
-test -f "$OPENWRT_PATH/upload/Packages_lean_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000.tar.gz"
+PACKAGES_DIR="$OPENWRT_PATH/upload/lean_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000_Packages"
+PACKAGES_ZIP="$OPENWRT_PATH/upload/lean_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000_Packages.zip"
+test -d "$PACKAGES_DIR"
+test -f "$PACKAGES_DIR/luci-app-accesscontrol_1.0.0_all.apk"
+test -f "$PACKAGES_ZIP"
+unzip -Z1 "$PACKAGES_ZIP" | grep -q '^lean_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000_Packages/'
+if unzip -Z1 "$PACKAGES_ZIP" | grep -q '\.tar\.gz$'; then
+	echo "Packages release archive must not contain a nested tarball" >&2
+	exit 1
+fi
 test -f "$OPENWRT_PATH/upload/lean_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000_squashfs-sysupgrade.bin"
 test -f "$OPENWRT_PATH/config_mine/readme.txt"
 grep -q "^readme_desc_file=$OPENWRT_PATH/config_mine/readme.txt$" "$GITHUB_ENV"
