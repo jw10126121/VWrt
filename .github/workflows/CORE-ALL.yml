@@ -65,6 +65,14 @@ on:
       WRT_DEFAULT_LANIP:
         required: true
         type: string
+      WRT_WIFI_SSID:
+        required: false
+        type: string
+        default: 'OpenwrtAP'
+      WRT_WIFI_PASSWORD:
+        required: false
+        type: string
+        default: '88886666'
       WRT_MINE_SAY:
         required: true
         type: string
@@ -102,6 +110,8 @@ env:
   WRT_DIYPackages: ${{inputs.WRT_DIYPackages}}                # 自定义包配置
   WRT_RELEASE_FIRMWARE: ${{inputs.WRT_RELEASE_FIRMWARE}}      # 发布固件
   WRT_DEFAULT_LANIP: ${{inputs.WRT_DEFAULT_LANIP}}            # 默认lanIP
+  WRT_WIFI_SSID: ${{inputs.WRT_WIFI_SSID}}                    # 默认 WiFi 名称
+  WRT_WIFI_PASSWORD: ${{inputs.WRT_WIFI_PASSWORD}}            # 默认 WiFi 密码
   WRT_MINE_SAY: ${{inputs.WRT_MINE_SAY}} 
   WRT_DIR_CONFIGS: Config                                     # 自定义配置文件夹
   WRT_DIR_SCRIPTS: Scripts                                    # 脚本文件夹

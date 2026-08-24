@@ -219,6 +219,8 @@ openwrt_path="${OPENWRT_PATH:?OPENWRT_PATH is required}"
 wrt_default_lanip="${WRT_DEFAULT_LANIP:?WRT_DEFAULT_LANIP is required}"
 wrt_has_lite="${WRT_HAS_LITE:-false}"
 wrt_has_wifi="${WRT_HAS_WIFI:-true}"
+wrt_wifi_ssid="${WRT_WIFI_SSID:-OpenwrtAP}"
+wrt_wifi_password="${WRT_WIFI_PASSWORD:-88886666}"
 wrt_repo_url="${WRT_REPO_URL:?WRT_REPO_URL is required}"
 wrt_repo_branch="${WRT_REPO_BRANCH:?WRT_REPO_BRANCH is required}"
 repo_git_hash="${REPO_GIT_HASH:-}"
@@ -259,6 +261,13 @@ fi
 
 if [ "${wrt_has_wifi}" != "true" ]; then
     wrt_has_wifi_text='无WIFI'
+fi
+
+wifi_credentials=''
+if [ "${wrt_has_wifi}" = "true" ]; then
+    wifi_credentials="
+WiFi 名称：${wrt_wifi_ssid}
+WiFi 密码：${wrt_wifi_password}"
 fi
 
 package_manager="$(extract_package_manager "${openwrt_path}/.config")"
@@ -324,6 +333,7 @@ OP版本：${op_version}
 默认地址：${wrt_default_lanip}
 默认密码：无 | password
 是否wifi：${wrt_has_wifi_text}
+${wifi_credentials}
 源码地址：${wrt_repo_url}
 源码分支：${wrt_repo_branch}
 源码hash：${repo_git_hash}"

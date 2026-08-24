@@ -6,7 +6,8 @@ set -eu
 
 TARGET_SCRIPT="$(cd "$(dirname "$0")/.." && pwd)/diy_config.sh"
 
-grep -Fq "WRT_SSID='LinWifi'" "$TARGET_SCRIPT"
-grep -Fq "WRT_WORD='88886666'" "$TARGET_SCRIPT"
+grep -Fq 'WRT_SSID="${WRT_WIFI_SSID:-OpenwrtAP}"' "$TARGET_SCRIPT"
+grep -Fq 'WRT_WORD="${WRT_WIFI_PASSWORD:-88886666}"' "$TARGET_SCRIPT"
+grep -Fq '        configure_wifi_lean' "$TARGET_SCRIPT"
 
 echo "test_diy_config_wifi_defaults: ok"
