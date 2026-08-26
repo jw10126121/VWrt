@@ -752,6 +752,7 @@ fix_diskman_makefile() {
 fix_pushbot_runtime() {
     local pushbot_dir
     local pushbot_action_file
+    local pushbot_feishu_file
     local net_fix_test_del=' https://www.qidian.com https://www.douban.com'
 
     pushbot_dir=$(find ./*/ -maxdepth 3 -type d -iname "luci-app-pushbot" -prune)
@@ -761,6 +762,13 @@ fix_pushbot_runtime() {
         sed -i 's/CPU：\${cputemp}℃/\${cputemp}/' "${pushbot_action_file}"
         sed -i "s|${net_fix_test_del}||g" "${pushbot_action_file}"
         echo "【Lin】app-pushbot has been fixed"
+    fi
+
+    # Feishu 分隔线只保留一个换行，避免出现多余空行。
+    pushbot_feishu_file="${pushbot_dir}/root/usr/bin/pushbot/api/feishu.json"
+    if [ -n "${pushbot_dir}" ] && [ -f "${pushbot_feishu_file}" ]; then
+        sed -i 's/"str_splitline": "\\\\n\\\\n"/"str_splitline": "\\\\n"/' "${pushbot_feishu_file}"
+        echo "【Lin】app-pushbot Feishu 格式已修复"
     fi
 }
 
