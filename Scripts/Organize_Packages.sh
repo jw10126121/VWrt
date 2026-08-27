@@ -146,7 +146,7 @@ nlbwmon|luci-app-nlbwmon_ nlbwmon_ luci-i18n-nlbwmon-zh-cn_ kmod-nf-conntrack-ne
 arpbind|luci-app-arpbind_ luci-i18n-arpbind-zh-cn_
 wifischedule|luci-app-wifischedule_ wifischedule_ luci-i18n-wifischedule-zh-cn_
 usbprinter|luci-app-usb-printer_ kmod-usb-printer_ p910nd_ luci-i18n-usb-printer-zh-cn_
-pushbot|luci-app-pushbot_ iputils-arping_ jq_ curl_
+pushbot|luci-app-pushbot_ iputils-arping_ jq_ curl_ luci-i18n-pushbot-zh-cn_
 wechatpush|luci-app-wechatpush_ luci-i18n-wechatpush-zh-cn_ iputils-arping_ jq_ curl_ bash_
 oaf|luci-app-oaf_ luci-i18n-oaf-zh-cn_ appfilter_ kmod-oaf_
 easytier|luci-app-easytier_ luci-i18n-easytier-zh-cn_ easytier_ easytier-noweb_ kmod-tun_
@@ -170,6 +170,8 @@ lucky|luci-app-lucky_ luci-i18n-lucky-zh-cn_ lucky_
 sqmcontroller|luci-app-sqm-controller_ luci-i18n-sqm-controller-zh-cn_ python3_ python3-light_ kmod-sched-connmark_ kmod-sched-ctinfo_
 nikki|luci-app-nikki_ nikki_
 subconverter|luci-app-subconverter_ luci-i18n-subconverter-zh-cn_ subconverter_
+fluent|luci-theme-fluent_ luci-i18n-fluent-zh-cn_
+aurora|luci-theme-aurora_ luci-app-aurora-config_ luci-i18n-aurora-config-zh-cn_
 EOF
 )
 
