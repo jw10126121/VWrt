@@ -765,11 +765,11 @@ fix_pushbot_runtime() {
     fi
 
     # Feishu 分隔线只保留一个换行，避免出现多余空行。
-    pushbot_feishu_file="${pushbot_dir}/root/usr/bin/pushbot/api/feishu.json"
-    if [ -n "${pushbot_dir}" ] && [ -f "${pushbot_feishu_file}" ]; then
-        sed -i 's/"str_splitline": "\\\\n\\\\n"/"str_splitline": "\\\\n"/' "${pushbot_feishu_file}"
-        echo "【Lin】app-pushbot Feishu 格式已修复"
-    fi
+    #pushbot_feishu_file="${pushbot_dir}/root/usr/bin/pushbot/api/feishu.json"
+    #if [ -n "${pushbot_dir}" ] && [ -f "${pushbot_feishu_file}" ]; then
+    #    sed -i 's/"str_splitline": "\\\\n\\\\n"/"str_splitline": "\\\\n"/' "${pushbot_feishu_file}"
+    #    echo "【Lin】app-pushbot Feishu 格式已修复"
+    #fi
 }
 
 fix_wechatpush_runtime() {
