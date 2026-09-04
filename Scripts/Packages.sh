@@ -60,13 +60,35 @@ normalize_repo_url() {
     fi
 }
 
-# 浅克隆只取目标分支最近一层历史，减小 Actions 拉取体积和时间。
+# 分支或 tag 使用浅克隆；完整 commit SHA 则用兼容的 fetch 流程检出。
 clone_repo_shallow() {
     local repo_url=$1
-    local repo_branch=$2
+    local repo_ref=$2
     local repo_name=$3
+    local ls_remote_status
 
-    git clone --depth=1 --single-branch --branch "${repo_branch}" "${repo_url}" "${repo_name}"
+    if [[ "${repo_ref}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+        # 40 位十六进制分支或 tag 虽少见但合法，优先按远端 ref 处理以保持旧行为。
+        if git ls-remote --exit-code --heads --tags "${repo_url}" "${repo_ref}" >/dev/null 2>&1; then
+            git clone --depth=1 --single-branch --branch "${repo_ref}" "${repo_url}" "${repo_name}"
+            return
+        else
+            ls_remote_status=$?
+        fi
+
+        if [ "${ls_remote_status}" -ne 2 ]; then
+            echo "【Lin】无法确认远端引用：${repo_ref}" >&2
+            return "${ls_remote_status}"
+        fi
+
+        git init -q "${repo_name}"
+        git -C "${repo_name}" remote add origin "${repo_url}"
+        git -C "${repo_name}" fetch --depth=1 origin "${repo_ref}"
+        git -C "${repo_name}" checkout --detach FETCH_HEAD
+        return
+    fi
+
+    git clone --depth=1 --single-branch --branch "${repo_ref}" "${repo_url}" "${repo_name}"
 }
 
 # 删除同名包是所有替换动作的第一步。
@@ -94,7 +116,7 @@ DELETE_PACKAGE() {
 UPDATE_PACKAGE() {
     local package_name=$1
     local package_repo=$2
-    local package_branch=$3
+    local package_ref=$3
     local package_special=${4:-}
     local search_type=$package_name
     local full_repo
@@ -108,8 +130,8 @@ UPDATE_PACKAGE() {
     repo_url_git=${full_repo%.git}
     repo_name=${repo_url_git##*/}
 
-    clone_repo_shallow "${full_repo}" "${package_branch}" "${repo_name}"
-    echo "【Lin】成功clone插件：${package_name} [库：${repo_name} | 分支：${package_branch}]"
+    clone_repo_shallow "${full_repo}" "${package_ref}" "${repo_name}"
+    echo "【Lin】成功clone插件：${package_name} [库：${repo_name} | 引用：${package_ref}]"
 
     case "${package_special}" in
         pkg)
@@ -155,7 +177,7 @@ MOVE_PACKAGE_FROM_LIST() {
 update_package_list() {
     local package_name_list=($1)
     local package_repo=$2
-    local package_branch=$3
+    local package_ref=$3
     local repo_root_files=${4:-}
     local full_repo
     local repo_url_git
@@ -184,8 +206,8 @@ update_package_list() {
         rm -rf "${existing_repo}"
     fi
 
-    echo "【Lin】下载插件库${repo_name}：【${package_branch}】${full_repo}"
-    clone_repo_shallow "${full_repo}" "${package_branch}" "${repo_name}"
+    echo "【Lin】下载插件库${repo_name}：【${package_ref}】${full_repo}"
+    clone_repo_shallow "${full_repo}" "${package_ref}" "${repo_name}"
     echo "【Lin】成功clone插件包库：${repo_name}"
 
     for package_name in "${package_name_list[@]}"; do
