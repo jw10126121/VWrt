@@ -4,8 +4,8 @@ run-name: ForCache-${{ (github.event_name == 'workflow_dispatch' && inputs.WRT_R
 
 #CI计划
 on:
-  schedule:
-    - cron: '0 3 * * 5'  # 每周五 03:00 UTC
+  # schedule:
+  #   - cron: '0 3 * * 5'  # 每周五 03:00 UTC
   workflow_dispatch:
     inputs:
       WHAT_MY_SAY:
