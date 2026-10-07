@@ -7,6 +7,7 @@
 # 用途：
 # 1. 启用 feeds.conf.default 中默认注释掉的 helloworld feed。
 # 2. 按需切换 lean 源码使用的 LuCI feed 分支。
+# 3. 清理已停用的第三方 feed。
 
 set -eu
 
@@ -37,6 +38,10 @@ dedupe_active_feeds() {
 	awk '
 	/^[[:space:]]*src-[^[:space:]]+[[:space:]]+/ {
 		feed_name = $2
+		# 插件已停用且仓库不可公开访问，旧配置也不能继续拉取。
+		if (feed_name == "miaomiaowu") {
+			next
+		}
 		if (seen[feed_name]++) {
 			next
 		}
@@ -75,8 +80,6 @@ fi
 
 dedupe_active_feeds
 
-# 加入 miaomiaowu feed，主要用于 luci-app-miaomiaowu。
-append_feed_if_missing "miaomiaowu" "src-git miaomiaowu https://github.com/xiaohai77/OpenWrt-MMW.git"
 # 添加istore
 append_feed_if_missing "istore" "src-git istore https://github.com/linkease/istore;main"
 # 添加sqm_scripts_nss
@@ -85,4 +88,3 @@ append_feed_if_missing "istore" "src-git istore https://github.com/linkease/isto
 
 # 添加sqm_scripts_nss，这个目前只支持 ipq807x，不支持ipq60xx，等更新
 append_feed_if_missing "sqm_scripts_nss" "src-git sqm_scripts_nss https://github.com/JuliusBairaktaris/sqm-scripts-nss.git"
-

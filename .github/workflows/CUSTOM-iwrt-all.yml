@@ -19,10 +19,10 @@ on:
         type: boolean
         default: false
       WRT_SOURCE_HASH_INFO:
-        description: '源码 HASH，可选填写 commit hash'
+        description: '源码 HASH，留空使用对应设备源码分支的最新提交'
         required: false
         type: string
-        default: '20edd8312f4f307c882f8861f7050ee8da555f24' # 'a4638cd4389183f1a1fcad0441f491ca11c97757' #'9e08f0c3cf44c6681d7f9b7730adf3fad8db62a5'
+        default: '' # 20edd8312f4f307c882f8861f7050ee8da555f24
 
 #CI权限
 permissions: write-all

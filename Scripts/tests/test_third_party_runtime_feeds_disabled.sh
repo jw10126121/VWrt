@@ -6,8 +6,11 @@ FEEDS_SCRIPT="$SCRIPT_DIR/diy_feeds.sh"
 CONFIG_SCRIPT="$SCRIPT_DIR/diy_config.sh"
 AFTER_SCRIPT="$SCRIPT_DIR/diy_after_defconfig.sh"
 
-# 第三方仓库仍作为编译期 feed 使用。
-grep -Fq 'append_feed_if_missing "miaomiaowu" "src-git miaomiaowu https://github.com/xiaohai77/OpenWrt-MMW.git"' "$FEEDS_SCRIPT"
+# iStore 仍作为编译期 feed；已失效的 miaomiaowu 不再添加。
+if grep -Eq '^append_feed_if_missing "miaomiaowu"' "$FEEDS_SCRIPT"; then
+	echo "diy_feeds.sh must not add the unavailable miaomiaowu feed" >&2
+	exit 1
+fi
 grep -Fq 'append_feed_if_missing "istore" "src-git istore https://github.com/linkease/istore;main"' "$FEEDS_SCRIPT"
 
 # 但不生成 APK/IPK 运行时软件源。

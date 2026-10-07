@@ -31,43 +31,28 @@ assert_toolchain_uses_scoped_restore_key() {
 	local restore_block
 	restore_block="$(awk '/Restore Toolchain Cache/,/Restore ccache Cache/' "$workflow_file")"
 
-	if ! printf '%s\n' "$restore_block" | grep -Fq -- 'key: toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.REPO_GIT_hash_simple }}'; then
-		echo "ASSERT FAILED: toolchain restore should use the shared subtarget/source key" >&2
+	if ! printf '%s\n' "$restore_block" | grep -Fq -- 'key: ${{ env.TOOLCHAIN_CACHE_KEY }}'; then
+		echo "ASSERT FAILED: toolchain restore must use the computed compatibility key" >&2
 		exit 1
 	fi
 
-	if printf '%s\n' "$restore_block" | grep -Fq -- 'WRT_CONFIG_LABEL'; then
-		echo "ASSERT FAILED: toolchain restore should not split caches by config label" >&2
-		exit 1
-	fi
-
-	if ! printf '%s\n' "$restore_block" | grep -Fq -- 'restore-keys: |'; then
-		echo "ASSERT FAILED: toolchain restore should use restore-keys for broader reuse" >&2
-		exit 1
-	fi
-
-	if ! printf '%s\n' "$restore_block" | grep -Fxq -- '          toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.REPO_GIT_hash_simple }}-'; then
-		echo "ASSERT FAILED: toolchain restore prefix should keep the shared subtarget/source scope" >&2
-		exit 1
-	fi
-
-	if ! printf '%s\n' "$restore_block" | grep -Fxq -- '          toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-'; then
-		echo "ASSERT FAILED: toolchain restore should fall back to the shared subtarget/version scope" >&2
+	if printf '%s\n' "$restore_block" | grep -Fq -- 'restore-keys:'; then
+		echo "ASSERT FAILED: toolchain must not fall back to another source/configuration" >&2
 		exit 1
 	fi
 }
 
 assert_restore_ccache_uses_rolling_key() {
 	local restore_block
-	restore_block="$(awk '/Restore ccache Cache/,/Refresh Cache Metadata/' "$workflow_file")"
+	restore_block="$(awk '/Restore ccache Cache/,/Print Build Summary/' "$workflow_file")"
 
-	if ! printf '%s\n' "$restore_block" | grep -Fq -- 'key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.REPO_GIT_hash_simple }}-${{ env.START_DATE }}'; then
-		echo "ASSERT FAILED: restore ccache should use the source-scoped daily rolling key" >&2
+	if ! printf '%s\n' "$restore_block" | grep -Fq -- 'key: ${{ env.CCACHE_CACHE_PREFIX }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ env.WRT_CONFIG_LABEL }}'; then
+		echo "ASSERT FAILED: ccache keys must roll by run, attempt and configuration" >&2
 		exit 1
 	fi
 
-	if printf '%s\n' "$restore_block" | grep -Eq -- '^[[:space:]]+key: ccache-\$\{\{ runner\.os \}\}-\$\{\{ env\.DEVICE_SUBTARGET \}\}-\$\{\{ env\.WRT_VER \}\}-\$\{\{ env\.REPO_GIT_hash_simple \}\}[[:space:]]*$'; then
-		echo "ASSERT FAILED: restore ccache should no longer use the frozen source hash key" >&2
+	if ! printf '%s\n' "$restore_block" | grep -Fq -- '${{ env.CCACHE_CACHE_PREFIX }}-'; then
+		echo "ASSERT FAILED: ccache should retain a compatible reuse prefix" >&2
 		exit 1
 	fi
 }
@@ -77,17 +62,33 @@ assert_contains 'uses: actions/cache/restore@v5' "workflow should use cache rest
 assert_contains '- name: Save Toolchain Cache' "workflow should save toolchain cache explicitly"
 assert_contains 'uses: actions/cache/save@v5' "workflow should use cache save actions"
 assert_not_contains 'WRT_OVERLAYS_HASH' "workflow should not keep an unused overlays hash variable"
-assert_contains 'key: toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.REPO_GIT_hash_simple }}' "toolchain cache key should be shared by subtarget and source hash"
-assert_not_contains 'toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.REPO_GIT_hash_simple }}-${{ env.WRT_CONFIG_LABEL }}' "toolchain cache should not create one cache per device config"
+assert_contains 'key: ${{ env.TOOLCHAIN_CACHE_KEY }}' "toolchain restore and save should use the computed compatibility key"
 assert_toolchain_uses_scoped_restore_key
+
+assert_not_contains '- name: Refresh Cache Metadata' "cached stamps must not be artificially refreshed"
+assert_not_contains '-exec touch' "workflow must let OpenWrt validate cached stamps"
+assert_not_contains 'tmp/.build' "workflow must not fake OpenWrt build state"
+assert_contains "steps.finalize_compile.outputs.status == 'success' && env.CACHE_TOOLCHAIN" "toolchain should only be saved after a successful build"
+assert_contains "CACHE_SCRIPTS_HASH: \${{ hashFiles('Scripts/**') }}" "script changes must invalidate the toolchain cache"
+
+python3 - "$workflow_file" <<'PY'
+from pathlib import Path
+import sys
+workflow = Path(sys.argv[1]).read_text()
+assert workflow.index('- name: DIY after defconfig') < workflow.index('- name: Compute Cache Keys') < workflow.index('- name: Restore Toolchain Cache'), 'Restore must follow final configuration and key computation'
+for cache in ('Toolchain', 'ccache'):
+    restore = workflow.split(f'- name: Restore {cache} Cache', 1)[1].split('\n    - name:', 1)[0]
+    save = workflow.split(f'- name: Save {cache} Cache', 1)[1].split('\n    - name:', 1)[0]
+    get_key = lambda block: next(line.strip() for line in block.splitlines() if line.strip().startswith('key:'))
+    assert get_key(restore) == get_key(save), f'{cache} restore/save keys must agree'
+PY
 
 assert_contains '- name: Restore ccache Cache' "workflow should restore ccache explicitly"
 assert_contains '- name: Save ccache Cache' "workflow should save ccache explicitly"
-assert_contains 'key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.REPO_GIT_hash_simple }}-${{ env.START_DATE }}' "ccache restore and save keys should roll forward daily within the source scope"
+assert_contains 'key: ${{ env.CCACHE_CACHE_PREFIX }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ env.WRT_CONFIG_LABEL }}' "ccache restore and save keys should roll per run and attempt"
 assert_restore_ccache_uses_rolling_key
 assert_contains 'restore-keys: |' "ccache restore step should still keep restore-keys"
-assert_contains 'ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.REPO_GIT_hash_simple }}-' "ccache source-scoped restore prefix should remain available"
-assert_contains 'ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-' "ccache restore prefix should remain unchanged"
+assert_contains '          ${{ env.CCACHE_CACHE_PREFIX }}-' "ccache should restore only within its computed compatibility scope"
 assert_not_contains "steps.restore_ccache_cache.outputs.cache-hit != 'true'" "ccache save should no longer be blocked on an exact cache hit"
 assert_contains 'continue-on-error: true' "cache save steps should tolerate duplicate parallel cache reservations"
 

@@ -391,44 +391,6 @@ jobs:
       run: |
         bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/ci_collect_source_metadata.sh" >> "$GITHUB_ENV"
 
-    - name: Restore Toolchain Cache
-      id: restore_toolchain_cache
-      if: env.CACHE_TOOLCHAIN == 'true'
-      uses: actions/cache/restore@v5
-      with:
-        key: toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.REPO_GIT_hash_simple }}
-        restore-keys: |
-          toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.REPO_GIT_hash_simple }}-
-          toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-
-        path: |
-          ${{ env.OPENWRT_PATH }}/staging_dir/host*
-          ${{ env.OPENWRT_PATH }}/staging_dir/tool*
-
-    - name: Restore ccache Cache
-      id: restore_ccache_cache
-      if: env.CACHE_TOOLCHAIN == 'true'
-      uses: actions/cache/restore@v5
-      with:
-        key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.REPO_GIT_hash_simple }}-${{ env.START_TIME }}
-        restore-keys: |
-          ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.REPO_GIT_hash_simple }}-
-          ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-
-        path: |
-          ${{ env.OPENWRT_PATH }}/.ccache
-
-    - name: Refresh Cache Metadata
-      if: env.CACHE_TOOLCHAIN == 'true'
-      run: |
-        if [ -d "${{ env.OPENWRT_PATH }}/staging_dir" ]; then
-          find "${{ env.OPENWRT_PATH }}/staging_dir" -type d -name "stamp" -not -path "*target*" | while read -r DIR; do
-            find "$DIR" -type f -exec touch {} +
-          done
-          mkdir -p ${{ env.OPENWRT_PATH }}/tmp && echo "1" > ${{ env.OPENWRT_PATH }}/tmp/.build
-          echo "【Lin】toolchain skiped done!"
-        else
-          echo "【Lin】caches missed!"
-        fi
-
     - name: Initialize Build Observability
       run: |
         echo "PREP_STAGE_START_TS=$(date +%s)" >> "$GITHUB_ENV"
@@ -526,6 +488,35 @@ jobs:
         bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/ci_collect_final_metadata.sh" >> "$GITHUB_ENV"
         echo "【Lin】构建元数据：架构=${DEVICE_ARCH}，OP=${OP_VERSION}，LuCI=${LUCI_VERSION}"
         echo "【Lin】输出前缀：${OUTPUT_NAME_PREFIX}"
+
+    - name: Compute Cache Keys
+      if: env.CACHE_TOOLCHAIN == 'true'
+      env:
+        CACHE_SCRIPTS_HASH: ${{ hashFiles('Scripts/**') }}
+      run: |
+        python3 "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/ci_cache_keys.py" >> "$GITHUB_ENV"
+
+    - name: Restore Toolchain Cache
+      id: restore_toolchain_cache
+      if: env.CACHE_TOOLCHAIN == 'true'
+      uses: actions/cache/restore@v5
+      with:
+        # 工具链严格匹配当前源码、配置和构建环境，不跨提交回退。
+        key: ${{ env.TOOLCHAIN_CACHE_KEY }}
+        path: |
+          ${{ env.OPENWRT_PATH }}/staging_dir/host*
+          ${{ env.OPENWRT_PATH }}/staging_dir/tool*
+
+    - name: Restore ccache Cache
+      id: restore_ccache_cache
+      if: env.CACHE_TOOLCHAIN == 'true'
+      uses: actions/cache/restore@v5
+      with:
+        key: ${{ env.CCACHE_CACHE_PREFIX }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ env.WRT_CONFIG_LABEL }}
+        restore-keys: |
+          ${{ env.CCACHE_CACHE_PREFIX }}-
+        path: |
+          ${{ env.OPENWRT_PATH }}/.ccache
 
     - name: Print Build Summary (打印编译条件摘要)
       working-directory: ${{ env.OPENWRT_PATH }}
@@ -825,21 +816,21 @@ jobs:
         echo "ccache_present=${ccache_present}" >> "$GITHUB_OUTPUT"
 
     - name: Save Toolchain Cache
-      if: always() && env.CACHE_TOOLCHAIN == 'true' && steps.restore_toolchain_cache.outputs.cache-hit != 'true' && steps.evaluate_cache_save_inputs.outputs.toolchain_present == 'true'
+      if: always() && steps.finalize_compile.outputs.status == 'success' && env.CACHE_TOOLCHAIN == 'true' && steps.restore_toolchain_cache.outputs.cache-hit != 'true' && steps.evaluate_cache_save_inputs.outputs.toolchain_present == 'true'
       continue-on-error: true
       uses: actions/cache/save@v5
       with:
-        key: toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.REPO_GIT_hash_simple }}
+        key: ${{ env.TOOLCHAIN_CACHE_KEY }}
         path: |
           ${{ env.OPENWRT_PATH }}/staging_dir/host*
           ${{ env.OPENWRT_PATH }}/staging_dir/tool*
 
     - name: Save ccache Cache
-      if: always() && env.CACHE_TOOLCHAIN == 'true' && steps.evaluate_cache_save_inputs.outputs.ccache_present == 'true'
+      if: always() && env.CACHE_TOOLCHAIN == 'true' && env.CCACHE_CACHE_PREFIX != '' && steps.evaluate_cache_save_inputs.outputs.ccache_present == 'true'
       continue-on-error: true
       uses: actions/cache/save@v5
       with:
-        key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.REPO_GIT_hash_simple }}-${{ env.START_TIME }}
+        key: ${{ env.CCACHE_CACHE_PREFIX }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ env.WRT_CONFIG_LABEL }}
         path: |
           ${{ env.OPENWRT_PATH }}/.ccache
 
