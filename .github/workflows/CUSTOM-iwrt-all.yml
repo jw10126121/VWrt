@@ -22,7 +22,7 @@ on:
         description: '源码 HASH，留空使用对应设备源码分支的最新提交'
         required: false
         type: string
-        default: '' # 20edd8312f4f307c882f8861f7050ee8da555f24
+        default: '20edd8312f4f307c882f8861f7050ee8da555f24' # 20edd8312f4f307c882f8861f7050ee8da555f24
 
 #CI权限
 permissions: write-all
