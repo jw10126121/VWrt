@@ -279,7 +279,7 @@ jobs:
           # libwrt 仅支持 IPQ60xx/IPQ80xx，非高通平台回退到官方 immortalwrt
           if [ "${IS_QUALCOMMAX}" = "true" ]; then
             WRT_REPO_URL="https://github.com/LiBwrt/LibWrt"
-            WRT_REPO_BRANCH="main-nss"
+            WRT_REPO_BRANCH="25.12-nss"
           else
             WRT_REPO_URL="https://github.com/immortalwrt/immortalwrt"
             WRT_REPO_BRANCH="master"
