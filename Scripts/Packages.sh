@@ -5,7 +5,7 @@
 # 2. 入口职责保持不变：先应用通用包清单和 lean 专属覆盖，再执行一组编译兼容性修补。
 # 3. 结构上拆成三层：通用包操作函数、lean 专属包清单、后置修补函数。
 # 4. 这个脚本不负责 menuconfig 选包，只负责把 package/ 与部分 feeds 中的包替换成指定来源版本。
-# 5. 整体策略是“先清理同名包，再拉取目标仓库，再做兼容性修补”，避免不同来源的重复包互相污染。
+# 5. 包合集先下载并确认目标目录，再替换同名包，避免失败时误删现有包。
 
 current_script_dir=$(cd "$(dirname "$0")" && pwd)
 echo "【Lin】脚本目录：${current_script_dir}"
@@ -43,7 +43,9 @@ echo "【Lin】工作目录：${package_workdir}"
 find_package_dirs() {
     local package_name=$1
 
-    find ./ ../feeds/luci/ ../feeds/packages/ -maxdepth 3 -type d -iname "$package_name" 2>/dev/null
+    find ./ ../feeds/luci/ ../feeds/packages/ -maxdepth 3 -type d \
+        \( -name 'pkglist_*' -prune \) -o \
+        \( -type d -iname "$package_name" -print \) 2>/dev/null
 }
 
 # 统一把 owner/repo 形式转换成完整 GitHub URL；
@@ -81,10 +83,10 @@ clone_repo_shallow() {
             return "${ls_remote_status}"
         fi
 
-        git init -q "${repo_name}"
-        git -C "${repo_name}" remote add origin "${repo_url}"
-        git -C "${repo_name}" fetch --depth=1 origin "${repo_ref}"
-        git -C "${repo_name}" checkout --detach FETCH_HEAD
+        git init -q "${repo_name}" || return
+        git -C "${repo_name}" remote add origin "${repo_url}" || return
+        git -C "${repo_name}" fetch --depth=1 origin "${repo_ref}" || return
+        git -C "${repo_name}" checkout --detach FETCH_HEAD || return
         return
     fi
 
@@ -161,7 +163,8 @@ MOVE_PACKAGE_FROM_LIST() {
 
     found=$(find "./${list_repo}" -mindepth 1 -maxdepth 2 -type d -iname "${package_name}" -print | head -n 1)
     if [ -n "${found}" ]; then
-        cp -rf "${found}" ./
+        DELETE_PACKAGE "${package_name}"
+        cp -rf "${found}" ./ || return
         echo "【Lin】复制插件包库${list_repo}的${package_name}到package中"
     else
         echo "【Lin】未找到插件包库${list_repo}的${package_name}"
@@ -170,8 +173,8 @@ MOVE_PACKAGE_FROM_LIST() {
 
 # update_package_list 适用于“一个仓库内维护多个包目录”的场景。
 # package_name_list 是空格分隔列表，函数会：
-# 1. 先删除所有同名旧包
-# 2. 临时克隆包合集仓库
+# 1. 临时克隆包合集仓库，失败时保留现有包
+# 2. 确认目标目录存在后才删除对应旧包
 # 3. 按列表逐个复制目标目录到 package/
 # 4. 删除临时仓库，避免 package/ 中残留整个合集
 update_package_list() {
@@ -184,11 +187,7 @@ update_package_list() {
     local repo_name_last
     local repo_name
     local existing_repo
-    local package_name repo_root_file
-
-    for package_name in "${package_name_list[@]}"; do
-        DELETE_PACKAGE "${package_name}"
-    done
+    local package_name repo_root_file clone_status
 
     full_repo=$(normalize_repo_url "${package_repo}")
     repo_url_git=${full_repo%.git}
@@ -207,11 +206,21 @@ update_package_list() {
     fi
 
     echo "【Lin】下载插件库${repo_name}：【${package_ref}】${full_repo}"
-    clone_repo_shallow "${full_repo}" "${package_ref}" "${repo_name}"
+    if clone_repo_shallow "${full_repo}" "${package_ref}" "${repo_name}"; then
+        :
+    else
+        clone_status=$?
+        rm -rf "${repo_name}"
+        echo "【Lin】下载插件包库失败：${full_repo}，保留现有包" >&2
+        return "${clone_status}"
+    fi
     echo "【Lin】成功clone插件包库：${repo_name}"
 
     for package_name in "${package_name_list[@]}"; do
-        MOVE_PACKAGE_FROM_LIST "${package_name}" "${repo_name}"
+        MOVE_PACKAGE_FROM_LIST "${package_name}" "${repo_name}" || {
+            rm -rf "${repo_name}"
+            return 1
+        }
     done
 
     if [ -n "${repo_root_files}" ]; then
@@ -536,7 +545,8 @@ apply_common_package_overrides() {
     # # NONGFAH 版本的 init 脚本和主程序需要可执行权限，否则安装后服务无法启动
     # [ -f ./luci-app-athena-led/root/etc/init.d/athena_led ] && chmod +x ./luci-app-athena-led/root/etc/init.d/athena_led && echo "【Lin】修复权限：luci-app-athena-led/root/etc/init.d/athena_led"
     # [ -f ./luci-app-athena-led/root/usr/sbin/athena-led ] && chmod +x ./luci-app-athena-led/root/usr/sbin/athena-led && echo "【Lin】修复权限：luci-app-athena-led/root/usr/sbin/athena-led"
-    update_package_list "luci-app-athena-led" "Sh1rokoDev/luci-app-athena-led" "LuCI2-JS"
+    # LuCI2-JS 的前端依赖同仓库的 Rust 后端，需要一起导入。
+    update_package_list "luci-app-athena-led athena-led" "Sh1rokoDev/luci-app-athena-led" "LuCI2-JS"
     fix_athena_led_makefile
 
     # Guest-WIFI
@@ -559,7 +569,7 @@ apply_common_package_overrides() {
 
     # luci-app-easymesh未测试 @linjw 20260618
     # lean源码树中 luci-app-adguardhome 版本较旧且缺中文，这里直接从 kenzok8/openwrt-packages 下载
-    update_package_list "luci-app-adguardhome luci-app-easymesh" "kenzok8/openwrt-packages" "master"
+    update_package_list "luci-app-adguardhome adguardhome luci-app-easymesh" "kenzok8/openwrt-packages" "master"
 
     update_package_list "luci-app-wolplus" "sundaqiang/openwrt-packages" "master"
     
@@ -631,10 +641,13 @@ apply_iwrt_package_overrides() {
     # update_package_list "luci-app-homeproxy sing-box" "VIKINGYFY/packages" "main"
     # UPDATE_VERSION "sing-box" # 升级sing-box到最新release版本，如果使用VIKINGYFY/packages/luci-app-homeproxy，要求sing-box版本>=1.14.0，否则luci-app-homeproxy无法编译成功
     
-    update_package_list "luci-app-substore node luci-app-adguardhome" "XiaoHaiSly/OpenWRT-packages" "main"
-    # update_package_list "luci-app-homeproxy sing-box" "XiaoHaiSly/luci-app-homeproxy" "main-v1" # 稳定版
+    # XiaoHaiSly/OpenWRT-packages 已不可访问；保留现有 Node 与通用 AdGuardHome 包。
+    update_package_list "luci-app-substore" "XiaoHaiSly/luci-app-substore" "main"
+
+    # 在通用模块中已经导入了 luci-app-adguardhome，所以不再重复导入
+    # update_package_list "luci-app-adguardhome adguardhome" "kenzok8/openwrt-packages" "master"
+
     update_package_list "luci-app-homeproxy sing-box" "XiaoHaiSly/luci-app-homeproxy" "main"
-    # update_package_list "luci-app-homeproxy sing-box luci-app-substore node luci-app-adguardhome" "XiaoHaiSly/OpenWRT-packages" "main"
 }
 
 # OpenWrt 25.12 的 LuCI 菜单机制与语言包状态和旧分支不同，这里统一补一层兼容：

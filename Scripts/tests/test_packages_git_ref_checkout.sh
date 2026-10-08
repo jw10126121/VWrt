@@ -30,6 +30,9 @@ if [ "$1" = "ls-remote" ]; then
 fi
 
 printf '%s\n' "$*" >> "$GIT_ARGS_FILE"
+if [ "${3:-}" = fetch ] && [ "${GIT_FETCH_STATUS:-0}" -ne 0 ]; then
+    exit "$GIT_FETCH_STATUS"
+fi
 EOF
 chmod +x "$TMPDIR/bin/git"
 
@@ -50,6 +53,21 @@ grep -Fxq 'init -q repo' "$TMPDIR/hash.args"
 grep -Fxq -- '-C repo remote add origin https://example.com/repo.git' "$TMPDIR/hash.args"
 grep -Fxq -- "-C repo fetch --depth=1 origin $commit_hash" "$TMPDIR/hash.args"
 grep -Fxq -- '-C repo checkout --detach FETCH_HEAD' "$TMPDIR/hash.args"
+
+# 调用方检查返回码时也必须保留 fetch 原始失败，不继续 checkout。
+if PATH="$TMPDIR/bin:$PATH" \
+GIT_ARGS_FILE="$TMPDIR/failed-fetch.args" \
+GIT_FETCH_STATUS=128 \
+clone_repo_shallow "https://example.com/repo.git" "$commit_hash" "repo"; then
+    echo 'ASSERT FAILED: failed SHA fetch must return an error' >&2
+    exit 1
+else
+    test "$?" -eq 128
+fi
+if grep -Fq 'checkout' "$TMPDIR/failed-fetch.args"; then
+    echo 'ASSERT FAILED: failed SHA fetch must not continue checkout' >&2
+    exit 1
+fi
 
 hex_branch='abcdefabcdefabcdefabcdefabcdefabcdefabcd'
 PATH="$TMPDIR/bin:$PATH" \
