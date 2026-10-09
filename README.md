@@ -27,7 +27,7 @@
 |------|------|------|--------|------|
 | **LWRT** | [coolsnowwolf/lede](https://github.com/coolsnowwolf/lede) | `master` | fw3 | Lean源码，兼容性好 |
 | **IWRT** | [VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt) | `main` / `owrt` | fw4 (nftables) | VIKINGYFY源码，功能更新 |
-| **LIBWRT** | [LiBwrt/LibWrt](https://github.com/LiBwrt/LibWrt) | `main-nss` | fw4 (nftables) | LibWrt源码，功能丰富 |
+| **LIBWRT** | [LiBwrt/LibWrt](https://github.com/LiBwrt/LibWrt) | `25.12-nss` | fw4 (nftables) | LibWrt源码，功能丰富 |
 
 **IWRT 分支说明：** GL-MT6000-WIFI 使用 `owrt` 分支，其余设备使用 `main` 分支。
 
@@ -59,7 +59,10 @@
 |--------|----------|------|
 | **CUSTOM-LWRT** | 定时（每月 2、16 日 03:00 UTC）/ 手动 | 批量构建 fw3 风味的全部设备 |
 | **CUSTOM-IWRT** | 定时（每月 1、15 日 03:00 UTC）/ 手动 | 批量构建 fw4 风味的全部设备 |
+| **CUSTOM-LIBWRT-ALL** | 手动 | 按 CUSTOM-IWRT-ALL 的四设备配置，使用 LibWrt `25.12-nss`、fw4、APK 构建 |
 | **DEFAULT** | 手动触发 | 单设备自定义构建，灵活选择参数 |
+
+`CUSTOM-LIBWRT-ALL` 包含 AX18 无 Wi-Fi + frps、MT6000 有/无 Wi-Fi、AX6600 有 Wi-Fi，全部显式使用 `LiBwrt/LibWrt` 仓库，不经过 MT6000 的默认源码回退。源码 HASH 留空时跟随 `25.12-nss` 最新提交；填写时须使用该 LibWrt 仓库中的提交。设备配置、插件脚本、LAN IP 和发布选项沿用 `CUSTOM-IWRT-ALL`。
 
 ### DEFAULT 工作流参数
 

@@ -99,6 +99,8 @@ env:
   WRT_SOURCE_HASH_INFO: ${{inputs.WRT_SOURCE_HASH_INFO}}
   WRT_DEVICE: ${{inputs.WRT_DEVICE}}                          # 设备名
   SOURCE_TYPE: ${{inputs.SOURCE_TYPE}}                        # 源码类型 vwrt/lean/libwrt/auto
+  WRT_REPO_URL: ${{ inputs.WRT_REPO_URL }}                    # 显式仓库优先于按设备推断
+  WRT_REPO_BRANCH: ${{ inputs.WRT_REPO_BRANCH }}
   WRT_FIREWALL: ${{inputs.WRT_FIREWALL}}                      # fw3 / fw4
   WRT_FRP_MODE: ${{inputs.WRT_FRP_MODE || 'none' }}
   WRT_USB_MODE: ${{inputs.WRT_USB_MODE || 'default' }}
