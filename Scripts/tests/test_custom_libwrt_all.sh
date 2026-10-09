@@ -9,53 +9,57 @@ import subprocess
 import sys
 
 root = Path(sys.argv[1])
-path = root / '.github/workflows/CUSTOM-LIBWRT-ALL.yml'
-assert path.is_file(), 'Missing LibWrt batch workflow'
-workflow = path.read_text()
+workflow_path = root / '.github/workflows/CUSTOM-iwrt-all.yml'
+workflow = workflow_path.read_text()
 readme = (root / 'README.md').read_text()
-template = (root / '.github/workflows/CUSTOM-iwrt-all.yml').read_text()
 core = (root / '.github/workflows/CORE-ALL.yml').read_text()
+legacy_path = root / '.github/workflows/CUSTOM-LIBWRT-ALL.yml'
 
-def jobs(text):
-    result = {}
-    for name, block in re.findall(r'^  ([a-z0-9_]+):\n(.*?)(?=^  [a-z0-9_]+:|\Z)', text.split('\njobs:\n', 1)[1], re.M | re.S):
-        values = dict(re.findall(r'^      ([A-Z_]+): (.*)$', block, re.M))
-        result[name] = (block, values)
-    return result
+assert not legacy_path.exists(), 'LibWrt batch workflow should be merged into CUSTOM-iwrt-all.yml'
+assert 'name: CUSTOM-IWRT-ALL' in workflow
+assert 'SOURCE_TYPE:' in workflow
+source_block = workflow.split('      SOURCE_TYPE:', 1)[1].split('      WRT_FIREWALL:', 1)[0]
+assert re.search(r"^        type: choice\s*$", source_block, re.M)
+assert re.search(r"^          - vwrt\s*$", source_block, re.M)
+assert re.search(r"^          - libwrt\s*$", source_block, re.M)
+assert re.search(r"^        default: 'vwrt'\s*$", source_block, re.M)
 
-expected = jobs(template)
-actual = jobs(workflow)
-assert set(actual) == set(expected) and len(actual) == 4, 'LibWrt must preserve all four device jobs'
-for name, (block, values) in actual.items():
+hash_block = workflow.split('      WRT_SOURCE_HASH_INFO:', 1)[1].split('\n#CI', 1)[0]
+assert re.search(r"^        default: ''\s*$", hash_block, re.M), 'source HASH must follow the selected branch by default'
+
+jobs = {}
+jobs_text = workflow.split('\njobs:\n', 1)[1]
+for name, block in re.findall(r'^  ([a-z0-9_]+):\n(.*?)(?=^  [a-z0-9_]+:|\Z)', jobs_text, re.M | re.S):
+    if 'uses: ./.github/workflows/CORE-ALL.yml' in block:
+        jobs[name] = block
+assert len(jobs) == 4, 'merged workflow must preserve all four device jobs'
+for name, block in jobs.items():
     assert 'uses: ./.github/workflows/CORE-ALL.yml' in block
     assert 'secrets: inherit' in block
-    assert values['SOURCE_TYPE'] == "'libwrt'"
-    assert values['WRT_REPO_URL'] == 'https://github.com/LiBwrt/LibWrt'
-    assert values['WRT_REPO_BRANCH'] == '25.12-nss'
-    assert values['WRT_PACKAGE_MANAGER'] == 'apk'
-    assert values['WRT_FIREWALL'] == 'fw4'
-    for key, value in expected[name][1].items():
-        if key not in ('SOURCE_TYPE', 'WRT_FIREWALL'):
-            assert values[key] == value, f'{name}: template setting changed: {key}'
+    assert 'SOURCE_TYPE: ${{ inputs.SOURCE_TYPE }}' in block, f'{name}: source type must be selected externally'
+    assert "WRT_PACKAGE_MANAGER: ${{ inputs.SOURCE_TYPE == 'libwrt' && 'apk' || 'auto' }}" in block, f'{name}: libwrt must use apk'
+    assert 'WRT_REPO_URL:' not in block
+    assert 'WRT_REPO_BRANCH:' not in block
 
-hash_input = workflow.split('      WRT_SOURCE_HASH_INFO:', 1)[1].split('\n#CI', 1)[0]
-assert re.search(r"^        default: ''\s*$", hash_input, re.M), 'Do not inherit another repository commit'
-assert 'name: CUSTOM-LIBWRT-ALL' in workflow
-assert 'run-name: CUSTOM-LIBWRT-ALL-' in workflow
-assert '`25.12-nss`' in readme and 'main-nss' not in readme, 'README must document the live LibWrt branch'
+assert 'CUSTOM-LIBWRT-ALL' not in readme
+assert 'CUSTOM-IWRT-ALL' in readme and 'SOURCE_TYPE' in readme
+assert 'WRT_REPO_URL="https://github.com/LiBwrt/LibWrt"' in core
+assert 'WRT_REPO_BRANCH="25.12-nss"' in core
 
-# 从真实工作流提取源码选择代码，验证显式 LibWrt 仓库不会被设备回退逻辑覆盖。
 source_selection = core.split('        # 源码仓库：', 1)[1].split('        echo "WRT_REPO_URL=', 1)[0]
 source_selection = '\n'.join(line[8:] for line in source_selection.splitlines()[1:])
 for device in ('cmiot-ax18-nowifi', 'jd-ax6600-wifi', 'gl-mt6000-wifi', 'gl-mt6000-nowifi'):
-    output = subprocess.check_output(['bash', '-c', source_selection + '\nprintf "%s\\n" "$WRT_REPO_URL" "$WRT_REPO_BRANCH"'], env={
-        'PATH': '/usr/bin:/bin', 'WRT_DEVICE': device, 'SOURCE_TYPE': 'libwrt',
-        'WRT_REPO_URL': 'https://github.com/LiBwrt/LibWrt', 'WRT_REPO_BRANCH': '25.12-nss',
-    }, text=True)
+    output = subprocess.check_output(
+        ['bash', '-c', source_selection + '\nprintf "%s\\n" "$WRT_REPO_URL" "$WRT_REPO_BRANCH"'],
+        env={
+            'PATH': '/usr/bin:/bin',
+            'WRT_DEVICE': device,
+            'SOURCE_TYPE': 'libwrt',
+            'WRT_REPO_URL': '',
+            'WRT_REPO_BRANCH': '',
+        },
+        text=True,
+    )
     assert output.splitlines()[-2:] == ['https://github.com/LiBwrt/LibWrt', '25.12-nss']
-
-env_block = core.split('\nenv:\n', 1)[1].split('\n#CI权限', 1)[0]
-assert 'WRT_REPO_URL: ${{ inputs.WRT_REPO_URL }}' in env_block, 'Reusable workflow must pass repository input to shell'
-assert 'WRT_REPO_BRANCH: ${{ inputs.WRT_REPO_BRANCH }}' in env_block, 'Reusable workflow must pass branch input to shell'
 print('test_custom_libwrt_all: ok')
 PY

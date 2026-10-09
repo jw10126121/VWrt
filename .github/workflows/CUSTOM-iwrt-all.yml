@@ -1,6 +1,6 @@
 #CI项目
 name: CUSTOM-IWRT-ALL
-run-name: CUSTOM-IWRT-ALL-${{ inputs.WRT_RELEASE_FIRMWARE && 'release' || 'test' }}
+run-name: CUSTOM-IWRT-ALL-${{ inputs.SOURCE_TYPE }}-${{ inputs.WRT_RELEASE_FIRMWARE && 'release' || 'test' }}
 
 #CI计划
 on:
@@ -18,16 +18,25 @@ on:
         required: false
         type: boolean
         default: false
+      SOURCE_TYPE:
+        description: '源码类型'
+        required: false
+        type: choice
+        options:
+          - vwrt
+          - libwrt
+        default: 'vwrt'
       WRT_SOURCE_HASH_INFO:
-        description: '源码 HASH，留空使用对应设备源码分支的最新提交'
+        description: '源码 HASH，留空使用所选源码分支的最新提交'
         required: false
         type: string
-        default: '20edd8312f4f307c882f8861f7050ee8da555f24' # 20edd8312f4f307c882f8861f7050ee8da555f24
+        default: ''
 
 #CI权限
 permissions: write-all
 
 #CI任务
+# 四个设备统一使用外部选择的 SOURCE_TYPE；libwrt 自动使用 apk，vwrt 沿用源码默认的 apk。
 jobs:
   # cmiot_ax18_nowifi_fw4:
   #   name: cmiot-ax18-nowifi-fw4-base
@@ -35,7 +44,8 @@ jobs:
   #   with:
   #     WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
   #     WRT_DEVICE: cmiot-ax18-nowifi
-  #     SOURCE_TYPE: 'vwrt'
+  #     SOURCE_TYPE: ${{ inputs.SOURCE_TYPE }}
+  #     WRT_PACKAGE_MANAGER: ${{ inputs.SOURCE_TYPE == 'libwrt' && 'apk' || 'auto' }}
   #     WRT_FIREWALL: auto
   #     WRT_OVERLAYS: ''
   #     WRT_DIY_SETTING: diy_config.sh
@@ -52,7 +62,8 @@ jobs:
     with:
       WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
       WRT_DEVICE: cmiot-ax18-nowifi
-      SOURCE_TYPE: 'vwrt'
+      SOURCE_TYPE: ${{ inputs.SOURCE_TYPE }}
+      WRT_PACKAGE_MANAGER: ${{ inputs.SOURCE_TYPE == 'libwrt' && 'apk' || 'auto' }}
       WRT_FIREWALL: auto
       WRT_OVERLAYS: frps
       WRT_DIY_SETTING: diy_config.sh
@@ -69,7 +80,8 @@ jobs:
     with:
       WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
       WRT_DEVICE: gl-mt6000-nowifi
-      SOURCE_TYPE: 'vwrt'
+      SOURCE_TYPE: ${{ inputs.SOURCE_TYPE }}
+      WRT_PACKAGE_MANAGER: ${{ inputs.SOURCE_TYPE == 'libwrt' && 'apk' || 'auto' }}
       WRT_FIREWALL: auto
       WRT_OVERLAYS: ''
       WRT_DIY_SETTING: diy_config.sh
@@ -86,7 +98,8 @@ jobs:
     with:
       WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
       WRT_DEVICE: gl-mt6000-wifi
-      SOURCE_TYPE: 'vwrt'
+      SOURCE_TYPE: ${{ inputs.SOURCE_TYPE }}
+      WRT_PACKAGE_MANAGER: ${{ inputs.SOURCE_TYPE == 'libwrt' && 'apk' || 'auto' }}
       WRT_FIREWALL: auto
       WRT_OVERLAYS: ''
       WRT_DIY_SETTING: diy_config.sh
@@ -103,7 +116,8 @@ jobs:
     with:
       WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
       WRT_DEVICE: jd-ax6600-wifi
-      SOURCE_TYPE: 'vwrt'
+      SOURCE_TYPE: ${{ inputs.SOURCE_TYPE }}
+      WRT_PACKAGE_MANAGER: ${{ inputs.SOURCE_TYPE == 'libwrt' && 'apk' || 'auto' }}
       WRT_FIREWALL: auto
       WRT_OVERLAYS: ''
       WRT_DIY_SETTING: diy_config.sh

@@ -278,15 +278,10 @@ jobs:
           WRT_REPO_URL="https://github.com/coolsnowwolf/lede"
           WRT_REPO_BRANCH="master"
         elif [ "${SOURCE_TYPE}" = "libwrt" ]; then
-          # libwrt 仅支持 IPQ60xx/IPQ80xx，非高通平台回退到官方 immortalwrt
-          if [ "${IS_QUALCOMMAX}" = "true" ]; then
-            WRT_REPO_URL="https://github.com/LiBwrt/LibWrt"
-            WRT_REPO_BRANCH="25.12-nss"
-          else
-            WRT_REPO_URL="https://github.com/immortalwrt/immortalwrt"
-            WRT_REPO_BRANCH="master"
-            echo "【Lin】libwrt 不支持当前平台 ${WRT_DEVICE}，回退到 immortalwrt 官方源码"
-          fi
+          # LibWrt 25.12-nss 同时包含 qualcommax 与 mediatek-filogic 目标；
+          # SOURCE_TYPE=libwrt 必须始终选择 LibWrt，不能按设备回退到其他源码。
+          WRT_REPO_URL="https://github.com/LiBwrt/LibWrt"
+          WRT_REPO_BRANCH="25.12-nss"
         else
           if [ "${IS_QUALCOMMAX}" = "true" ]; then
             WRT_REPO_URL="https://github.com/VIKINGYFY/immortalwrt"

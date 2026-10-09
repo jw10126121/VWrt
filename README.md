@@ -31,7 +31,7 @@
 
 **IWRT 分支说明：** GL-MT6000-WIFI 使用 `owrt` 分支，其余设备使用 `main` 分支。
 
-**源码回退机制：** 当选择 `vwrt` 或 `libwrt` 风味时，如果目标设备不是 IPQ 平台（如 GL-MT6000-WIFI 使用 MediaTek 平台），将自动回退到 [immortalwrt 官方源码](https://github.com/immortalwrt/immortalwrt) 的 `master` 分支，以确保固件正常编译。
+**源码选择机制：** `vwrt` 在非高通设备上使用官方 immortalwrt；`libwrt` 始终使用 `LiBwrt/LibWrt` 的 `25.12-nss` 分支，覆盖 qualcommax 和 mediatek-filogic 设备。
 
 三种风味共用同一套设备配置和构建脚本，通过 `SOURCE_TYPE`（`lean` / `vwrt` / `libwrt`）和 `WRT_FIREWALL` 参数区分。`vwrt` 与 `libwrt` 都属于 iwrt 配置族，默认使用 fw4；`lean` 默认使用 fw3。
 
@@ -58,11 +58,10 @@
 | 工作流 | 触发方式 | 说明 |
 |--------|----------|------|
 | **CUSTOM-LWRT** | 定时（每月 2、16 日 03:00 UTC）/ 手动 | 批量构建 fw3 风味的全部设备 |
-| **CUSTOM-IWRT** | 定时（每月 1、15 日 03:00 UTC）/ 手动 | 批量构建 fw4 风味的全部设备 |
-| **CUSTOM-LIBWRT-ALL** | 手动 | 按 CUSTOM-IWRT-ALL 的四设备配置，使用 LibWrt `25.12-nss`、fw4、APK 构建 |
+| **CUSTOM-IWRT** | 定时（每月 1、15 日 03:00 UTC）/ 手动 | 批量构建 fw4 风味的全部设备，可选择 VWrt 或 LibWrt |
 | **DEFAULT** | 手动触发 | 单设备自定义构建，灵活选择参数 |
 
-`CUSTOM-LIBWRT-ALL` 包含 AX18 无 Wi-Fi + frps、MT6000 有/无 Wi-Fi、AX6600 有 Wi-Fi，全部显式使用 `LiBwrt/LibWrt` 仓库，不经过 MT6000 的默认源码回退。源码 HASH 留空时跟随 `25.12-nss` 最新提交；填写时须使用该 LibWrt 仓库中的提交。设备配置、插件脚本、LAN IP 和发布选项沿用 `CUSTOM-IWRT-ALL`。
+`CUSTOM-IWRT-ALL` 包含 AX18 无 Wi-Fi + frps、MT6000 有/无 Wi-Fi、AX6600 有 Wi-Fi，四个任务统一使用外部选择的 `SOURCE_TYPE`。选择 `vwrt` 时沿用 VIKINGYFY 的 immortalwrt；选择 `libwrt` 时使用 `LiBwrt/LibWrt` 的 `25.12-nss` 分支，并自动使用 APK。源码 HASH 留空时跟随所选分支最新提交；填写时须确保提交属于对应源码仓库。设备配置、插件脚本、LAN IP 和发布选项保持一致。
 
 ### DEFAULT 工作流参数
 
