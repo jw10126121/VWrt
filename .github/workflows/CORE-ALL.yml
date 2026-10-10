@@ -277,19 +277,16 @@ jobs:
         elif [ "${SOURCE_TYPE}" = "lean" ]; then
           WRT_REPO_URL="https://github.com/coolsnowwolf/lede"
           WRT_REPO_BRANCH="master"
-        elif [ "${SOURCE_TYPE}" = "libwrt" ]; then
-          # LibWrt 25.12-nss 同时包含 qualcommax 与 mediatek-filogic 目标；
-          # SOURCE_TYPE=libwrt 必须始终选择 LibWrt，不能按设备回退到其他源码。
+        elif [ "${SOURCE_TYPE}" = "libwrt" ] && [ "${IS_QUALCOMMAX}" = "true" ]; then
+          # LibWrt 仅用于高通设备；MT6000 等非高通设备沿用 vwrt 的官方 ImmortalWrt 路径。
           WRT_REPO_URL="https://github.com/LiBwrt/LibWrt"
           WRT_REPO_BRANCH="25.12-nss"
+        elif [ "${SOURCE_TYPE}" = "vwrt" ] && [ "${IS_QUALCOMMAX}" = "true" ]; then
+          WRT_REPO_URL="https://github.com/VIKINGYFY/immortalwrt"
+          WRT_REPO_BRANCH="main"
         else
-          if [ "${IS_QUALCOMMAX}" = "true" ]; then
-            WRT_REPO_URL="https://github.com/VIKINGYFY/immortalwrt"
-            WRT_REPO_BRANCH="main"
-          else
-            WRT_REPO_URL="https://github.com/immortalwrt/immortalwrt"
-            WRT_REPO_BRANCH="master"
-          fi
+          WRT_REPO_URL="https://github.com/immortalwrt/immortalwrt"
+          WRT_REPO_BRANCH="master"
         fi
         echo "WRT_REPO_URL=${WRT_REPO_URL}" >> $GITHUB_ENV
         echo "WRT_REPO_BRANCH=${WRT_REPO_BRANCH}" >> $GITHUB_ENV

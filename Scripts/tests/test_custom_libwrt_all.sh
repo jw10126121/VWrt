@@ -48,18 +48,36 @@ assert 'WRT_REPO_BRANCH="25.12-nss"' in core
 
 source_selection = core.split('        # 源码仓库：', 1)[1].split('        echo "WRT_REPO_URL=', 1)[0]
 source_selection = '\n'.join(line[8:] for line in source_selection.splitlines()[1:])
-for device in ('cmiot-ax18-nowifi', 'jd-ax6600-wifi', 'gl-mt6000-wifi', 'gl-mt6000-nowifi'):
+cases = [
+    ('libwrt', 'cmiot-ax18-nowifi', 'https://github.com/LiBwrt/LibWrt', '25.12-nss'),
+    ('libwrt', 'jd-ax6600-wifi', 'https://github.com/LiBwrt/LibWrt', '25.12-nss'),
+    ('libwrt', 'gl-mt6000-wifi', 'https://github.com/immortalwrt/immortalwrt', 'master'),
+    ('libwrt', 'gl-mt6000-nowifi', 'https://github.com/immortalwrt/immortalwrt', 'master'),
+    ('vwrt', 'cmiot-ax18-nowifi', 'https://github.com/VIKINGYFY/immortalwrt', 'main'),
+    ('vwrt', 'gl-mt6000-wifi', 'https://github.com/immortalwrt/immortalwrt', 'master'),
+    ('lean', 'gl-mt6000-nowifi', 'https://github.com/coolsnowwolf/lede', 'master'),
+]
+for source, device, repository, branch in cases:
     output = subprocess.check_output(
         ['bash', '-c', source_selection + '\nprintf "%s\\n" "$WRT_REPO_URL" "$WRT_REPO_BRANCH"'],
         env={
             'PATH': '/usr/bin:/bin',
             'WRT_DEVICE': device,
-            'SOURCE_TYPE': 'libwrt',
+            'SOURCE_TYPE': source,
             'WRT_REPO_URL': '',
             'WRT_REPO_BRANCH': '',
         },
         text=True,
     )
-    assert output.splitlines()[-2:] == ['https://github.com/LiBwrt/LibWrt', '25.12-nss']
+    assert output.splitlines()[-2:] == [repository, branch], f'{source}/{device}: unexpected repository or branch'
+
+output = subprocess.check_output(
+    ['bash', '-c', source_selection + '\nprintf "%s\\n" "$WRT_REPO_URL" "$WRT_REPO_BRANCH"'],
+    env={
+        'PATH': '/usr/bin:/bin', 'WRT_DEVICE': 'gl-mt6000-nowifi', 'SOURCE_TYPE': 'libwrt',
+        'WRT_REPO_URL': 'https://example.com/custom.git', 'WRT_REPO_BRANCH': 'custom',
+    }, text=True,
+)
+assert output.splitlines()[-2:] == ['https://example.com/custom.git', 'custom'], 'explicit repository must take priority'
 print('test_custom_libwrt_all: ok')
 PY
