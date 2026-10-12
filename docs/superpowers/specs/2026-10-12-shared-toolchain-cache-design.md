@@ -78,7 +78,7 @@ CONFIG_TARGET_DEVICE_PACKAGES_*
 # CONFIG_TARGET_DEVICE_PACKAGES_* is not set
 ```
 
-其余非空行保留并排序，然后以换行连接后计算哈希。排序避免仅由配置行顺序造成无意义失效。
+纯说明注释不参与指纹，但 `# CONFIG_* is not set` 仍作为真实配置状态保留。其余非空配置行保留并排序，然后以换行连接后计算哈希。排序避免仅由配置行顺序造成无意义失效。
 
 该策略是保守过滤：只忽略明确属于软件包选择的配置。以下变化仍然会改变 toolchain key：
 
@@ -130,9 +130,10 @@ staging_dir/tool*
 3. 已启用与 `is not set` 两种软件包写法都被忽略。
 4. 改变 `CONFIG_DEFAULT_*` 不改变 toolchain key。
 5. 改变 `CONFIG_TARGET_DEVICE_PACKAGES_*` 不改变 toolchain key。
-6. 改变 GCC 等非软件包配置仍使 toolchain key 失效。
-7. 源码 commit、脚本哈希、target/subtarget 和 runner 边界继续失效。
-8. ccache key 行为保持不变。
+6. 改变纯说明注释不改变 toolchain key。
+7. 改变 GCC 等非软件包配置仍使 toolchain key 失效。
+8. 源码 commit、脚本哈希、target/subtarget 和 runner 边界继续失效。
+9. ccache key 行为保持不变。
 
 继续运行 `Scripts/tests/test_workflow_cache_keys.sh`，确认：
 

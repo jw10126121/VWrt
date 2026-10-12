@@ -89,6 +89,8 @@ PACKAGE_ONLY_CONFIG_PREFIXES = (
 def config_symbol(line):
     if line.startswith("# ") and line.endswith(" is not set"):
         return line[2:-len(" is not set")]
+    if line.startswith("#"):
+        return ""
     return line.split("=", 1)[0]
 
 
@@ -99,7 +101,7 @@ def toolchain_config_hash(path):
         if not line:
             continue
         symbol = config_symbol(line)
-        if symbol.startswith(PACKAGE_ONLY_CONFIG_PREFIXES):
+        if not symbol or symbol.startswith(PACKAGE_ONLY_CONFIG_PREFIXES):
             continue
         normalized.append(line)
     content = "\n".join(sorted(normalized)) + "\n"

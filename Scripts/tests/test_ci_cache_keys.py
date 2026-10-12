@@ -62,6 +62,7 @@ class CacheKeysTest(unittest.TestCase):
     def test_package_only_config_changes_reuse_toolchain(self):
         config = self.root / ".config"
         config.write_text(
+            '# Wi-Fi 软件包\n'
             'CONFIG_TARGET_BOARD="qualcommax"\n'
             'CONFIG_GCC_VERSION="14.3.0"\n'
             'CONFIG_PACKAGE_kmod-mt7915e=y\n'
@@ -72,6 +73,7 @@ class CacheKeysTest(unittest.TestCase):
         first = self.keys()
 
         config.write_text(
+            '# OVERLAY_GROUP=nowifi\n'
             'CONFIG_TARGET_DEVICE_PACKAGES_qualcommax_device="-kmod-mt7915e"\n'
             '# CONFIG_DEFAULT_kmod-mt76 is not set\n'
             'CONFIG_PACKAGE_wpad-openssl=y\n'
