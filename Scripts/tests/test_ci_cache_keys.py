@@ -59,6 +59,31 @@ class CacheKeysTest(unittest.TestCase):
         self.assertNotEqual(first["TOOLCHAIN_CACHE_KEY"], self.keys()["TOOLCHAIN_CACHE_KEY"])
         self.assertNotEqual(self.keys()["TOOLCHAIN_CACHE_KEY"], self.keys(CACHE_SCRIPTS_HASH="c" * 64)["TOOLCHAIN_CACHE_KEY"])
 
+    def test_package_only_config_changes_reuse_toolchain(self):
+        config = self.root / ".config"
+        config.write_text(
+            'CONFIG_TARGET_BOARD="qualcommax"\n'
+            'CONFIG_GCC_VERSION="14.3.0"\n'
+            'CONFIG_PACKAGE_kmod-mt7915e=y\n'
+            '# CONFIG_PACKAGE_wpad-openssl is not set\n'
+            'CONFIG_DEFAULT_kmod-mt76=y\n'
+            'CONFIG_TARGET_DEVICE_PACKAGES_qualcommax_device="kmod-mt7915e"\n'
+        )
+        first = self.keys()
+
+        config.write_text(
+            'CONFIG_TARGET_DEVICE_PACKAGES_qualcommax_device="-kmod-mt7915e"\n'
+            '# CONFIG_DEFAULT_kmod-mt76 is not set\n'
+            'CONFIG_PACKAGE_wpad-openssl=y\n'
+            '# CONFIG_PACKAGE_kmod-mt7915e is not set\n'
+            'CONFIG_GCC_VERSION="14.3.0"\n'
+            'CONFIG_TARGET_BOARD="qualcommax"\n'
+        )
+        changed = self.keys()
+
+        self.assertEqual(first["TOOLCHAIN_CACHE_KEY"], changed["TOOLCHAIN_CACHE_KEY"])
+        self.assertEqual(first["CCACHE_CACHE_PREFIX"], changed["CCACHE_CACHE_PREFIX"])
+
     def test_repo_branch_target_and_host_are_isolated(self):
         first = self.keys()
         for change in (
