@@ -64,7 +64,7 @@ def main():
         "config": config_hash,
         "scripts": scripts_hash,
     })
-    print(f"TOOLCHAIN_CACHE_KEY=toolchain-v2-{compatibility_hash}")
+    print(f"TOOLCHAIN_CACHE_KEY=toolchain-v3-{compatibility_hash}")
     # ccache 自行验证编译器、源码和参数，可在同一 scope 内跨提交复用。
     print(f"CCACHE_CACHE_PREFIX=ccache-v2-{fingerprint(scope)}")
 

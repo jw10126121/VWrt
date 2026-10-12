@@ -43,7 +43,7 @@ class CacheKeysTest(unittest.TestCase):
     def test_keys_are_deterministic_and_versioned(self):
         first = self.keys()
         self.assertEqual(first, self.keys())
-        self.assertTrue(first["TOOLCHAIN_CACHE_KEY"].startswith("toolchain-v2-"))
+        self.assertTrue(first["TOOLCHAIN_CACHE_KEY"].startswith("toolchain-v3-"))
         self.assertTrue(first["CCACHE_CACHE_PREFIX"].startswith("ccache-v2-"))
 
     def test_new_commit_invalidates_toolchain_but_allows_ccache_reuse(self):
