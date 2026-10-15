@@ -25,7 +25,7 @@ on:
         options:
           - vwrt
           - libwrt
-        default: 'vwrt'
+        default: 'libwrt'
       WRT_SOURCE_HASH_INFO:
         description: '源码 HASH，留空使用所选源码分支的最新提交'
         required: false

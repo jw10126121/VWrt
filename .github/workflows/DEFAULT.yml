@@ -88,7 +88,7 @@ on:
           - vwrt
           - lean
           - libwrt
-        default: 'vwrt'
+        default: 'libwrt'
       # 防火墙栈：- auto = lean -> fw3，vwrt/libwrt -> fw4，- fw3 / fw4 = 手动指定
       WRT_FIREWALL:
         description: '防火墙栈'
