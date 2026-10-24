@@ -45,7 +45,7 @@ SOURCE_FLAVOR_TAG="lean" \
 FW_STACK_TAG="fw3" \
 FRP_ROLE_TAG="frpc" \
 BUILD_VARIANT_TAG="lean_fw3_ipk_frpc" \
-OUTPUT_NAME_PREFIX="lean_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000" \
+OUTPUT_NAME_PREFIX="lean_abc1234_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000" \
 DEVICE_SUBTARGET="ipq60xx" \
 DEVICE_NAME_LIST="cmiot_ax18" \
 DEVICE_NAME_LIST_LIAN="cmiot_ax18" \
@@ -53,19 +53,19 @@ WRT_VER="lede-master" \
 START_TIME="D260419_T120000" \
 bash "$TARGET_SCRIPT" >/dev/null
 
-test -f "$OPENWRT_PATH/upload/config_lean_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000.txt"
-test -f "$OPENWRT_PATH/upload/readme_lean_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000.txt"
-PACKAGES_DIR="$OPENWRT_PATH/upload/lean_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000_Packages"
-PACKAGES_ZIP="$OPENWRT_PATH/upload/lean_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000_Packages.zip"
+test -f "$OPENWRT_PATH/upload/config_lean_abc1234_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000.txt"
+test -f "$OPENWRT_PATH/upload/readme_lean_abc1234_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000.txt"
+PACKAGES_DIR="$OPENWRT_PATH/upload/lean_abc1234_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000_Packages"
+PACKAGES_ZIP="$OPENWRT_PATH/upload/lean_abc1234_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000_Packages.zip"
 test -d "$PACKAGES_DIR"
 test -f "$PACKAGES_DIR/luci-app-accesscontrol_1.0.0_all.apk"
 test -f "$PACKAGES_ZIP"
-unzip -Z1 "$PACKAGES_ZIP" | grep -q '^lean_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000_Packages/'
+unzip -Z1 "$PACKAGES_ZIP" | grep -q '^lean_abc1234_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000_Packages/'
 if unzip -Z1 "$PACKAGES_ZIP" | grep -q '\.tar\.gz$'; then
 	echo "Packages release archive must not contain a nested tarball" >&2
 	exit 1
 fi
-test -f "$OPENWRT_PATH/upload/lean_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000_squashfs-sysupgrade.bin"
+test -f "$OPENWRT_PATH/upload/lean_abc1234_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000_squashfs-sysupgrade.bin"
 test -f "$OPENWRT_PATH/config_mine/readme.txt"
 grep -q "^readme_desc_file=$OPENWRT_PATH/config_mine/readme.txt$" "$GITHUB_ENV"
 grep -q "^release_desc_file=$OPENWRT_PATH/readme_release.txt$" "$GITHUB_ENV"
