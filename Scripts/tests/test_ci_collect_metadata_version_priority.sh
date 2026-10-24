@@ -66,7 +66,7 @@ run_case() {
     local package_manager=${7:-auto}
     local repo_url=${8:-https://github.com/example/openwrt}
     local repo_git_hash_simple=${9-abc1234}
-    local repo_git_hash=${10:-test-hash}
+    local repo_git_hash=${10-test-hash}
 
     OPENWRT_PATH="$root_dir" \
     WRT_DEFAULT_LANIP="192.168.0.1" \
@@ -146,6 +146,23 @@ run_case \
 
 grep -q '^OUTPUT_NAME_PREFIX=lean_1234567_cmiot_ax18_fw4_ipk_frpc_D260514_T003050$' "$TMPDIR/case-fallback.env" || {
     echo "case-fallback should derive the short hash from the full hash" >&2
+    exit 1
+}
+
+run_case \
+    "$CASE_DIR" \
+    "$TMPDIR/case-unknown.env" \
+    "true" \
+    "cmiot_ax18" \
+    "" \
+    "lean" \
+    "auto" \
+    "https://github.com/example/openwrt" \
+    "" \
+    ""
+
+grep -q '^OUTPUT_NAME_PREFIX=lean_unknown_cmiot_ax18_fw4_ipk_frpc_D260514_T003050$' "$TMPDIR/case-unknown.env" || {
+    echo "case-unknown should use unknown when no source hash is available" >&2
     exit 1
 }
 
