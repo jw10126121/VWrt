@@ -26,15 +26,15 @@
 | 风味（产物标记） | 源码 | 分支 | 防火墙 | 说明 |
 |------|------|------|--------|------|
 | **`lean`**（LWRT） | [coolsnowwolf/lede](https://github.com/coolsnowwolf/lede) | `master` | fw3 | Lean 源码，兼容性好 |
-| **`vwrt`**（IWRT） | [VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt) | `main` | fw4 (nftables) | VIKINGYFY 源码，用于高通设备 |
+| **`vikingyfy`**（入口 `vwrt`） | [VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt) | `main` | fw4 (nftables) | VIKINGYFY 源码，用于高通设备 |
 | **`libwrt`**（LIBWRT） | [LiBwrt/LibWrt](https://github.com/LiBwrt/LibWrt) | `25.12-nss` | fw4 (nftables) | LibWrt 源码，用于高通设备 |
 | **`immortalwrt`** | [immortalwrt/immortalwrt](https://github.com/immortalwrt/immortalwrt) | `master` | fw4 (nftables) | 官方 ImmortalWrt，非 IPQ 设备自动使用 |
 
 **源码选择机制：** `SOURCE_TYPE` 选择构建入口，未显式传入 `WRT_REPO_URL` 时实际源码仓库按设备架构决定。`lean` 始终使用 coolsnowwolf/lede；`vwrt` 和 `libwrt` 在高通（IPQ）设备上分别使用 VIKINGYFY 的 immortalwrt 和 `LiBwrt/LibWrt`，在 GL-MT6000 等非 IPQ 设备上统一回退到官方 `immortalwrt/immortalwrt` 的 `master` 分支。显式传入 `WRT_REPO_URL` 时以传入仓库为准。
 
-**风味命名：** 元信息中的“源码风味”、产物文件名前缀和发布名都以实际克隆的上游仓库为准。因此非 IPQ 设备即使在入口选择 `vwrt` 或 `libwrt`，构建结果也会标记为 `immortalwrt`。
+**风味命名：** 元信息中的“源码风味”、产物文件名前缀和发布名都以实际克隆的上游仓库为准。VIKINGYFY 源码标记为 `vikingyfy`；非 IPQ 设备即使在入口选择 `vwrt` 或 `libwrt`，构建结果也会标记为 `immortalwrt`。
 
-三种入口共用同一套设备配置和构建脚本，通过 `SOURCE_TYPE`（`lean` / `vwrt` / `libwrt`）和 `WRT_FIREWALL` 参数区分。`vwrt` 与 `libwrt` 都属于 iwrt 配置族，默认使用 fw4；`lean` 默认使用 fw3。
+三种入口共用同一套设备配置和构建脚本，通过 `SOURCE_TYPE`（`lean` / `vwrt` / `libwrt`）和 `WRT_FIREWALL` 参数区分。`vwrt` 与 `libwrt` 都属于 iwrt 配置族，默认使用 fw4；`lean` 默认使用 fw3。`vwrt` 仅是入口值，对外风味标记为 `vikingyfy`。
 
 ## 支持设备
 
@@ -67,7 +67,7 @@
 
 > 各工作流的 `schedule` 定时触发当前均已注释，需在 Actions 页面手动运行。
 
-`CUSTOM-IWRT-ALL` 包含 AX18 无 Wi-Fi + frps、MT6000 有/无 Wi-Fi、AX6600 有 Wi-Fi，四个任务统一使用外部选择的 `SOURCE_TYPE`。该选项控制高通设备使用 VIKINGYFY 的 immortalwrt（`vwrt`）或 LibWrt `25.12-nss`（`libwrt`）；MT6000 的两种配置始终使用官方 ImmortalWrt `master`，产物风味标记为 `immortalwrt`。包管理器由 `libwrt` 自动选择 APK，`vwrt` 沿用源码默认值。源码 HASH 留空时跟随各设备实际源码分支的最新提交；批量任务涉及不同仓库，填写 HASH 时须确保提交适用于全部设备。设备配置、插件脚本、LAN IP 和发布选项保持一致。
+`CUSTOM-IWRT-ALL` 包含 AX18 无 Wi-Fi + frps、MT6000 有/无 Wi-Fi、AX6600 有 Wi-Fi，四个任务统一使用外部选择的 `SOURCE_TYPE`。该选项控制高通设备使用 VIKINGYFY 的 immortalwrt（入口 `vwrt`，风味标记 `vikingyfy`）或 LibWrt `25.12-nss`（入口 `libwrt`）；MT6000 的两种配置始终使用官方 ImmortalWrt `master`，产物风味标记为 `immortalwrt`。包管理器由 `libwrt` 自动选择 APK，`vwrt` 沿用源码默认值。源码 HASH 留空时跟随各设备实际源码分支的最新提交；批量任务涉及不同仓库，填写 HASH 时须确保提交适用于全部设备。设备配置、插件脚本、LAN IP 和发布选项保持一致。
 
 ### DEFAULT 工作流参数
 
@@ -91,7 +91,7 @@
 
 **参数说明：**
 
-- `SOURCE_TYPE` 只决定构建入口；非 IPQ 设备会回退到官方 ImmortalWrt，风味按实际源码显示为 `immortalwrt`
+- `SOURCE_TYPE` 只决定构建入口；入口 `vwrt` 对应的 VIKINGYFY 源码风味标记为 `vikingyfy`，非 IPQ 设备会回退到官方 ImmortalWrt，风味按实际源码显示为 `immortalwrt`
 - `WRT_LUCI_BRANCH` 留空时使用源码默认 LuCI feed
 - `WRT_DIYPackages` 默认 `auto`：优先使用 `Scripts/Packages-<设备名>.sh` 或短名脚本；填 `Packages.sh` 可强制使用通用包脚本
 - `WRT_FRP_MODE` 默认 `frpc`；`frp` 表示同时启用 `frpc` 与 `frps`，日常切换不再需要手输 overlay
@@ -112,7 +112,7 @@
 通用配置（按优先级取第一个匹配项）
   Config/general-<设备名>.txt      # 设备专用，如 general-cmiot-ax18-wifi.txt
   Config/general-<设备简写>.txt    # 去掉 -wifi/-nowifi 后的简写
-  Config/general-<源码类型>.txt    # 如 general-lean.txt、general-vwrt.txt
+  Config/general-<源码入口值>.txt  # 如 general-lean.txt、general-vwrt.txt
   Config/general-iwrt.txt          # iwrt 配置族（fw4 或 vwrt/libwrt）
   Config/general.txt               # 通用基线
 

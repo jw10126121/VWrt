@@ -246,14 +246,14 @@ mv "$CASE_DIR8/version.mk.tmp" "$CASE_DIR8/include/version.mk"
 
 run_case "$CASE_DIR8" "$TMPDIR/case8.env" "true" "cmiot_ax18" "cmiot-ax18-wifi" "vwrt" "apk"
 
-grep -q '^SOURCE_FLAVOR_TAG=vwrt$' "$TMPDIR/case8.env"
+grep -q '^SOURCE_FLAVOR_TAG=vikingyfy$' "$TMPDIR/case8.env"
 grep -q '^PACKAGE_MANAGER_TAG=apk$' "$TMPDIR/case8.env"
-grep -q '^BUILD_VARIANT_TAG=vwrt_fw4_apk_frpc$' "$TMPDIR/case8.env"
-grep -q '^OUTPUT_NAME_PREFIX=vwrt_cmiot_ax18_fw4_apk_frpc_D260514_T003050$' "$TMPDIR/case8.env" || {
-    echo "case8 should emit the vwrt_cmiot_ax18 fw4 apk output prefix" >&2
+grep -q '^BUILD_VARIANT_TAG=vikingyfy_fw4_apk_frpc$' "$TMPDIR/case8.env"
+grep -q '^OUTPUT_NAME_PREFIX=vikingyfy_cmiot_ax18_fw4_apk_frpc_D260514_T003050$' "$TMPDIR/case8.env" || {
+    echo "case8 should emit the vikingyfy_cmiot_ax18 fw4 apk output prefix" >&2
     exit 1
 }
-grep -q '源码风味：vwrt' "$TMPDIR/case8.env"
+grep -q '源码风味：vikingyfy' "$TMPDIR/case8.env"
 grep -q '包管理器：apk' "$TMPDIR/case8.env"
 
 # 非 IPQ 设备在 vwrt/libwrt 下会回退到官方 immortalwrt，
@@ -300,8 +300,8 @@ run_case \
     "apk" \
     "https://github.com/VIKINGYFY/immortalwrt"
 
-grep -q '^SOURCE_FLAVOR_TAG=vwrt$' "$TMPDIR/case10.env"
-grep -q '源码风味：vwrt' "$TMPDIR/case10.env"
+grep -q '^SOURCE_FLAVOR_TAG=vikingyfy$' "$TMPDIR/case10.env"
+grep -q '源码风味：vikingyfy' "$TMPDIR/case10.env"
 
 # 其余上游仓库同样以 URL 识别风味。
 run_case \

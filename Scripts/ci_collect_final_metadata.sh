@@ -55,8 +55,22 @@ choose_preferred_version() {
 }
 
 # 源码风味以实际克隆的上游仓库为准，而不是只看 SOURCE_TYPE。
-# 这样非 IPQ（如 GL-MT6000）在 vwrt/libwrt 下回退到官方 immortalwrt 时，
-# 元信息、产物名和发布名都会显示 immortalwrt，避免与实际源码不符。
+# 1. VIKINGYFY/immortalwrt 的风味标记为 vikingyfy（SOURCE_TYPE=vwrt 仍作为内部入口值）。
+# 2. 非 IPQ（如 GL-MT6000）在 vwrt/libwrt 下回退到官方 immortalwrt 时，
+#    元信息、产物名和发布名都会显示 immortalwrt，避免与实际源码不符。
+normalize_source_flavor_label() {
+    local flavor=$1
+
+    case "${flavor}" in
+        vwrt|iwrt)
+            printf '%s\n' 'vikingyfy'
+            ;;
+        *)
+            printf '%s\n' "${flavor:-lean}"
+            ;;
+    esac
+}
+
 resolve_source_flavor() {
     local repo_url=$1
     local fallback=$2
@@ -68,7 +82,7 @@ resolve_source_flavor() {
             printf '%s\n' 'lean'
             ;;
         *vikingyfy/immortalwrt*)
-            printf '%s\n' 'vwrt'
+            printf '%s\n' 'vikingyfy'
             ;;
         *libwrt/libwrt*)
             printf '%s\n' 'libwrt'
@@ -77,7 +91,7 @@ resolve_source_flavor() {
             printf '%s\n' 'immortalwrt'
             ;;
         *)
-            printf '%s\n' "${fallback:-lean}"
+            normalize_source_flavor_label "${fallback:-lean}"
             ;;
     esac
 }
