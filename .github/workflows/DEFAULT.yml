@@ -1,6 +1,6 @@
 #CI项目
 name: DEFAULT
-run-name: ${{ inputs.WRT_DEVICE }}-${{ inputs.SOURCE_TYPE }}-${{ inputs.WRT_FIREWALL == 'auto' && (inputs.SOURCE_TYPE == 'lean' && 'fw3' || 'fw4') || inputs.WRT_FIREWALL }}-${{ inputs.WRT_FRP_MODE }}-${{ inputs.WRT_USB_MODE == 'nousb' && 'nousb' || 'usb' }}-${{ inputs.WRT_PACKAGE_MANAGER == 'auto' && (inputs.SOURCE_TYPE == 'vwrt' && 'apk' || 'ipk') || inputs.WRT_PACKAGE_MANAGER }}${{ inputs.WRT_OVERLAYS != '' && format('-{0}', inputs.WRT_OVERLAYS) || '' }}
+run-name: ${{ inputs.WRT_DEVICE }}-${{ inputs.SOURCE_TYPE }}-${{ inputs.WRT_FIREWALL == 'auto' && (inputs.SOURCE_TYPE == 'lean' && 'fw3' || 'fw4') || inputs.WRT_FIREWALL }}-${{ inputs.WRT_FRP_MODE }}-${{ inputs.WRT_USB_MODE == 'nousb' && 'nousb' || 'usb' }}-${{ inputs.WRT_PACKAGE_MANAGER == 'auto' && (inputs.SOURCE_TYPE == 'vikingyfy' && 'apk' || 'ipk') || inputs.WRT_PACKAGE_MANAGER }}${{ inputs.WRT_OVERLAYS != '' && format('-{0}', inputs.WRT_OVERLAYS) || '' }}
 
 on:
   workflow_call:
@@ -79,17 +79,17 @@ on:
           - gl-mt6000-wifi
           - gl-mt6000-nowifi
         default: 'gl-mt6000-nowifi'
-      # 源码类型：vwrt = immortalwrt，lean = coolsnowwolf/lede，libwrt = LiBwrt/LibWrt
+      # 源码类型：vikingyfy = immortalwrt，lean = coolsnowwolf/lede，libwrt = LiBwrt/LibWrt
       SOURCE_TYPE:
         description: '源码类型'
         required: false
         type: choice
         options:
-          - vwrt
+          - vikingyfy
           - lean
           - libwrt
         default: 'libwrt'
-      # 防火墙栈：- auto = lean -> fw3，vwrt/libwrt -> fw4，- fw3 / fw4 = 手动指定
+      # 防火墙栈：- auto = lean -> fw3，vikingyfy/libwrt -> fw4，- fw3 / fw4 = 手动指定
       WRT_FIREWALL:
         description: '防火墙栈'
         required: false
@@ -211,18 +211,18 @@ jobs:
           usb_mode="${{ inputs.WRT_USB_MODE }}"
           usb_label='usb'
 
-          # 配置防火墙版本：vwrt → fw4 / apk，libwrt → fw4 / ipk，lean → fw3 / ipk
+          # 配置防火墙版本：vikingyfy → fw4 / apk，libwrt → fw4 / ipk，lean → fw3 / ipk
           if [ "$firewall" = "auto" ]; then
-            if [ "$source_type" = "vwrt" ] || [ "$source_type" = "libwrt" ]; then
+            if [ "$source_type" = "vikingyfy" ] || [ "$source_type" = "libwrt" ]; then
               firewall="fw4"
             else
               firewall="fw3"
             fi
           fi
 
-          # 配置包管理器：vwrt → apk，libwrt → ipk，lean → ipk
+          # 配置包管理器：vikingyfy → apk，libwrt → ipk，lean → ipk
           if [ "$package_manager_input" = "auto" ]; then
-            if [ "$source_type" = "vwrt" ]; then
+            if [ "$source_type" = "vikingyfy" ]; then
               resolved_package_manager="apk"
             else
               resolved_package_manager="ipk"
@@ -251,7 +251,7 @@ jobs:
     with:
       # 参数化配置
       WRT_DEVICE: ${{ inputs.WRT_DEVICE }}
-      # 源码类型：vwrt / lean / libwrt
+      # 源码类型：vikingyfy / lean / libwrt
       SOURCE_TYPE: ${{ inputs.SOURCE_TYPE }}
       # 指定源码HASH信息，默认空
       WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}

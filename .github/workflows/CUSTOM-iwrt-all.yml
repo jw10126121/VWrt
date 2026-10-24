@@ -23,7 +23,7 @@ on:
         required: false
         type: choice
         options:
-          - vwrt
+          - vikingyfy
           - libwrt
         default: 'libwrt'
       WRT_SOURCE_HASH_INFO:
@@ -36,7 +36,7 @@ on:
 permissions: write-all
 
 #CI任务
-# 四个设备统一使用外部选择的 SOURCE_TYPE；libwrt 自动使用 apk，vwrt 沿用源码默认的 apk。
+# 四个设备统一使用外部选择的 SOURCE_TYPE；libwrt 自动使用 apk，vikingyfy 沿用源码默认的 apk。
 jobs:
   # cmiot_ax18_nowifi_fw4:
   #   name: cmiot-ax18-nowifi-fw4-base

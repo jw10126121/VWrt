@@ -64,12 +64,13 @@ run_case() {
     local wrt_device=${5:-}
     local source_type=${6:-lean}
     local package_manager=${7:-auto}
+    local repo_url=${8:-https://github.com/example/openwrt}
 
     OPENWRT_PATH="$root_dir" \
     WRT_DEFAULT_LANIP="192.168.0.1" \
     WRT_HAS_LITE=false \
     WRT_HAS_WIFI="$has_wifi" \
-    WRT_REPO_URL="https://github.com/example/openwrt" \
+    WRT_REPO_URL="$repo_url" \
     WRT_REPO_BRANCH="main" \
     SOURCE_TYPE="$source_type" \
     WRT_PACKAGE_MANAGER="$package_manager" \
@@ -230,7 +231,7 @@ grep -q '^OUTPUT_NAME_PREFIX=lean_mt6000_nowifi_fw4_ipk_frpc_D260514_T003050$' "
 grep -q '支持设备：glinet_gl-mt6000' "$TMPDIR/case7.env"
 grep -q '是否wifi：无WIFI' "$TMPDIR/case7.env"
 
-CASE_DIR8="$TMPDIR/vwrt-apk"
+CASE_DIR8="$TMPDIR/vikingyfy-apk"
 make_openwrt_tree \
     "$CASE_DIR8" \
     "OpenWrt 24.10.5" \
@@ -243,16 +244,88 @@ mv "$CASE_DIR8/include.version.mk" "$CASE_DIR8/version.mk.tmp"
 mkdir -p "$CASE_DIR8/include"
 mv "$CASE_DIR8/version.mk.tmp" "$CASE_DIR8/include/version.mk"
 
-run_case "$CASE_DIR8" "$TMPDIR/case8.env" "true" "cmiot_ax18" "cmiot-ax18-wifi" "vwrt" "apk"
+run_case "$CASE_DIR8" "$TMPDIR/case8.env" "true" "cmiot_ax18" "cmiot-ax18-wifi" "vikingyfy" "apk"
 
-grep -q '^SOURCE_FLAVOR_TAG=vwrt$' "$TMPDIR/case8.env"
+grep -q '^SOURCE_FLAVOR_TAG=vikingyfy$' "$TMPDIR/case8.env"
 grep -q '^PACKAGE_MANAGER_TAG=apk$' "$TMPDIR/case8.env"
-grep -q '^BUILD_VARIANT_TAG=vwrt_fw4_apk_frpc$' "$TMPDIR/case8.env"
-grep -q '^OUTPUT_NAME_PREFIX=vwrt_cmiot_ax18_fw4_apk_frpc_D260514_T003050$' "$TMPDIR/case8.env" || {
-    echo "case8 should emit the vwrt_cmiot_ax18 fw4 apk output prefix" >&2
+grep -q '^BUILD_VARIANT_TAG=vikingyfy_fw4_apk_frpc$' "$TMPDIR/case8.env"
+grep -q '^OUTPUT_NAME_PREFIX=vikingyfy_cmiot_ax18_fw4_apk_frpc_D260514_T003050$' "$TMPDIR/case8.env" || {
+    echo "case8 should emit the vikingyfy_cmiot_ax18 fw4 apk output prefix" >&2
     exit 1
 }
-grep -q '源码风味：vwrt' "$TMPDIR/case8.env"
+grep -q '源码风味：vikingyfy' "$TMPDIR/case8.env"
 grep -q '包管理器：apk' "$TMPDIR/case8.env"
+
+# 非 IPQ 设备在 vikingyfy/libwrt 下会回退到官方 immortalwrt，
+# 源码风味与产物前缀必须以实际仓库为准。
+CASE_DIR9="$TMPDIR/mt6000-immortalwrt"
+make_openwrt_tree \
+    "$CASE_DIR9" \
+    "OpenWrt 24.10.5" \
+    "VERSION_NUMBER:= OpenWrt, 24.10.5" \
+    "src-git luci https://github.com/openwrt/luci.git;openwrt-24.10" \
+    "fw4" \
+    "apk"
+
+mv "$CASE_DIR9/include.version.mk" "$CASE_DIR9/version.mk.tmp"
+mkdir -p "$CASE_DIR9/include"
+mv "$CASE_DIR9/version.mk.tmp" "$CASE_DIR9/include/version.mk"
+
+run_case \
+    "$CASE_DIR9" \
+    "$TMPDIR/case9.env" \
+    "true" \
+    "glinet_gl-mt6000" \
+    "gl-mt6000-wifi" \
+    "libwrt" \
+    "apk" \
+    "https://github.com/immortalwrt/immortalwrt"
+
+grep -q '^SOURCE_FLAVOR_TAG=immortalwrt$' "$TMPDIR/case9.env"
+grep -q '^BUILD_VARIANT_TAG=immortalwrt_fw4_apk_frpc$' "$TMPDIR/case9.env"
+grep -q '^OUTPUT_NAME_PREFIX=immortalwrt_mt6000_fw4_apk_frpc_D260514_T003050$' "$TMPDIR/case9.env" || {
+    echo "case9 should emit the immortalwrt_mt6000 fw4 apk output prefix" >&2
+    exit 1
+}
+grep -q '源码风味：immortalwrt' "$TMPDIR/case9.env"
+
+# 显式指定上游仓库时，风味同样跟随仓库而不是 SOURCE_TYPE。
+run_case \
+    "$CASE_DIR9" \
+    "$TMPDIR/case10.env" \
+    "true" \
+    "glinet_gl-mt6000" \
+    "gl-mt6000-wifi" \
+    "vikingyfy" \
+    "apk" \
+    "https://github.com/VIKINGYFY/immortalwrt"
+
+grep -q '^SOURCE_FLAVOR_TAG=vikingyfy$' "$TMPDIR/case10.env"
+grep -q '源码风味：vikingyfy' "$TMPDIR/case10.env"
+
+# 其余上游仓库同样以 URL 识别风味。
+run_case \
+    "$CASE_DIR9" \
+    "$TMPDIR/case11.env" \
+    "true" \
+    "glinet_gl-mt6000" \
+    "gl-mt6000-wifi" \
+    "libwrt" \
+    "apk" \
+    "https://github.com/coolsnowwolf/lede"
+
+grep -q '^SOURCE_FLAVOR_TAG=lean$' "$TMPDIR/case11.env"
+
+run_case \
+    "$CASE_DIR9" \
+    "$TMPDIR/case12.env" \
+    "true" \
+    "glinet_gl-mt6000" \
+    "gl-mt6000-wifi" \
+    "lean" \
+    "apk" \
+    "https://github.com/LiBwrt/LibWrt"
+
+grep -q '^SOURCE_FLAVOR_TAG=libwrt$' "$TMPDIR/case12.env"
 
 echo "test_ci_collect_metadata_version_priority: ok"

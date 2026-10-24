@@ -20,9 +20,9 @@ assert 'name: CUSTOM-IWRT-ALL' in workflow
 assert 'SOURCE_TYPE:' in workflow
 source_block = workflow.split('      SOURCE_TYPE:', 1)[1].split('      WRT_FIREWALL:', 1)[0]
 assert re.search(r"^        type: choice\s*$", source_block, re.M)
-assert re.search(r"^          - vwrt\s*$", source_block, re.M)
+assert re.search(r"^          - vikingyfy\s*$", source_block, re.M)
 assert re.search(r"^          - libwrt\s*$", source_block, re.M)
-assert re.search(r"^        default: 'vwrt'\s*$", source_block, re.M)
+assert re.search(r"^        default: 'libwrt'\s*$", source_block, re.M)
 
 hash_block = workflow.split('      WRT_SOURCE_HASH_INFO:', 1)[1].split('\n#CI', 1)[0]
 assert re.search(r"^        default: ''\s*$", hash_block, re.M), 'source HASH must follow the selected branch by default'
@@ -53,8 +53,8 @@ cases = [
     ('libwrt', 'jd-ax6600-wifi', 'https://github.com/LiBwrt/LibWrt', '25.12-nss'),
     ('libwrt', 'gl-mt6000-wifi', 'https://github.com/immortalwrt/immortalwrt', 'master'),
     ('libwrt', 'gl-mt6000-nowifi', 'https://github.com/immortalwrt/immortalwrt', 'master'),
-    ('vwrt', 'cmiot-ax18-nowifi', 'https://github.com/VIKINGYFY/immortalwrt', 'main'),
-    ('vwrt', 'gl-mt6000-wifi', 'https://github.com/immortalwrt/immortalwrt', 'master'),
+    ('vikingyfy', 'cmiot-ax18-nowifi', 'https://github.com/VIKINGYFY/immortalwrt', 'main'),
+    ('vikingyfy', 'gl-mt6000-wifi', 'https://github.com/immortalwrt/immortalwrt', 'master'),
     ('lean', 'gl-mt6000-nowifi', 'https://github.com/coolsnowwolf/lede', 'master'),
 ]
 for source, device, repository, branch in cases:

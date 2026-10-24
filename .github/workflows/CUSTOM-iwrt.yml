@@ -35,7 +35,7 @@ jobs:
   #   with:
   #     WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
   #     WRT_DEVICE: cmiot-ax18-nowifi
-  #     SOURCE_TYPE: 'vwrt'
+  #     SOURCE_TYPE: 'vikingyfy'
   #     WRT_FIREWALL: auto
   #     WRT_OVERLAYS: ''
   #     WRT_DIY_SETTING: diy_config.sh
@@ -52,7 +52,7 @@ jobs:
     with:
       WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
       WRT_DEVICE: cmiot-ax18-nowifi
-      SOURCE_TYPE: 'vwrt'
+      SOURCE_TYPE: 'vikingyfy'
       WRT_FIREWALL: auto
       WRT_OVERLAYS: frps
       WRT_DIY_SETTING: diy_config.sh
@@ -69,7 +69,7 @@ jobs:
     with:
       WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
       WRT_DEVICE: gl-mt6000-nowifi
-      SOURCE_TYPE: 'vwrt'
+      SOURCE_TYPE: 'vikingyfy'
       WRT_FIREWALL: auto
       WRT_OVERLAYS: ''
       WRT_DIY_SETTING: diy_config.sh
@@ -86,7 +86,7 @@ jobs:
   #   with:
   #     WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
   #     WRT_DEVICE: gl-mt6000-wifi
-  #     SOURCE_TYPE: 'vwrt'
+  #     SOURCE_TYPE: 'vikingyfy'
   #     WRT_FIREWALL: auto
   #     WRT_OVERLAYS: ''
   #     WRT_DIY_SETTING: diy_config.sh
@@ -103,7 +103,7 @@ jobs:
     with:
       WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
       WRT_DEVICE: jd-ax6600-wifi
-      SOURCE_TYPE: 'vwrt'
+      SOURCE_TYPE: 'vikingyfy'
       WRT_FIREWALL: auto
       WRT_OVERLAYS: ''
       WRT_DIY_SETTING: diy_config.sh

@@ -38,7 +38,7 @@ extract_function_body "apply_iwrt_package_overrides" | grep -q 'UPDATE_PACKAGE "
 extract_function_body "apply_luci_feed_25_12_package_overrides" | grep -q 'is_luci_feed_25_12'
 extract_function_body "apply_luci_feed_25_12_package_overrides" | grep -q 'update_package_list "luci-app-accesscontrol luci-app-filetransfer" "coolsnowwolf/luci" "openwrt-23.05"'
 grep -q 'find "./${list_repo}" -mindepth 1 -maxdepth 2 -type d -iname "${package_name}" -print | head -n 1' "$TARGET_SCRIPT"
-if grep -q '^apply_vwrt_package_overrides() {' "$TARGET_SCRIPT"; then
+if grep -q '^apply_vikingyfy_package_overrides() {' "$TARGET_SCRIPT"; then
 	echo "Packages.sh should use apply_iwrt_package_overrides for non-lean sources" >&2
 	exit 1
 fi

@@ -34,7 +34,7 @@ IWRT_USB_OUT="$TMPDIR/iwrt-usb.txt"
 LEAN_NOUSB_OUT="$TMPDIR/lean-nousb.txt"
 LEAN_USB_OUT="$TMPDIR/lean-usb.txt"
 
-SOURCE_TYPE=vwrt bash "$EXPORT_SCRIPT" \
+SOURCE_TYPE=vikingyfy bash "$EXPORT_SCRIPT" \
     --device cmiot-ax18-wifi \
     --fw fw4 \
     --output "$IWRT_DEFAULT_OUT" >/dev/null
@@ -44,7 +44,7 @@ assert_has_line 'CONFIG_PACKAGE_usb-modeswitch=y' "$IWRT_DEFAULT_OUT"
 assert_lacks_line 'CONFIG_PACKAGE_kmod-usb-xhci=y' "$IWRT_DEFAULT_OUT"
 assert_lacks_line 'CONFIG_PACKAGE_kmod-usb-modeswitch=y' "$IWRT_DEFAULT_OUT"
 
-SOURCE_TYPE=vwrt bash "$EXPORT_SCRIPT" \
+SOURCE_TYPE=vikingyfy bash "$EXPORT_SCRIPT" \
     --device cmiot-ax18-wifi \
     --fw fw4 \
     --overlay nousb \
@@ -69,8 +69,7 @@ for pkg in \
     usbutils \
     libimobiledevice \
     usbmuxd \
-    luci-app-usb-printer \
-    luci-i18n-usb-printer-zh-cn; do
+    luci-app-usb-printer; do
     assert_has_line "CONFIG_PACKAGE_${pkg}=n" "$IWRT_NOUSB_OUT"
 done
 
@@ -78,7 +77,7 @@ assert_lacks_line 'CONFIG_PACKAGE_kmod-usb-core=y' "$IWRT_NOUSB_OUT"
 assert_lacks_line 'CONFIG_PACKAGE_kmod-usb-xhci-hcd=y' "$IWRT_NOUSB_OUT"
 assert_lacks_line 'CONFIG_PACKAGE_usb-modeswitch=y' "$IWRT_NOUSB_OUT"
 
-SOURCE_TYPE=vwrt bash "$EXPORT_SCRIPT" \
+SOURCE_TYPE=vikingyfy bash "$EXPORT_SCRIPT" \
     --device cmiot-ax18-wifi \
     --fw fw4 \
     --overlay usb \
@@ -107,7 +106,7 @@ for pkg in \
 done
 
 assert_has_line 'CONFIG_PACKAGE_luci-app-usb-printer=m' "$IWRT_USB_OUT"
-assert_has_line 'CONFIG_PACKAGE_luci-i18n-usb-printer-zh-cn=m' "$IWRT_USB_OUT"
+assert_lacks_line 'CONFIG_PACKAGE_luci-i18n-usb-printer-zh-cn=m' "$IWRT_USB_OUT"
 
 SOURCE_TYPE=lean bash "$EXPORT_SCRIPT" \
     --device cmiot-ax18-wifi \
@@ -131,8 +130,7 @@ for pkg in \
     kmod-usb-serial-option \
     usb-modeswitch \
     usbutils \
-    luci-app-usb-printer \
-    luci-i18n-usb-printer-zh-cn; do
+    luci-app-usb-printer; do
     assert_has_line "CONFIG_PACKAGE_${pkg}=n" "$LEAN_NOUSB_OUT"
 done
 
@@ -162,6 +160,6 @@ for pkg in \
 done
 
 assert_has_line 'CONFIG_PACKAGE_luci-app-usb-printer=m' "$LEAN_USB_OUT"
-assert_has_line 'CONFIG_PACKAGE_luci-i18n-usb-printer-zh-cn=m' "$LEAN_USB_OUT"
+assert_lacks_line 'CONFIG_PACKAGE_luci-i18n-usb-printer-zh-cn=m' "$LEAN_USB_OUT"
 
 echo "test_usb_overlay_profiles: ok"

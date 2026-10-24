@@ -105,17 +105,17 @@ grep -Fxq 'PKG_BASE:=packages-25.12' "$WORKDIR_COMPAT/feeds/packages/lang/node/M
     exit 1
 }
 
-WORKDIR_VWRT_FALLBACK="$TMPDIR/openwrt-vwrt-fallback"
-make_openwrt_tree_without_version "$WORKDIR_VWRT_FALLBACK"
+WORKDIR_VIKINGYFY_FALLBACK="$TMPDIR/openwrt-vikingyfy-fallback"
+make_openwrt_tree_without_version "$WORKDIR_VIKINGYFY_FALLBACK"
 
-SOURCE_TYPE=vwrt \
+SOURCE_TYPE=vikingyfy \
 LANG_NODE_PREBUILT_REPO="$REPO_DIR" \
-bash "$TARGET_SCRIPT" "$WORKDIR_VWRT_FALLBACK"
+bash "$TARGET_SCRIPT" "$WORKDIR_VIKINGYFY_FALLBACK"
 
-grep -Fxq 'packages-25.12' "$WORKDIR_VWRT_FALLBACK/feeds/packages/lang/node/SOURCE.txt"
-grep -Fxq 'PKG_BASE:=packages-25.12' "$WORKDIR_VWRT_FALLBACK/feeds/packages/lang/node/Makefile"
-[ ! -d "$WORKDIR_VWRT_FALLBACK/feeds/packages/lang/node.bak" ] || {
-    echo "Backup directory should be removed after vwrt fallback replacement" >&2
+grep -Fxq 'packages-25.12' "$WORKDIR_VIKINGYFY_FALLBACK/feeds/packages/lang/node/SOURCE.txt"
+grep -Fxq 'PKG_BASE:=packages-25.12' "$WORKDIR_VIKINGYFY_FALLBACK/feeds/packages/lang/node/Makefile"
+[ ! -d "$WORKDIR_VIKINGYFY_FALLBACK/feeds/packages/lang/node.bak" ] || {
+    echo "Backup directory should be removed after vikingyfy fallback replacement" >&2
     exit 1
 }
 

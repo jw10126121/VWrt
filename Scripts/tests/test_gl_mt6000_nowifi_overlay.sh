@@ -28,13 +28,13 @@ SOURCE_TYPE=lean bash "$EXPORT_SCRIPT" \
 	--fw "fw3" \
 	--output "$FW3_NOWIFI_OUT" >/dev/null
 
-SOURCE_TYPE=vwrt bash "$EXPORT_SCRIPT" \
+SOURCE_TYPE=vikingyfy bash "$EXPORT_SCRIPT" \
 	--config-dir "$SCRIPT_DIR/../Config" \
 	--device "gl-mt6000-wifi" \
 	--fw "fw4" \
 	--output "$FW4_WIFI_OUT" >/dev/null
 
-SOURCE_TYPE=vwrt bash "$EXPORT_SCRIPT" \
+SOURCE_TYPE=vikingyfy bash "$EXPORT_SCRIPT" \
 	--config-dir "$SCRIPT_DIR/../Config" \
 	--device "gl-mt6000-nowifi" \
 	--fw "fw4" \
@@ -48,8 +48,10 @@ grep -n '^CONFIG_PACKAGE_luci-app-wifischedule=' "$FW3_NOWIFI_OUT" | tail -n 1 |
 grep -n '^CONFIG_PACKAGE_luci-app-wifischedule=' "$FW4_WIFI_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_luci-app-wifischedule=y'
 grep -n '^CONFIG_PACKAGE_luci-app-wifischedule=' "$FW4_NOWIFI_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_luci-app-wifischedule=n'
 
-grep -n '^CONFIG_PACKAGE_luci-i18n-wifischedule-zh-cn=' "$FW3_NOWIFI_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_luci-i18n-wifischedule-zh-cn=n'
-grep -n '^CONFIG_PACKAGE_luci-i18n-wifischedule-zh-cn=' "$FW4_NOWIFI_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_luci-i18n-wifischedule-zh-cn=n'
+if grep -q 'luci-i18n' "$FW3_NOWIFI_OUT" "$FW4_NOWIFI_OUT"; then
+	echo "luci-i18n language packs should not be exported" >&2
+	exit 1
+fi
 grep -n '^CONFIG_PACKAGE_luci-app-guest-wifi=' "$FW3_NOWIFI_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_luci-app-guest-wifi=n'
 grep -n '^CONFIG_PACKAGE_wpad-openssl=' "$FW4_NOWIFI_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_wpad-openssl=n'
 grep -n '^CONFIG_PACKAGE_hostapd-common=' "$FW4_NOWIFI_OUT" | tail -n 1 | grep -q 'CONFIG_PACKAGE_hostapd-common=n'

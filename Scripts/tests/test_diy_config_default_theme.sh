@@ -97,7 +97,7 @@ EOF
 }
 
 run_case lean_auto lean auto argon
-run_case vwrt_auto vwrt auto aurora
+run_case vikingyfy_auto vikingyfy auto aurora
 run_case libwrt_auto libwrt auto aurora
 run_case explicit_theme lean noobwrt noobwrt
 

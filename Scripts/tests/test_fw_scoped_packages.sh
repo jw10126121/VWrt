@@ -47,8 +47,11 @@ bash "$EXPORT_SCRIPT" \
 	--output "$FW4_OUT" >/dev/null
 
 assert_last_config_value "$FW3_OUT" "CONFIG_PACKAGE_luci-app-turboacc" "y"
-assert_last_config_value "$FW3_OUT" "CONFIG_PACKAGE_luci-i18n-turboacc-zh-cn" "y"
 assert_last_config_value "$FW4_OUT" "CONFIG_PACKAGE_luci-app-turboacc" "n"
-assert_last_config_value "$FW4_OUT" "CONFIG_PACKAGE_luci-i18n-turboacc-zh-cn" "n"
+
+if grep -q 'luci-i18n' "$FW3_OUT" "$FW4_OUT"; then
+	echo "luci-i18n language packs should not be exported" >&2
+	exit 1
+fi
 
 echo "test_fw_scoped_packages: ok"

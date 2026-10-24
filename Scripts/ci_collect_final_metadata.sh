@@ -54,6 +54,48 @@ choose_preferred_version() {
     printf '%s\n' "${primary:-${secondary}}"
 }
 
+# 源码风味以实际克隆的上游仓库为准，而不是只看 SOURCE_TYPE。
+# 1. VIKINGYFY/immortalwrt 的风味标记为 vikingyfy（SOURCE_TYPE=vikingyfy 仍作为内部入口值）。
+# 2. 非 IPQ（如 GL-MT6000）在 vikingyfy/libwrt 下回退到官方 immortalwrt 时，
+#    元信息、产物名和发布名都会显示 immortalwrt，避免与实际源码不符。
+normalize_source_flavor_label() {
+    local flavor=$1
+
+    case "${flavor}" in
+        vikingyfy|iwrt)
+            printf '%s\n' 'vikingyfy'
+            ;;
+        *)
+            printf '%s\n' "${flavor:-lean}"
+            ;;
+    esac
+}
+
+resolve_source_flavor() {
+    local repo_url=$1
+    local fallback=$2
+    local repo_url_lower
+
+    repo_url_lower=$(printf '%s' "${repo_url}" | tr '[:upper:]' '[:lower:]')
+    case "${repo_url_lower}" in
+        *coolsnowwolf/lede*)
+            printf '%s\n' 'lean'
+            ;;
+        *vikingyfy/immortalwrt*)
+            printf '%s\n' 'vikingyfy'
+            ;;
+        *libwrt/libwrt*)
+            printf '%s\n' 'libwrt'
+            ;;
+        *immortalwrt/immortalwrt*)
+            printf '%s\n' 'immortalwrt'
+            ;;
+        *)
+            normalize_source_flavor_label "${fallback:-lean}"
+            ;;
+    esac
+}
+
 map_device_name_alias() {
     local raw_name=$1
 
@@ -224,7 +266,7 @@ wrt_wifi_password="${WRT_WIFI_PASSWORD:-88886666}"
 wrt_repo_url="${WRT_REPO_URL:?WRT_REPO_URL is required}"
 wrt_repo_branch="${WRT_REPO_BRANCH:?WRT_REPO_BRANCH is required}"
 repo_git_hash="${REPO_GIT_HASH:-}"
-source_flavor="${SOURCE_TYPE:-lean}"
+source_flavor="$(resolve_source_flavor "${wrt_repo_url}" "${SOURCE_TYPE:-lean}")"
 device_target="${DEVICE_TARGET:-}"
 device_subtarget="${DEVICE_SUBTARGET:-}"
 device_arch="$(sed -n 's/^CONFIG_TARGET_ARCH_PACKAGES="\([^"]*\)"/\1/p' "${openwrt_path}/.config" | head -n1 || true)"

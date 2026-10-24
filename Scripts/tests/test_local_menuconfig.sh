@@ -36,7 +36,7 @@ grep -Fq '. "$SOURCE_TYPE_LIB"' "$TARGET_SCRIPT"
 grep -Fq 'SOURCE_TYPE=$(resolve_source_type "${SOURCE_TYPE:-auto}" "$OPENWRT_PATH")' "$TARGET_SCRIPT"
 grep -Fq 'SOURCE_CONFIG_FAMILY=$(source_config_family "$SOURCE_TYPE")' "$TARGET_SCRIPT"
 grep -Fq 'package_manager="$WRT_PACKAGE_MANAGER"' "$TARGET_SCRIPT"
-if grep -Fq '支持 lean、iwrt、vwrt、libwrt' "$TARGET_SCRIPT"; then
+if grep -Fq '支持 lean、iwrt、vikingyfy、libwrt' "$TARGET_SCRIPT"; then
 	echo "local_menuconfig.sh should not expose iwrt as a SOURCE_TYPE option" >&2
 	exit 1
 fi

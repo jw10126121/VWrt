@@ -453,7 +453,7 @@ clear_passwords() {
 # 1. set-wireless.sh（旧格式）
 # 2. mac80211.uc（新格式）
 # 参数：WRT_SSID（WiFi名称）、WRT_WORD（WiFi密码，为空或none时保持开放WiFi）
-configure_wifi_vwrt() {
+configure_wifi_vikingyfy() {
     local wifi_sh wifi_uc
 
     wifi_sh=$(find ./target/linux/{mediatek/filogic,qualcommax}/base-files/etc/uci-defaults/ -type f -name "*set-wireless.sh" 2>/dev/null | head -1)
@@ -640,7 +640,7 @@ main() {
 
     # iwrt 配置族源码专用：配置无线参数
     if [ "${SOURCE_CONFIG_FAMILY}" = "iwrt" ]; then
-        configure_wifi_vwrt
+        configure_wifi_vikingyfy
     fi
 
     write_build_target_marker
