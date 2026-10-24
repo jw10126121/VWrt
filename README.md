@@ -1,6 +1,6 @@
 # VWrt — OpenWrt 云编译仓库
 
-基于 [coolsnowwolf/lede](https://github.com/coolsnowwolf/lede)（Lean源码）、[VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt)（VIKINGYFY源码）和 [LiBwrt/LibWrt](https://github.com/LiBwrt/LibWrt)（LibWrt源码）的 OpenWrt 云编译仓库，通过 GitHub Actions 自动构建多设备、多防火墙栈的固件。
+基于 [coolsnowwolf/lede](https://github.com/coolsnowwolf/lede)（Lean 源码）、[VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt)（VIKINGYFY 源码）、[LiBwrt/LibWrt](https://github.com/LiBwrt/LibWrt)（LibWrt 源码）和 [immortalwrt/immortalwrt](https://github.com/immortalwrt/immortalwrt)（官方 ImmortalWrt）的 OpenWrt 云编译仓库，通过 GitHub Actions 自动构建多设备、多防火墙栈的固件。
 
 ## 目录
 
@@ -23,17 +23,18 @@
 
 ## 固件风味
 
-| 风味 | 源码 | 分支 | 防火墙 | 说明 |
+| 风味（产物标记） | 源码 | 分支 | 防火墙 | 说明 |
 |------|------|------|--------|------|
-| **LWRT** | [coolsnowwolf/lede](https://github.com/coolsnowwolf/lede) | `master` | fw3 | Lean源码，兼容性好 |
-| **IWRT** | [VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt) | `main` / `owrt` | fw4 (nftables) | VIKINGYFY源码，功能更新 |
-| **LIBWRT** | [LiBwrt/LibWrt](https://github.com/LiBwrt/LibWrt) | `25.12-nss` | fw4 (nftables) | LibWrt源码，功能丰富 |
+| **`lean`**（LWRT） | [coolsnowwolf/lede](https://github.com/coolsnowwolf/lede) | `master` | fw3 | Lean 源码，兼容性好 |
+| **`vwrt`**（IWRT） | [VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt) | `main` | fw4 (nftables) | VIKINGYFY 源码，用于高通设备 |
+| **`libwrt`**（LIBWRT） | [LiBwrt/LibWrt](https://github.com/LiBwrt/LibWrt) | `25.12-nss` | fw4 (nftables) | LibWrt 源码，用于高通设备 |
+| **`immortalwrt`** | [immortalwrt/immortalwrt](https://github.com/immortalwrt/immortalwrt) | `master` | fw4 (nftables) | 官方 ImmortalWrt，非 IPQ 设备自动使用 |
 
-**IWRT 分支说明：** GL-MT6000-WIFI 使用 `owrt` 分支，其余设备使用 `main` 分支。
+**源码选择机制：** `SOURCE_TYPE` 选择构建入口，未显式传入 `WRT_REPO_URL` 时实际源码仓库按设备架构决定。`lean` 始终使用 coolsnowwolf/lede；`vwrt` 和 `libwrt` 在高通（IPQ）设备上分别使用 VIKINGYFY 的 immortalwrt 和 `LiBwrt/LibWrt`，在 GL-MT6000 等非 IPQ 设备上统一回退到官方 `immortalwrt/immortalwrt` 的 `master` 分支。显式传入 `WRT_REPO_URL` 时以传入仓库为准。
 
-**源码选择机制：** `vwrt` 在高通设备上使用 VIKINGYFY 的 immortalwrt；`libwrt` 在高通设备上使用 `LiBwrt/LibWrt` 的 `25.12-nss` 分支。两者在 MT6000 等非高通设备上均使用官方 `immortalwrt/immortalwrt` 的 `master` 分支。
+**风味命名：** 元信息中的“源码风味”、产物文件名前缀和发布名都以实际克隆的上游仓库为准。因此非 IPQ 设备即使在入口选择 `vwrt` 或 `libwrt`，构建结果也会标记为 `immortalwrt`。
 
-三种风味共用同一套设备配置和构建脚本，通过 `SOURCE_TYPE`（`lean` / `vwrt` / `libwrt`）和 `WRT_FIREWALL` 参数区分。`vwrt` 与 `libwrt` 都属于 iwrt 配置族，默认使用 fw4；`lean` 默认使用 fw3。
+三种入口共用同一套设备配置和构建脚本，通过 `SOURCE_TYPE`（`lean` / `vwrt` / `libwrt`）和 `WRT_FIREWALL` 参数区分。`vwrt` 与 `libwrt` 都属于 iwrt 配置族，默认使用 fw4；`lean` 默认使用 fw3。
 
 ## 支持设备
 
@@ -44,6 +45,7 @@
 | `JD-AX1800PRO-NOWIFI` | qualcommax-ipq60xx / aarch64 | 京东云亚瑟，无 Wi-Fi |
 | `JD-AX6600-WIFI` | qualcommax-ipq60xx / aarch64 | 京东云雅典娜，带 Wi-Fi |
 | `GL-MT6000-WIFI` | mediatek-filogic / aarch64 | GL.iNet MT6000，带 Wi-Fi |
+| `GL-MT6000-NOWIFI` | mediatek-filogic / aarch64 | GL.iNet MT6000，无 Wi-Fi |
 
 如需调整具体机型勾选项，修改对应配置文件中的 `CONFIG_TARGET_DEVICE_*`。
 
@@ -57,12 +59,15 @@
 
 | 工作流 | 触发方式 | 说明 |
 |--------|----------|------|
-| **CUSTOM-LWRT** | 定时（每月 2、16 日 03:00 UTC）/ 手动 | 批量构建 fw3 风味的全部设备 |
-| **CUSTOM-IWRT** | 定时（每月 1、15 日 03:00 UTC）/ 手动 | 批量构建 fw4 风味的全部设备 |
-| **CUSTOM-IWRT-ALL** | 手动 | 四设备批量构建，可选择 `vwrt` / `libwrt`；MT6000 均使用官方 ImmortalWrt |
-| **DEFAULT** | 手动触发 | 单设备自定义构建，灵活选择参数 |
+| **CUSTOM-LWRT** | 手动 | 批量构建 fw3 风味的常用设备组合 |
+| **CUSTOM-IWRT** | 手动 | 批量构建 fw4 风味的常用设备组合 |
+| **CUSTOM-IWRT-ALL** | 手动 | 四任务批量构建，可选择 `vwrt` / `libwrt`；MT6000 均使用官方 ImmortalWrt |
+| **DEFAULT** | 手动 | 单设备自定义构建，灵活选择参数 |
+| **ForCache** | 手动 | 编译常用组合以预热工具链和 ccache 缓存 |
 
-`CUSTOM-IWRT-ALL` 包含 AX18 无 Wi-Fi + frps、MT6000 有/无 Wi-Fi、AX6600 有 Wi-Fi，四个任务统一使用外部选择的 `SOURCE_TYPE`。该选项控制高通设备使用 VIKINGYFY 的 immortalwrt（`vwrt`）或 LibWrt `25.12-nss`（`libwrt`）；MT6000 的两种配置始终使用官方 ImmortalWrt `master`。批量入口保持 fw4、APK。源码 HASH 留空时跟随各设备实际源码分支的最新提交；批量任务涉及不同仓库，填写 HASH 时须确保提交适用于全部设备。设备配置、插件脚本、LAN IP 和发布选项保持一致。
+> 各工作流的 `schedule` 定时触发当前均已注释，需在 Actions 页面手动运行。
+
+`CUSTOM-IWRT-ALL` 包含 AX18 无 Wi-Fi + frps、MT6000 有/无 Wi-Fi、AX6600 有 Wi-Fi，四个任务统一使用外部选择的 `SOURCE_TYPE`。该选项控制高通设备使用 VIKINGYFY 的 immortalwrt（`vwrt`）或 LibWrt `25.12-nss`（`libwrt`）；MT6000 的两种配置始终使用官方 ImmortalWrt `master`，产物风味标记为 `immortalwrt`。包管理器由 `libwrt` 自动选择 APK，`vwrt` 沿用源码默认值。源码 HASH 留空时跟随各设备实际源码分支的最新提交；批量任务涉及不同仓库，填写 HASH 时须确保提交适用于全部设备。设备配置、插件脚本、LAN IP 和发布选项保持一致。
 
 ### DEFAULT 工作流参数
 
@@ -71,39 +76,58 @@
 | 参数 | 说明 | 示例 |
 |------|------|------|
 | `WRT_DEVICE` | 设备型号 | `CMIOT-AX18-NOWIFI` |
-| `SOURCE_TYPE` | 源码类型 | `lean` / `vwrt` / `libwrt` |
-| `WRT_FIREWALL` | 防火墙栈 | `fw3` / `fw4` |
+| `SOURCE_TYPE` | 构建入口 / 源码类型 | `lean` / `vwrt` / `libwrt` |
+| `WRT_FIREWALL` | 防火墙栈 | `auto` / `fw3` / `fw4` |
 | `WRT_FRP_MODE` | FRP 模式 | `frpc` / `frps` / `frp` / `none` |
 | `WRT_USB_MODE` | USB 模式 | `default` / `usb` / `nousb` |
-| `WRT_PACKAGE_MANAGER` | 包管理器 overlay | `auto` / `apk` / `ipk` |
-| `WRT_OVERLAYS` | 高级兜底差异层，逗号分隔 | `frps,apk` |
+| `WRT_PACKAGE_MANAGER` | 包管理器 | `auto` / `apk` / `ipk` |
+| `WRT_OVERLAYS` | 高级兜底差异层，逗号分隔 | `frps,nousb` |
+| `WRT_EXTRA_CONFIGS` | 临时附加配置项 | `luci-app-mmw,CONFIG_PACKAGE_xxx=y` |
 | `WRT_LUCI_BRANCH` | LuCI feed 分支 | `openwrt-23.05` |
 | `WRT_DIYPackages` | 包脚本选择 | `auto`（默认）/ `Packages.sh` |
+| `WRT_DEFAULT_LANIP` | 默认 LAN IP | `192.168.0.1` |
+| `WRT_RELEASE_FIRMWARE` | 是否发布 Release | `true` / `false` |
 | `WRT_SOURCE_HASH_INFO` | 固定 git 提交 | commit hash |
 
 **参数说明：**
 
+- `SOURCE_TYPE` 只决定构建入口；非 IPQ 设备会回退到官方 ImmortalWrt，风味按实际源码显示为 `immortalwrt`
 - `WRT_LUCI_BRANCH` 留空时使用源码默认 LuCI feed
 - `WRT_DIYPackages` 默认 `auto`：优先使用 `Scripts/Packages-<设备名>.sh` 或短名脚本；填 `Packages.sh` 可强制使用通用包脚本
 - `WRT_FRP_MODE` 默认 `frpc`；`frp` 表示同时启用 `frpc` 与 `frps`，日常切换不再需要手输 overlay
 - `WRT_USB_MODE` 默认 `default`，表示保持设备主配置中的 USB 能力；选 `usb/nousb` 时才额外叠加 overlay
-- `WRT_PACKAGE_MANAGER` 默认 `auto`，表示沿用源码默认包管理器；选 `apk/ipk` 时会直接传给构建主流程，不再重复追加到 `WRT_OVERLAYS`
-- `WRT_OVERLAYS` 仍保留，作为自定义 overlay 的高级兜底输入；它会追加在结构化选项之后
+- `WRT_PACKAGE_MANAGER` 默认 `auto`，表示沿用源码默认包管理器；选 `apk/ipk` 时会直接传给构建主流程
+- `WRT_OVERLAYS` 保留为自定义 overlay 的高级兜底输入，会追加在结构化选项之后
+- `WRT_EXTRA_CONFIGS` 用于临时追加 Kconfig 配置，支持 `luci-app-mmw`、`luci-app-mmw=y`、`CONFIG_PACKAGE_xxx=y` 等写法，可用空格、逗号或换行分隔
 - overlay 文件可用 `# OVERLAY_GROUP=<组名>` 声明互斥组；同组内按 `WRT_OVERLAYS` 顺序以最后一个为准
 - `WRT_SOURCE_HASH_INFO` 留空时使用所选源码分支的最新提交；填写时会在克隆后检出该提交。批量构建涉及不同源码仓库，固定 HASH 时需确保该提交适用于各设备。
 
-**构建缓存：** 工具链缓存按构建环境、仓库/分支、完整源码提交、最终 `.config` 和构建脚本指纹严格匹配，仅在固件编译成功后保存。恢复后仍由 OpenWrt 检查依赖，不保证跳过工具链重建。ccache 按构建环境、仓库/分支及目标平台隔离，在该范围内通过 ccache 自身校验跨提交复用，每次运行保存新键。缓存不包含源码和 feeds；v2 缓存键会自动隔离旧记录，首次构建工具链可能耗时较长。
+**构建缓存：** 工具链缓存按构建环境、仓库/分支、完整源码提交、最终 `.config` 和构建脚本指纹严格匹配，仅在固件编译成功后保存。恢复后仍由 OpenWrt 检查依赖，不保证跳过工具链重建。ccache 按构建环境、仓库/分支及目标平台隔离，在该范围内通过 ccache 自身校验跨提交复用，每次运行保存新键。缓存不包含源码和 feeds；缓存键带版本前缀（当前工具链 `toolchain-v3`、ccache `ccache-v2`），会自动隔离旧记录，首次构建工具链可能耗时较长。
 
 ## 配置组织
 
-配置按以下顺序叠加（后面的覆盖前面的同名项）：
+配置按以下顺序合并（后加载的内容覆盖前面的同名项）：
 
 ```
-Config/GENERAL-<设备名>.txt    # 设备专用通用配置（若不存在则用 GENERAL.txt）
-Config/<设备名>-<FW>.txt       # 设备 + 防火墙栈专属配置
-Config/device-overlays/<设备名>-<FW>.txt  # 设备差异层（若存在）
-Config/overlays/<overlay>.txt  # 自定义差异层（按 WRT_OVERLAYS 顺序叠加）
+通用配置（按优先级取第一个匹配项）
+  Config/general-<设备名>.txt      # 设备专用，如 general-cmiot-ax18-wifi.txt
+  Config/general-<设备简写>.txt    # 去掉 -wifi/-nowifi 后的简写
+  Config/general-<源码类型>.txt    # 如 general-lean.txt、general-vwrt.txt
+  Config/general-iwrt.txt          # iwrt 配置族（fw4 或 vwrt/libwrt）
+  Config/general.txt               # 通用基线
+
+设备主配置
+  Config/<设备名>-fw4-iwrt.txt     # iwrt 配置族 / fw4 优先
+  Config/<设备名>-fw3.txt          # fw3
+  Config/<设备名>.txt              # 兼容旧文件名
+  # nowifi 设备找不到自身配置时，回退到对应的 <短名>-wifi 配置
+
+差异层
+  Config/device-overlays/<设备名>-<FW>.txt  # 可选的设备差异层（当前仓库未使用）
+  Config/overlays/<overlay>.txt             # 功能差异层，按 WRT_OVERLAYS 顺序叠加
 ```
+
+通用配置只会选中一个文件，不会同时叠加设备专用配置和基线配置。所有合并完成后会按配置键去重，保留最后一次出现的值。
 
 ### 主维护配置文件
 
@@ -124,14 +148,15 @@ Overlay 用于在不修改设备主配置的前提下叠加功能差异。
 
 | Overlay | 说明 |
 |---------|------|
-| `apk` | APK 包管理器 |
-| `ipk` | IPK 包管理器（默认） |
 | `frpc` | FRP 内网穿透客户端 |
 | `frps` | FRP 内网穿透服务端 |
 | `frp` | 同时启用 FRP 客户端与服务端 |
 | `usb` | USB 支持 |
 | `nousb` | 移除 USB 支持 |
 | `nowifi-ipq60xx` | IPQ60XX 设备移除 Wi-Fi |
+| `nowifi-filogic` | Filogic（如 GL-MT6000）设备移除 Wi-Fi |
+
+包管理器不是 overlay，请使用 `WRT_PACKAGE_MANAGER`（`auto` / `apk` / `ipk`）选择。`*-nowifi` 设备会根据平台自动追加对应的 `nowifi-*` overlay，无需手动填写。
 
 ### 自定义 Overlay
 
@@ -144,7 +169,8 @@ Overlay 用于在不修改设备主配置的前提下叠加功能差异。
 
 | 项目 | 默认值 |
 |------|--------|
-| 主题 | Argon |
+| 主题 | Fluent（`WRT_THEME_NAME=auto`） |
+| 主机名 | `Linjw` |
 | LAN IP | `192.168.0.1` |
 | 用户名 | `root` |
 | 密码 | 空密码 |
@@ -152,7 +178,7 @@ Overlay 用于在不修改设备主配置的前提下叠加功能差异。
 ## 下载固件
 
 - **发布页**：[VWrt Releases](https://github.com/jw10126121/VWrt/releases)
-- **上游源码**：[coolsnowwolf/lede](https://github.com/coolsnowwolf/lede)（Lean）| [VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt)（VIKINGYFY）| [LiBwrt/LibWrt](https://github.com/LiBwrt/LibWrt)（LibWrt）
+- **上游源码**：[coolsnowwolf/lede](https://github.com/coolsnowwolf/lede)（Lean）| [VIKINGYFY/immortalwrt](https://github.com/VIKINGYFY/immortalwrt)（VIKINGYFY）| [LiBwrt/LibWrt](https://github.com/LiBwrt/LibWrt)（LibWrt）| [immortalwrt/immortalwrt](https://github.com/immortalwrt/immortalwrt)（官方 ImmortalWrt）
 
 ## 刷机说明
 
