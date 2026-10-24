@@ -14,7 +14,7 @@ trap cleanup EXIT
 META_OUT="$TMPDIR/context.env"
 CONFIG_OUT="$TMPDIR/out.txt"
 
-SOURCE_TYPE=vwrt bash "$EXPORT_SCRIPT" \
+SOURCE_TYPE=vikingyfy bash "$EXPORT_SCRIPT" \
 	--config-dir "$SCRIPT_DIR/../Config" \
 	--device "jd-ax1800pro-nowifi" \
 	--fw "fw4" \
@@ -29,7 +29,7 @@ grep -qx 'RESOLVED_AUTO_OVERLAYS=nowifi-ipq60xx' "$META_OUT"
 grep -qx 'RESOLVED_FINAL_OVERLAYS=nowifi-ipq60xx' "$META_OUT"
 grep -qx 'RESOLVED_FINAL_OVERLAY_FILES=Config/overlays/nowifi-ipq60xx.txt' "$META_OUT"
 
-SOURCE_TYPE=vwrt bash "$EXPORT_SCRIPT" \
+SOURCE_TYPE=vikingyfy bash "$EXPORT_SCRIPT" \
 	--config-dir "$SCRIPT_DIR/../Config" \
 	--device "jd-ax1800pro-nowifi" \
 	--fw "fw4" \

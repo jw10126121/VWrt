@@ -36,7 +36,7 @@ show_help() {
   WRT_DIY_FEEDS          自定义 feeds 脚本，默认 diy_feeds.sh
   WRT_DEFAULT_LANIP      默认 LAN IP，默认 192.168.0.1
   WRT_SOURCE_HASH_INFO   可选源码 commit hash
-  SOURCE_TYPE            源码类型，默认 auto；支持 lean、vwrt、libwrt
+  SOURCE_TYPE            源码类型，默认 auto；支持 lean、vikingyfy、libwrt
 
 本地辅助参数：
   WRT_THEME_NAME         默认 auto（lean 使用 argon，其它源码使用 aurora）
@@ -214,7 +214,7 @@ WRT_OVERLAYS=$(merge_overlay_csv_lists "$CONFIG_ROOT" "$auto_overlays" "$combine
 
 package_manager="$WRT_PACKAGE_MANAGER"
 if [ "$package_manager" = "auto" ]; then
-	if [ "$SOURCE_TYPE" = "vwrt" ]; then
+	if [ "$SOURCE_TYPE" = "vikingyfy" ]; then
 		package_manager=apk
 	else
 		package_manager=ipk

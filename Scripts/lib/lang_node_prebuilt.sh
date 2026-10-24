@@ -65,7 +65,7 @@ default_openwrt_minor_fallback() {
     fi
 
     case "${source_type}" in
-        vwrt|iwrt|immortalwrt|vikingyfy)
+        vikingyfy|iwrt|immortalwrt)
             printf '%s\n' '25.12'
             return 0
             ;;

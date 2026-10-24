@@ -38,7 +38,7 @@ extract_function() {
 }
 
 FUNCTIONS_FILE="$TMPDIR/functions.sh"
-extract_function "configure_wifi_vwrt" > "$FUNCTIONS_FILE"
+extract_function "configure_wifi_vikingyfy" > "$FUNCTIONS_FILE"
 
 CASE_DIR="$TMPDIR/openwrt"
 WIFI_UC="$CASE_DIR/package/network/config/wifi-scripts/files/lib/wifi/mac80211.uc"
@@ -59,7 +59,7 @@ EOF
 	PATH="$TEST_BIN:$PATH"
 	# shellcheck disable=SC1090
 	. "$FUNCTIONS_FILE"
-	configure_wifi_vwrt >/dev/null
+	configure_wifi_vikingyfy >/dev/null
 )
 
 grep -q "^.*ssid='OpenAP'$" "$WIFI_UC"

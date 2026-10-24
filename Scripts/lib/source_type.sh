@@ -11,8 +11,8 @@ normalize_source_type() {
 		lean|lede|lwrt)
 			printf '%s\n' 'lean'
 			;;
-		iwrt|vwrt|immortalwrt|vikingyfy)
-			printf '%s\n' 'vwrt'
+		iwrt|immortalwrt|vikingyfy)
+			printf '%s\n' 'vikingyfy'
 			;;
 		libwrt)
 			printf '%s\n' 'libwrt'
@@ -21,7 +21,8 @@ normalize_source_type() {
 			printf '%s\n' 'auto'
 			;;
 		*)
-			printf '%s\n' "$source_type"
+			printf 'Unsupported SOURCE_TYPE: %s\n' "$source_type" >&2
+			return 1
 			;;
 	esac
 }
@@ -41,7 +42,7 @@ source_config_family() {
 	esac
 }
 
-# 在未显式指定时，根据源码树特征判断当前是 lean 还是 vwrt。
+# 在未显式指定时，根据源码树特征判断当前是 lean 还是 vikingyfy。
 detect_source_type_from_tree() {
 	local source_root=${1:-.}
 
@@ -49,7 +50,7 @@ detect_source_type_from_tree() {
 		[ -f "$source_root/package/lean/default-settings/Makefile" ]; then
 		printf '%s\n' 'lean'
 	else
-		printf '%s\n' 'vwrt'
+		printf '%s\n' 'vikingyfy'
 	fi
 }
 

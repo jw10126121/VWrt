@@ -53,7 +53,7 @@ resolve_device_config() {
 	device_name_lower=$(echo "$device_name" | tr '[:upper:]' '[:lower:]')
 
 	# 1. 源码类型专用配置
-	#    iwrt/vwrt/libwrt → DEVICE-FW4-iwrt.txt（iwrt 配置族默认 fw4）
+	#    iwrt/vikingyfy/libwrt → DEVICE-FW4-iwrt.txt（iwrt 配置族默认 fw4）
 	#    lean → DEVICE-FW3.txt（lean 默认 fw3）
 	if [ "$source_family" = "iwrt" ] || [ "$fw_lower" = "fw4" ]; then
 		# iwrt 配置族优先查找 fw4-iwrt 配置，如果不存在则查找 fw3 配置
@@ -156,7 +156,7 @@ resolve_general_configs() {
 	fi
 
 	# 2. 源码类型专用配置（独立使用，不加载通用基线）
-	# iwrt/vwrt/libwrt 继承 iwrt 的配置
+	# iwrt/vikingyfy/libwrt 继承 iwrt 的配置
 	if [ -f "$config_root/$source_type_file" ]; then
 		echo "【Lin】加载通用配置：${source_type_file}（源码类型 ${source_type}）" >&2
 		printf '%s\n' "$source_type_file"
