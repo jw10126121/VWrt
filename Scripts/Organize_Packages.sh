@@ -171,6 +171,7 @@ sqmcontroller|luci-app-sqm-controller_ luci-i18n-sqm-controller-zh-cn_ python3_ 
 nikki|luci-app-nikki_ nikki_
 subconverter|luci-app-subconverter_ luci-i18n-subconverter-zh-cn_ subconverter_
 fluent|luci-theme-fluent_ luci-i18n-fluent-zh-cn_
+miaomiaowu|luci-app-miaomiaowu_ miaomiaowu_
 aurora|luci-theme-aurora_ luci-app-aurora-config_ luci-i18n-aurora-config-zh-cn_
 EOF
 )
