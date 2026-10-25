@@ -25,12 +25,12 @@ class CacheKeysTest(unittest.TestCase):
             "RUNNER_ARCH": "X64",
             "ImageOS": "ubuntu24",
             "ImageVersion": "20261001.1.0",
+            "WRT_CONFIG_LABEL": "gl-mt6000-fw4",
             "WRT_REPO_URL": "https://github.com/VIKINGYFY/immortalwrt",
             "WRT_REPO_BRANCH": "main",
             "REPO_GIT_HASH": "a" * 40,
             "DEVICE_TARGET": "qualcommax",
             "DEVICE_SUBTARGET": "ipq60xx",
-            "CACHE_SCRIPTS_HASH": "b" * 64,
         }
 
     def keys(self, **changes):
@@ -43,21 +43,25 @@ class CacheKeysTest(unittest.TestCase):
     def test_keys_are_deterministic_and_versioned(self):
         first = self.keys()
         self.assertEqual(first, self.keys())
-        self.assertTrue(first["TOOLCHAIN_CACHE_KEY"].startswith("toolchain-v3-"))
-        self.assertTrue(first["CCACHE_CACHE_PREFIX"].startswith("ccache-v2-"))
+        self.assertTrue(first["TOOLCHAIN_CACHE_KEY"].startswith("toolchain-v4-"))
+        self.assertTrue(first["TOOLCHAIN_CACHE_RESTORE_KEY"].startswith("toolchain-v4-"))
+        self.assertTrue(first["CCACHE_CACHE_PREFIX"].startswith("ccache-v4-"))
+        self.assertTrue(first["CCACHE_CACHE_KEY"].startswith(first["CCACHE_CACHE_PREFIX"] + "-"))
 
-    def test_new_commit_invalidates_toolchain_but_allows_ccache_reuse(self):
+    def test_new_commit_changes_exact_toolchain_key_but_keeps_restore_scope(self):
         first = self.keys()
         # 完整 SHA 的尾部变化也必须使工具链失效。
         changed = self.keys(REPO_GIT_HASH="a" * 39 + "c")
         self.assertNotEqual(first["TOOLCHAIN_CACHE_KEY"], changed["TOOLCHAIN_CACHE_KEY"])
+        self.assertEqual(first["TOOLCHAIN_CACHE_RESTORE_KEY"], changed["TOOLCHAIN_CACHE_RESTORE_KEY"])
         self.assertEqual(first["CCACHE_CACHE_PREFIX"], changed["CCACHE_CACHE_PREFIX"])
+        self.assertEqual(first["CCACHE_CACHE_KEY"], changed["CCACHE_CACHE_KEY"])
 
-    def test_config_and_script_changes_invalidate_toolchain(self):
+    def test_config_changes_invalidate_toolchain_and_restore_scope(self):
         first = self.keys()
         (self.root / ".config").write_text('CONFIG_GCC_VERSION="15.2.0"\n')
         self.assertNotEqual(first["TOOLCHAIN_CACHE_KEY"], self.keys()["TOOLCHAIN_CACHE_KEY"])
-        self.assertNotEqual(self.keys()["TOOLCHAIN_CACHE_KEY"], self.keys(CACHE_SCRIPTS_HASH="c" * 64)["TOOLCHAIN_CACHE_KEY"])
+        self.assertNotEqual(first["TOOLCHAIN_CACHE_RESTORE_KEY"], self.keys()["TOOLCHAIN_CACHE_RESTORE_KEY"])
 
     def test_package_only_config_changes_reuse_toolchain(self):
         config = self.root / ".config"
@@ -94,16 +98,38 @@ class CacheKeysTest(unittest.TestCase):
             {"DEVICE_TARGET": "other"},
             {"DEVICE_SUBTARGET": "ipq807x"},
             {"RUNNER_ARCH": "ARM64"},
-            {"ImageOS": "ubuntu26"},
-            {"ImageVersion": "20261007.1.0"},
         ):
             with self.subTest(change=change):
                 changed = self.keys(**change)
                 self.assertNotEqual(first["TOOLCHAIN_CACHE_KEY"], changed["TOOLCHAIN_CACHE_KEY"])
+                self.assertNotEqual(first["TOOLCHAIN_CACHE_RESTORE_KEY"], changed["TOOLCHAIN_CACHE_RESTORE_KEY"])
                 self.assertNotEqual(first["CCACHE_CACHE_PREFIX"], changed["CCACHE_CACHE_PREFIX"])
+                self.assertNotEqual(first["CCACHE_CACHE_KEY"], changed["CCACHE_CACHE_KEY"])
+
+        image_changed = self.keys(ImageOS="ubuntu26")
+        self.assertNotEqual(first["TOOLCHAIN_CACHE_KEY"], image_changed["TOOLCHAIN_CACHE_KEY"])
+        self.assertNotEqual(first["TOOLCHAIN_CACHE_RESTORE_KEY"], image_changed["TOOLCHAIN_CACHE_RESTORE_KEY"])
+        self.assertEqual(first["CCACHE_CACHE_PREFIX"], image_changed["CCACHE_CACHE_PREFIX"])
+        self.assertEqual(first["CCACHE_CACHE_KEY"], image_changed["CCACHE_CACHE_KEY"])
+
+    def test_image_version_isolates_toolchain_but_not_ccache(self):
+        first = self.keys()
+        changed = self.keys(ImageVersion="20261007.1.0")
+        self.assertNotEqual(first["TOOLCHAIN_CACHE_KEY"], changed["TOOLCHAIN_CACHE_KEY"])
+        self.assertNotEqual(first["TOOLCHAIN_CACHE_RESTORE_KEY"], changed["TOOLCHAIN_CACHE_RESTORE_KEY"])
+        self.assertEqual(first["CCACHE_CACHE_PREFIX"], changed["CCACHE_CACHE_PREFIX"])
+        self.assertEqual(first["CCACHE_CACHE_KEY"], changed["CCACHE_CACHE_KEY"])
+
+    def test_config_label_only_changes_exact_ccache_key(self):
+        first = self.keys()
+        changed = self.keys(WRT_CONFIG_LABEL="jd-ax6600-fw4")
+        self.assertEqual(first["TOOLCHAIN_CACHE_KEY"], changed["TOOLCHAIN_CACHE_KEY"])
+        self.assertEqual(first["TOOLCHAIN_CACHE_RESTORE_KEY"], changed["TOOLCHAIN_CACHE_RESTORE_KEY"])
+        self.assertEqual(first["CCACHE_CACHE_PREFIX"], changed["CCACHE_CACHE_PREFIX"])
+        self.assertNotEqual(first["CCACHE_CACHE_KEY"], changed["CCACHE_CACHE_KEY"])
 
     def test_missing_metadata_fails_instead_of_using_broad_key(self):
-        for name in ("REPO_GIT_HASH", "DEVICE_TARGET", "DEVICE_SUBTARGET", "CACHE_SCRIPTS_HASH"):
+        for name in ("REPO_GIT_HASH", "WRT_CONFIG_LABEL", "DEVICE_TARGET", "DEVICE_SUBTARGET"):
             with self.subTest(name=name):
                 result = subprocess.run(
                     [sys.executable, str(SCRIPT)], env={**self.env, name: ""},

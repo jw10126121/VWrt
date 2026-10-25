@@ -39,7 +39,7 @@ echo "readme_desc_file=${readme_desc_file}" >> "${GITHUB_ENV}"
 echo "release_desc_file=${release_desc_file}" >> "${GITHUB_ENV}"
 
 # output_name_prefix 是所有导出文件共享的命名前缀。
-# 命名格式统一为“源码风味 / 设备别名 / 可选 nowifi / FW / 包管理器 / 功能 / 编译开始时间”，
+# 命名格式统一为“源码风味 / 源码短 hash / 设备别名 / 可选 nowifi / FW / 包管理器 / 功能 / 编译开始时间”，
 # 避免文件名里继续混入 target 子平台和源码版本等冗余字段。
 output_name_prefix="${OUTPUT_NAME_PREFIX:-${DEVICE_SUBTARGET:?DEVICE_SUBTARGET is required}_${DEVICE_NAME_LIST_LIAN:?DEVICE_NAME_LIST_LIAN is required}_${BUILD_VARIANT_TAG:?BUILD_VARIANT_TAG is required}_${WRT_VER:?WRT_VER is required}_${START_TIME:?START_TIME is required}}"
 
@@ -71,7 +71,7 @@ rm -f "${packages_zip}"
     zip -qr "$(basename "${packages_zip}")" "$(basename "${packages_dir}")"
 )
 
-# 固件镜像文件按“子平台_设备名_源码风味_FW_FRP_版本_开始时间”重命名，方便发布页辨认。
+# 固件镜像文件按统一输出前缀加镜像类型重命名，方便发布页辨认。
 # type 来自 DEVICE_NAME_LIST，例如 cmiot_ax18 / glinet_gl-mt6000。
 # 对每个设备，扫描 bin/targets 下属于该设备的镜像文件并统一改名后放进 upload/。
 for type in ${DEVICE_NAME_LIST:-}; do

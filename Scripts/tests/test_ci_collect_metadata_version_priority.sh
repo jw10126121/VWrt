@@ -65,6 +65,8 @@ run_case() {
     local source_type=${6:-lean}
     local package_manager=${7:-auto}
     local repo_url=${8:-https://github.com/example/openwrt}
+    local repo_git_hash_simple=${9-abc1234}
+    local repo_git_hash=${10-test-hash}
 
     OPENWRT_PATH="$root_dir" \
     WRT_DEFAULT_LANIP="192.168.0.1" \
@@ -79,7 +81,8 @@ run_case() {
     DEVICE_PROFILE="$device_profile" \
     WRT_DEVICE="$wrt_device" \
     VERSION_KERNEL="6.12.80" \
-    REPO_GIT_HASH="test-hash" \
+    REPO_GIT_HASH="$repo_git_hash" \
+    REPO_GIT_hash_simple="$repo_git_hash_simple" \
     START_TIME="D260514_T003050" \
     bash "$FINAL_SCRIPT" > "$output_file"
 }
@@ -103,8 +106,8 @@ grep -q '^PACKAGE_MANAGER_TAG=ipk$' "$TMPDIR/case1.env"
 grep -q '^BUILD_VARIANT_TAG=lean_fw4_ipk_frpc$' "$TMPDIR/case1.env"
 grep -q '^DEVICE_NAME_ALIAS=cmiot_ax18$' "$TMPDIR/case1.env"
 grep -q '^DEFAULT_THEME=aurora$' "$TMPDIR/case1.env"
-grep -q '^OUTPUT_NAME_PREFIX=lean_cmiot_ax18_fw4_ipk_frpc_D260514_T003050$' "$TMPDIR/case1.env" || {
-    echo "case1 should emit the lean_cmiot_ax18 fw4 output prefix" >&2
+grep -q '^OUTPUT_NAME_PREFIX=lean_abc1234_cmiot_ax18_fw4_ipk_frpc_D260514_T003050$' "$TMPDIR/case1.env" || {
+    echo "case1 should emit the lean_abc1234_cmiot_ax18 fw4 output prefix" >&2
     exit 1
 }
 grep -q '^编译开始：D260514_T003050$' "$TMPDIR/case1.env" || {
@@ -128,6 +131,40 @@ run_case "$CASE_DIR2" "$TMPDIR/case2.env"
 grep -q '^OP_VERSION=24.10.5$' "$TMPDIR/case2.env"
 grep -q '^LUCI_VERSION=23.05$' "$TMPDIR/case2.env"
 grep -q '^BUILD_VARIANT_TAG=lean_fw4_ipk_frpc$' "$TMPDIR/case2.env"
+
+run_case \
+    "$CASE_DIR" \
+    "$TMPDIR/case-fallback.env" \
+    "true" \
+    "cmiot_ax18" \
+    "" \
+    "lean" \
+    "auto" \
+    "https://github.com/example/openwrt" \
+    "" \
+    "123456789abcdef"
+
+grep -q '^OUTPUT_NAME_PREFIX=lean_1234567_cmiot_ax18_fw4_ipk_frpc_D260514_T003050$' "$TMPDIR/case-fallback.env" || {
+    echo "case-fallback should derive the short hash from the full hash" >&2
+    exit 1
+}
+
+run_case \
+    "$CASE_DIR" \
+    "$TMPDIR/case-unknown.env" \
+    "true" \
+    "cmiot_ax18" \
+    "" \
+    "lean" \
+    "auto" \
+    "https://github.com/example/openwrt" \
+    "" \
+    ""
+
+grep -q '^OUTPUT_NAME_PREFIX=lean_unknown_cmiot_ax18_fw4_ipk_frpc_D260514_T003050$' "$TMPDIR/case-unknown.env" || {
+    echo "case-unknown should use unknown when no source hash is available" >&2
+    exit 1
+}
 
 CASE_DIR3="$TMPDIR/mixed-fw-stack"
 make_openwrt_tree \
@@ -162,8 +199,8 @@ mv "$CASE_DIR4/version.mk.tmp" "$CASE_DIR4/include/version.mk"
 run_case "$CASE_DIR4" "$TMPDIR/case4.env" "false" "cmiot_ax18" "cmiot-ax18-nowifi"
 
 grep -q '^DEVICE_NAME_ALIAS=cmiot_ax18_nowifi$' "$TMPDIR/case4.env"
-grep -q '^OUTPUT_NAME_PREFIX=lean_cmiot_ax18_nowifi_fw3_ipk_frpc_D260514_T003050$' "$TMPDIR/case4.env" || {
-    echo "case4 should emit the lean_cmiot_ax18_nowifi fw3 output prefix" >&2
+grep -q '^OUTPUT_NAME_PREFIX=lean_abc1234_cmiot_ax18_nowifi_fw3_ipk_frpc_D260514_T003050$' "$TMPDIR/case4.env" || {
+    echo "case4 should emit the lean_abc1234_cmiot_ax18_nowifi fw3 output prefix" >&2
     exit 1
 }
 grep -q '支持设备：cmiot_ax18' "$TMPDIR/case4.env"
@@ -184,8 +221,8 @@ mv "$CASE_DIR5/version.mk.tmp" "$CASE_DIR5/include/version.mk"
 run_case "$CASE_DIR5" "$TMPDIR/case5.env" "true" "jdcloud_re-ss-01" "jd-ax1800pro-wifi"
 
 grep -q '^DEVICE_NAME_ALIAS=jd_ax1800pro$' "$TMPDIR/case5.env"
-grep -q '^OUTPUT_NAME_PREFIX=lean_jd_ax1800pro_fw3_ipk_frpc_D260514_T003050$' "$TMPDIR/case5.env" || {
-    echo "case5 should emit the lean_jd_ax1800pro fw3 output prefix" >&2
+grep -q '^OUTPUT_NAME_PREFIX=lean_abc1234_jd_ax1800pro_fw3_ipk_frpc_D260514_T003050$' "$TMPDIR/case5.env" || {
+    echo "case5 should emit the lean_abc1234_jd_ax1800pro fw3 output prefix" >&2
     exit 1
 }
 grep -q '支持设备：jdcloud_re-ss-01' "$TMPDIR/case5.env"
@@ -204,8 +241,8 @@ mv "$CASE_DIR6/version.mk.tmp" "$CASE_DIR6/include/version.mk"
 run_case "$CASE_DIR6" "$TMPDIR/case6.env" "true" "glinet_gl-mt6000" "gl-mt6000-wifi"
 
 grep -q '^DEVICE_NAME_ALIAS=mt6000$' "$TMPDIR/case6.env"
-grep -q '^OUTPUT_NAME_PREFIX=lean_mt6000_fw4_ipk_frpc_D260514_T003050$' "$TMPDIR/case6.env" || {
-    echo "case6 should emit the lean_mt6000 fw4 output prefix" >&2
+grep -q '^OUTPUT_NAME_PREFIX=lean_abc1234_mt6000_fw4_ipk_frpc_D260514_T003050$' "$TMPDIR/case6.env" || {
+    echo "case6 should emit the lean_abc1234_mt6000 fw4 output prefix" >&2
     exit 1
 }
 grep -q '支持设备：glinet_gl-mt6000' "$TMPDIR/case6.env"
@@ -224,8 +261,8 @@ mv "$CASE_DIR7/version.mk.tmp" "$CASE_DIR7/include/version.mk"
 run_case "$CASE_DIR7" "$TMPDIR/case7.env" "false" "glinet_gl-mt6000" "gl-mt6000-nowifi"
 
 grep -q '^DEVICE_NAME_ALIAS=mt6000_nowifi$' "$TMPDIR/case7.env"
-grep -q '^OUTPUT_NAME_PREFIX=lean_mt6000_nowifi_fw4_ipk_frpc_D260514_T003050$' "$TMPDIR/case7.env" || {
-    echo "case7 should emit the lean_mt6000_nowifi fw4 output prefix" >&2
+grep -q '^OUTPUT_NAME_PREFIX=lean_abc1234_mt6000_nowifi_fw4_ipk_frpc_D260514_T003050$' "$TMPDIR/case7.env" || {
+    echo "case7 should emit the lean_abc1234_mt6000_nowifi fw4 output prefix" >&2
     exit 1
 }
 grep -q '支持设备：glinet_gl-mt6000' "$TMPDIR/case7.env"
@@ -249,8 +286,8 @@ run_case "$CASE_DIR8" "$TMPDIR/case8.env" "true" "cmiot_ax18" "cmiot-ax18-wifi" 
 grep -q '^SOURCE_FLAVOR_TAG=vikingyfy$' "$TMPDIR/case8.env"
 grep -q '^PACKAGE_MANAGER_TAG=apk$' "$TMPDIR/case8.env"
 grep -q '^BUILD_VARIANT_TAG=vikingyfy_fw4_apk_frpc$' "$TMPDIR/case8.env"
-grep -q '^OUTPUT_NAME_PREFIX=vikingyfy_cmiot_ax18_fw4_apk_frpc_D260514_T003050$' "$TMPDIR/case8.env" || {
-    echo "case8 should emit the vikingyfy_cmiot_ax18 fw4 apk output prefix" >&2
+grep -q '^OUTPUT_NAME_PREFIX=vikingyfy_abc1234_cmiot_ax18_fw4_apk_frpc_D260514_T003050$' "$TMPDIR/case8.env" || {
+    echo "case8 should emit the vikingyfy_abc1234_cmiot_ax18 fw4 apk output prefix" >&2
     exit 1
 }
 grep -q '源码风味：vikingyfy' "$TMPDIR/case8.env"
@@ -283,8 +320,8 @@ run_case \
 
 grep -q '^SOURCE_FLAVOR_TAG=immortalwrt$' "$TMPDIR/case9.env"
 grep -q '^BUILD_VARIANT_TAG=immortalwrt_fw4_apk_frpc$' "$TMPDIR/case9.env"
-grep -q '^OUTPUT_NAME_PREFIX=immortalwrt_mt6000_fw4_apk_frpc_D260514_T003050$' "$TMPDIR/case9.env" || {
-    echo "case9 should emit the immortalwrt_mt6000 fw4 apk output prefix" >&2
+grep -q '^OUTPUT_NAME_PREFIX=immortalwrt_abc1234_mt6000_fw4_apk_frpc_D260514_T003050$' "$TMPDIR/case9.env" || {
+    echo "case9 should emit the immortalwrt_abc1234_mt6000 fw4 apk output prefix" >&2
     exit 1
 }
 grep -q '源码风味：immortalwrt' "$TMPDIR/case9.env"

@@ -36,18 +36,23 @@ assert_toolchain_uses_scoped_restore_key() {
 		exit 1
 	fi
 
-	if printf '%s\n' "$restore_block" | grep -Fq -- 'restore-keys:'; then
-		echo "ASSERT FAILED: toolchain must not fall back to another source/configuration" >&2
+	if ! printf '%s\n' "$restore_block" | grep -Fq -- 'restore-keys:'; then
+		echo "ASSERT FAILED: toolchain should fall back within the same compatibility scope" >&2
+		exit 1
+	fi
+
+	if ! printf '%s\n' "$restore_block" | grep -Fq -- '          ${{ env.TOOLCHAIN_CACHE_RESTORE_KEY }}'; then
+		echo "ASSERT FAILED: toolchain fallback must use the computed scoped restore key" >&2
 		exit 1
 	fi
 }
 
-assert_restore_ccache_uses_rolling_key() {
+assert_restore_ccache_uses_stable_key() {
 	local restore_block
 	restore_block="$(awk '/Restore ccache Cache/,/Print Build Summary/' "$workflow_file")"
 
-	if ! printf '%s\n' "$restore_block" | grep -Fq -- 'key: ${{ env.CCACHE_CACHE_PREFIX }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ env.WRT_CONFIG_LABEL }}'; then
-		echo "ASSERT FAILED: ccache keys must roll by run, attempt and configuration" >&2
+	if ! printf '%s\n' "$restore_block" | grep -Fq -- 'key: ${{ env.CCACHE_CACHE_KEY }}'; then
+		echo "ASSERT FAILED: ccache should use its computed configuration key" >&2
 		exit 1
 	fi
 
@@ -62,34 +67,44 @@ assert_contains 'uses: actions/cache/restore@v5' "workflow should use cache rest
 assert_contains '- name: Save Toolchain Cache' "workflow should save toolchain cache explicitly"
 assert_contains 'uses: actions/cache/save@v5' "workflow should use cache save actions"
 assert_not_contains 'WRT_OVERLAYS_HASH' "workflow should not keep an unused overlays hash variable"
+assert_not_contains 'CACHE_SCRIPTS_HASH' "workflow should not include the build scripts hash in cache keys"
 assert_contains 'key: ${{ env.TOOLCHAIN_CACHE_KEY }}' "toolchain restore and save should use the computed compatibility key"
+assert_contains '          ${{ env.TOOLCHAIN_CACHE_RESTORE_KEY }}' "toolchain restore should use the computed fallback key"
 assert_toolchain_uses_scoped_restore_key
 
-assert_not_contains '- name: Refresh Cache Metadata' "cached stamps must not be artificially refreshed"
-assert_not_contains '-exec touch' "workflow must let OpenWrt validate cached stamps"
-assert_not_contains 'tmp/.build' "workflow must not fake OpenWrt build state"
+assert_contains '- name: Prepare Restored Build Cache (整理恢复的缓存)' "workflow should prepare restored build caches"
+assert_contains 'steps.restore_toolchain_cache.outputs.cache-matched-key !=' "cache preparation should run when a toolchain cache was restored"
+assert_contains "-not -path 'staging_dir/target-*/*'" "cache preparation should leave target staging stamps untouched"
+assert_contains '-exec touch {} +' "cache preparation should refresh restored stamp files"
+assert_contains "echo '1' > tmp/.build" "cache preparation should restore the OpenWrt build marker"
+assert_contains '- name: Print Cache Status (打印缓存命中状态)' "workflow should report restored cache status"
+assert_contains 'cache-matched-key' "workflow should print the matched cache keys"
 assert_contains "steps.finalize_compile.outputs.status == 'success' && env.CACHE_TOOLCHAIN" "toolchain should only be saved after a successful build"
-assert_contains "CACHE_SCRIPTS_HASH: \${{ hashFiles('Scripts/**') }}" "script changes must invalidate the toolchain cache"
 
 python3 - "$workflow_file" <<'PY'
 from pathlib import Path
 import sys
 workflow = Path(sys.argv[1]).read_text()
 assert workflow.index('- name: DIY after defconfig') < workflow.index('- name: Compute Cache Keys') < workflow.index('- name: Restore Toolchain Cache'), 'Restore must follow final configuration and key computation'
+assert workflow.index('- name: Restore ccache Cache') < workflow.index('- name: Prepare Restored Build Cache') < workflow.index('- name: Print Cache Status'), 'Restored caches must be prepared and reported before the build summary'
 for cache in ('Toolchain', 'ccache'):
     restore = workflow.split(f'- name: Restore {cache} Cache', 1)[1].split('\n    - name:', 1)[0]
     save = workflow.split(f'- name: Save {cache} Cache', 1)[1].split('\n    - name:', 1)[0]
     get_key = lambda block: next(line.strip() for line in block.splitlines() if line.strip().startswith('key:'))
     assert get_key(restore) == get_key(save), f'{cache} restore/save keys must agree'
+ccache_restore = workflow.split('- name: Restore ccache Cache', 1)[1].split('\n    - name:', 1)[0]
+ccache_save = workflow.split('- name: Save ccache Cache', 1)[1].split('\n    - name:', 1)[0]
+assert 'github.run_id' not in ccache_restore and 'github.run_attempt' not in ccache_restore, 'ccache exact key must remain stable across runs'
+assert "steps.restore_ccache_cache.outputs.cache-hit != 'true'" in ccache_save, 'ccache should only save when the exact key was not restored'
 PY
 
 assert_contains '- name: Restore ccache Cache' "workflow should restore ccache explicitly"
 assert_contains '- name: Save ccache Cache' "workflow should save ccache explicitly"
-assert_contains 'key: ${{ env.CCACHE_CACHE_PREFIX }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ env.WRT_CONFIG_LABEL }}' "ccache restore and save keys should roll per run and attempt"
-assert_restore_ccache_uses_rolling_key
+assert_contains 'key: ${{ env.CCACHE_CACHE_KEY }}' "ccache restore and save keys should use the computed stable key"
+assert_restore_ccache_uses_stable_key
 assert_contains 'restore-keys: |' "ccache restore step should still keep restore-keys"
 assert_contains '          ${{ env.CCACHE_CACHE_PREFIX }}-' "ccache should restore only within its computed compatibility scope"
-assert_not_contains "steps.restore_ccache_cache.outputs.cache-hit != 'true'" "ccache save should no longer be blocked on an exact cache hit"
+assert_contains "steps.restore_ccache_cache.outputs.cache-hit != 'true'" "ccache save should skip an already restored exact cache"
 assert_contains 'continue-on-error: true' "cache save steps should tolerate duplicate parallel cache reservations"
 
 assert_contains '- name: Initialize Build Observability' "workflow should initialize build timing observability"

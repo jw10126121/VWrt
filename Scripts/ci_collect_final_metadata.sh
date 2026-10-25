@@ -266,6 +266,11 @@ wrt_wifi_password="${WRT_WIFI_PASSWORD:-88886666}"
 wrt_repo_url="${WRT_REPO_URL:?WRT_REPO_URL is required}"
 wrt_repo_branch="${WRT_REPO_BRANCH:?WRT_REPO_BRANCH is required}"
 repo_git_hash="${REPO_GIT_HASH:-}"
+repo_git_hash_simple="${REPO_GIT_hash_simple:-}"
+if [ -z "${repo_git_hash_simple}" ] && [ -n "${repo_git_hash}" ]; then
+    repo_git_hash_simple="${repo_git_hash:0:7}"
+fi
+repo_git_hash_simple="${repo_git_hash_simple:-unknown}"
 source_flavor="$(resolve_source_flavor "${wrt_repo_url}" "${SOURCE_TYPE:-lean}")"
 device_target="${DEVICE_TARGET:-}"
 device_subtarget="${DEVICE_SUBTARGET:-}"
@@ -354,7 +359,7 @@ elif grep -q '^CONFIG_PACKAGE_frpc=y$' "${openwrt_path}/.config" 2>/dev/null && 
 fi
 
 build_variant_tag="${source_flavor_tag}_${fw_stack_tag}_${package_manager_tag}_${frp_role_tag}"
-output_name_prefix="${source_flavor_tag}_${device_name_alias}_${fw_stack_tag}_${package_manager_tag}_${frp_role_tag}_${start_time_tag}"
+output_name_prefix="${source_flavor_tag}_${repo_git_hash_simple}_${device_name_alias}_${fw_stack_tag}_${package_manager_tag}_${frp_role_tag}_${start_time_tag}"
 
 # 统一拼接给 README / 通知消息使用的固件说明正文。
 # 文案仍保持“内核版本 / LUCI版本 / OP版本”，以兼容现有通知与 README，
