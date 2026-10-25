@@ -1,2 +1,5 @@
 docs/
 OpenWrt.sparseimage
+.DS_Store
+.superpowers/brainstorm/
+/Scripts/readme.txt

@@ -34,9 +34,4 @@ for file in $CONFIG_FILES; do
 	done
 done
 
-if rg -n 'luci-app-ssr-plus_(Iptables_Transparent_Proxy|INCLUDE_libustream-openssl|INCLUDE_Shadowsocks_Rust_Client|INCLUDE_Shadowsocks_Rust_Server|INCLUDE_Shadowsocks_NONE_Server|INCLUDE_Xray|INCLUDE_MosDNS|INCLUDE_Mihomo|INCLUDE_Shadowsocks_Simple_Obfs|INCLUDE_ShadowsocksR_Libev_Client)' "$REPO_ROOT/Scripts/readme.txt" >/dev/null 2>&1; then
-	echo "SSR Plus upstream-default options should not be listed in Scripts/readme.txt" >&2
-	exit 1
-fi
-
 echo "test_ssrplus_upstream_defaults: ok"
