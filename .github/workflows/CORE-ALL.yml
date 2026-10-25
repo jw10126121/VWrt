@@ -380,6 +380,15 @@ jobs:
         fi
         bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/export_config.sh" "${EXPORT_ARGS[@]}"
 
+    - name: Apply apk-tools Patch (应用 apk-tools 补丁)
+      working-directory: ${{ env.OPENWRT_PATH }}
+      if: env.WRT_PACKAGE_MANAGER == 'apk'
+      run: bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/apk-tools.sh"
+
+    - name: Skip apk-tools Patch for IPK (IPK 模式跳过 apk-tools 补丁)
+      if: env.WRT_PACKAGE_MANAGER != 'apk'
+      run: echo "【Lin】当前包管理器为 ${WRT_PACKAGE_MANAGER}，跳过 apk-tools 补丁"
+
     - name: Read Variables (读取变量)
       working-directory: ${{ env.OPENWRT_PATH }}
       run: |
