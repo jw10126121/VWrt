@@ -155,7 +155,7 @@ CONFIG_PACKAGE_luci-app-rclone_INCLUDE_rclone-webui=y
 EOF
 
 cat > "$GENERATED_OVERRIDES" <<'EOF'
-luci-app-openvpn|luci-app-openvpn_ luci-i18n-openvpn-zh-cn_
+luci-app-unmanaged|luci-app-unmanaged_
 luci-app-basic|luci-app-basic_ luci-i18n-basic-zh-cn_
 EOF
 
@@ -337,8 +337,8 @@ for filename in $openclash_required_files; do
 	fi
 done
 
-[ ! -d "$TMPDIR/luci-app-openvpn" ] || {
-	echo "Unexpected auto-grouped directory created: luci-app-openvpn" >&2
+[ ! -d "$TMPDIR/luci-app-unmanaged" ] || {
+	echo "Unexpected auto-grouped directory created: luci-app-unmanaged" >&2
 	exit 1
 }
 [ ! -d "$TMPDIR/luci-app-basic" ] || {

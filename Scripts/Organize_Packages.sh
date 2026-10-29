@@ -123,13 +123,19 @@ ORGANIZE_USB_PACKAGES() {
 
 ### --- 包列表定义 --- ###
 PACKAGE_OVERRIDES=$(cat <<'EOF'
-openclash|luci-app-openclash_ kmod-inet-diag_ coreutils-nohup_ libcap-bin_ libgmp10_ libruby libyaml_ ruby_ ruby-bigdecimal_ ruby-date_ ruby-digest_ ruby-enc_ ruby-forwardable_ ruby-pstore_ ruby-psych_ ruby-stringio_ ruby-strscan_ ruby-yaml_ unzip_ kmod-nft-tproxy_
-ssrplus|luci-app-ssr-plus_ luci-i18n-ssr-plus-zh-cn_ libustream-openssl dnsmasq-full_ jq_ ip-full_ curl_ libpcap1_ libudns_ libuci-lua_ nping_ resolveip_ lua-neturl_ libev_ libpcre2_ libsodium_ dns2socks_ dns2tcp_ ipt2socks_ chinadns-ng_ mosdns_ microsocks_ shadowsocks-libev-ss-local_ shadowsocks-libev-ss-redir_ shadowsocks-libev-ss-server_ shadowsocks-rust-sslocal_ shadowsocks-rust-ssserver_ shadowsocksr-libev-ssr-check_ shadowsocksr-libev-ssr-local_ shadowsocksr-libev-ssr-redir_ shadowsocksr-libev-ssr-server_ simple-obfs-client_ tcping_ xray-core_ coreutils_ coreutils-base64_ ca-bundle_ libopenssl3_ libubox20240329_ lyaml_ xz-utils_ libyaml_ unzip_
+openclash|luci-app-openclash_ kmod-inet-diag_ coreutils-nohup_ libcap-bin_ libgmp10_ libruby libyaml_ ruby_ ruby-bigdecimal_ ruby-date_ ruby-digest_ ruby-enc_ ruby-forwardable_ ruby-pstore_ ruby-psych_ ruby-stringio_ ruby-strscan_ ruby-yaml_ bash_ curl_ ca-bundle_ ip-full_ kmod-tun_ unzip_ kmod-nft-tproxy_
+accesscontrol|luci-app-accesscontrol_ luci-i18n-accesscontrol-zh-cn_
+advancedplus|luci-app-advancedplus_ luci-i18n-advancedplus-zh-cn_ luci-compat_ curl_
+advancedsetting|luci-app-advancedsetting_ luci-i18n-advancedsetting-zh-cn_
+athena-led|luci-app-athena-led_ luci-i18n-athena-led-zh-cn_ athena-led_ zoneinfo-core_ zoneinfo-asia_
+attendedsysupgrade|luci-app-attendedsysupgrade_ luci-i18n-attendedsysupgrade-zh-cn_ attendedsysupgrade-common_ cgi-io_
+autoreboot|luci-app-autoreboot_ luci-i18n-autoreboot-zh-cn_
+ssrplus|luci-app-ssr-plus_ luci-i18n-ssr-plus-zh-cn_ libustream-openssl20201210_ dnsmasq-full_ jq_ ip-full_ curl_ libpcap1_ libudns_ libuci-lua_ nping_ resolveip_ lua-neturl_ libev_ libpcre2_ libsodium_ dns2socks_ dns2tcp_ ipt2socks_ chinadns-ng_ mosdns_ microsocks_ shadowsocks-libev-ss-local_ shadowsocks-libev-ss-redir_ shadowsocks-libev-ss-server_ shadowsocks-rust-sslocal_ shadowsocks-rust-ssserver_ shadowsocksr-libev-ssr-check_ shadowsocksr-libev-ssr-local_ shadowsocksr-libev-ssr-redir_ shadowsocksr-libev-ssr-server_ simple-obfs-client_ tcping_ xray-core_ coreutils_ coreutils-base64_ ca-bundle_ libopenssl3_ libubox20240329_ lyaml_ xz-utils_ libyaml_ unzip_
 sqm|luci-app-sqm_ luci-i18n-sqm-zh-cn_ sqm-scripts_ kmod-ipt-ipopt_ kmod-ifb_ kmod-sched-cake_ kmod-sched-core_ iptables-mod-ipopt_ tc-tiny_ kmod-qca-nss-drv-igs_ kmod-qca-nss-drv-qdisc_
 openvpnserver|luci-app-openvpn-server_ luci-i18n-openvpn-server-zh-cn_ liblzo_ openvpn-easy-rsa_ openvpn-openssl_
 adguardhome|luci-app-adguardhome_ luci-i18n-adguardhome-zh-cn_ adguardhome_ ca-certs_ curl_ wget-ssl_ ca-bundle_ libcurl_ libgnutls_ libmbedtls_ libopenssl_ libwolfssl_ kmod-crypto-hw-padlock_ kmod-crypto-user_ kmod-cryptodev_ libatomic_ libgcc_
 samba4|luci-app-samba4_ luci-i18n-samba4-zh-cn_ libattr_ libgnutls_ libavahi-client_ libavahi-dbus-support_ libdaemon_ libdbus_ libexpat_ libgmp_ libnettle_ libtasn1_ libtirpc_ liburing_ avahi-dbus-daemon_ wsdd2_ samba4-libs_ samba4-server_ attr_ dbus_
-mwan3|luci-app-mwan3_ luci-i18n-mwan3-zh-cn_ pdnsd-alt_ mwan3_
+mwan3|luci-app-mwan3_ luci-i18n-mwan3-zh-cn_ pdnsd-alt_ mwan3_ ip_ ipset_ iptables_ iptables-mod-conntrack-extra_ iptables-mod-ipopt_ rpcd_ rpcd-mod-ucode_ jshn_
 alist|luci-app-alist_ luci-i18n-alist-zh-cn_ alist_ libfuse_ fuse-utils_
 openlist|luci-app-openlist_ luci-i18n-openlist-zh-cn_ openlist_ libfuse_ fuse-utils_
 wrtbwmon|luci-app-wrtbwmon_ luci-i18n-wrtbwmon-zh-cn_ wrtbwmon_
@@ -158,8 +164,8 @@ onliner|luci-app-onliner_ luci-i18n-onliner-zh-cn_ arp-scan_ libpcap_
 wolplus|luci-app-wolplus_ luci-i18n-wolplus-zh-cn_ etherwake_
 versync|luci-app-verysync_ verysync_
 vlmcsd|luci-app-vlmcsd_ luci-i18n-vlmcsd-zh-cn_ vlmcsd_
-netspeedtest|luci-app-netspeedtest_ luci-i18n-netspeedtest-zh-cn_ speedtest-cli_ iperf3_ curl_ jsonfilter_ taskset_
-homeproxy|luci-app-homeproxy_ luci-i18n-homeproxy-zh-cn_ firewall4_ kmod-lib-crc32c_ kmod-nf-flow_ kmod-nft-core_ kmod-nft-fib_ kmod-nft-nat_ kmod-nft-offload_ kmod-nft-tproxy_ kmod-netlink-diag_ jansson_ libnftnl_ nftables-json_ chinadns-ng_ sing-box_
+netspeedtest|luci-app-netspeedtest_ luci-i18n-netspeedtest-zh-cn_ speedtest-cli_ ookla-speedtest_ homebox_ python3_ python3-light_ python3-pkg-resources_ python3-xml_ python3-email_ python3-urllib_ python3-codecs_ python3-openssl_ iperf3_ iperf3-ssl_ curl_ jsonfilter_ taskset_
+homeproxy|luci-app-homeproxy_ luci-i18n-homeproxy-zh-cn_ firewall4_ kmod-lib-crc32c_ kmod-nf-flow_ kmod-nft-core_ kmod-nft-fib_ kmod-nft-nat_ kmod-nft-offload_ kmod-nft-tproxy_ kmod-netlink-diag_ jansson_ libnftnl_ nftables-json_ chinadns-ng_ sing-box_ ip-full_ kmod-tun_ curl_ flock_ unzip_ ucode-mod-digest_
 tailscale|luci-app-tailscale_ luci-i18n-tailscale-zh-cn_ tailscale_
 nftqos|luci-app-nft-qos_ luci-i18n-nft-qos-zh-cn_ nft-qos_
 hdidle|luci-app-hd-idle_ luci-i18n-hd-idle-zh-cn_ hd-idle_ lsblk_
@@ -168,7 +174,32 @@ turboacc|luci-app-turboacc_ luci-i18n-turboacc-zh-cn_ kmod-fast-classifier_ kmod
 vsftpd|luci-app-vsftpd_ luci-i18n-vsftpd-zh-cn_ vsftpd_ vsftpd-alt_
 lucky|luci-app-lucky_ luci-i18n-lucky-zh-cn_ lucky_
 sqmcontroller|luci-app-sqm-controller_ luci-i18n-sqm-controller-zh-cn_ python3_ python3-light_ kmod-sched-connmark_ kmod-sched-ctinfo_
-nikki|luci-app-nikki_ nikki_
+clientstatus|luci-app-clientstatus_ luci-i18n-clientstatus-zh-cn_ clientstatus_ luci-compat_
+cpufreq|luci-app-cpufreq_ luci-i18n-cpufreq-zh-cn_ cpufreq_
+ddns|luci-app-ddns_ luci-i18n-ddns-zh-cn_ ddns-scripts_ ddns-scripts-aliyun_ resolveip_ ip_
+ddns-go|luci-app-ddns-go_ luci-i18n-ddns-go-zh-cn_ ddns-go_ ca-bundle_
+docker|luci-app-docker_ luci-i18n-docker-zh-cn_ luci-compat_ docker_ dockerd_ e2fsprogs_ fdisk_
+dockerman|luci-app-dockerman_ luci-i18n-dockerman-zh-cn_ luci-base_ docker_ ttyd_ dockerd_ docker-compose_ ucode-mod-socket_
+easymesh|luci-app-easymesh_ luci-i18n-easymesh-zh-cn_ kmod-cfg80211_ batctl-default_ kmod-batman-adv_ wpad-mesh-openssl_ dawn_
+guest-wifi|luci-app-guest-wifi_ luci-i18n-guest-wifi-zh-cn_
+minidiskmanager|luci-app-mini-diskmanager_ luci-i18n-mini-diskmanager-zh-cn_ block-mount_ fdisk_ parted_ lsblk_
+mwan3helper|luci-app-mwan3helper_ luci-i18n-mwan3helper-zh-cn_ luci-app-mwan3_ pdnsd-alt_ dnsmasq-full_ ipset_
+nfs|luci-app-nfs_ luci-i18n-nfs-zh-cn_ luci-compat_ nfs-utils_ nfs-kernel-server_ nfs-kernel-server-utils_ mount-utils_
+ninjaconnector2|luci-app-ninjaconnector2_ luci-i18n-ninjaconnector2-zh-cn_ luci-base_ luci-compat_ luci-app-openclash_ curl_ ca-bundle_ jsonfilter_
+openvpn|luci-app-openvpn_ luci-i18n-openvpn-zh-cn_ luci-base_ luci-compat_ openvpn-openssl_ kmod-tun_
+partexp|luci-app-partexp_ luci-i18n-partexp-zh-cn_ fdisk_ block-mount_ bc_ blkid_ parted_ btrfs-progs_ losetup_ resize2fs_ e2fsprogs_ f2fs-tools_ kmod-loop_
+ramfree|luci-app-ramfree_ luci-i18n-ramfree-zh-cn_
+smartdns|luci-app-smartdns_ luci-i18n-smartdns-zh-cn_ smartdns_ smartdns-ui_ libopenssl3_
+syncdial|luci-app-syncdial_ luci-i18n-syncdial-zh-cn_ luci-compat_ kmod-macvlan_ luci-app-mwan3_
+timewol|luci-app-timewol_ luci-i18n-timewol-zh-cn_ luci-compat_
+ttyd|luci-app-ttyd_ luci-i18n-ttyd-zh-cn_ luci-base_ ttyd_
+uhttpd|luci-app-uhttpd_ luci-i18n-uhttpd-zh-cn_ luci-base_ uhttpd_
+upnp|luci-app-upnp_ luci-i18n-upnp-zh-cn_ luci-base_ miniupnpd-nftables_ rpcd-mod-ucode_
+watchcat|luci-app-watchcat_ luci-i18n-watchcat-zh-cn_ luci-base_ watchcat_
+webadmin|luci-app-webadmin_ luci-i18n-webadmin-zh-cn_ uhttpd_
+wol|luci-app-wol_ luci-i18n-wol-zh-cn_ luci-base_ etherwake_
+zerotier|luci-app-zerotier_ luci-i18n-zerotier-zh-cn_ zerotier_ libpthread_ libstdcpp6_ kmod-tun_ ip_ libminiupnpc_ libnatpmp_ libatomic_
+nikki|luci-app-nikki_ luci-i18n-nikki-zh-cn_ nikki_ mihomo_ ca-bundle_ curl_ yq_ firewall4_ ip-full_ kmod-inet-diag_ kmod-nft-socket_ kmod-nft-tproxy_ kmod-tun_ kmod-dummy_
 subconverter|luci-app-subconverter_ luci-i18n-subconverter-zh-cn_ subconverter_
 fluent|luci-theme-fluent_ luci-i18n-fluent-zh-cn_
 miaomiaowu|luci-app-miaomiaowu_ miaomiaowu_
