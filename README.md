@@ -216,6 +216,7 @@ libwrt_1a2b3c4_cmiot_ax18_nowifi_fw4_apk_frps_D261025_T120000
 - 固件镜像在原前缀后追加镜像类型，如 `_squashfs-sysupgrade.bin`
 - 配置与说明文件：`config_<前缀>.txt`、`readme_<前缀>.txt`；存在 `seed.config` 时另有 `config_seed_<前缀>.txt`
 - 安装包目录与压缩包：`<前缀>_Packages/`、`<前缀>_Packages.zip`
+- 安装包目录按插件分组，分组里只保留需要上传安装的包：`.config` 中为 `=y`（已编译进固件）的依赖会被跳过，插件主包与语言包始终保留
 - Artifact 名称：`<前缀>` 与 `<前缀>-packages`；Release 的 tag 和标题同样使用 `<前缀>`
 
 短 hash 取实际检出源码提交的 Git 默认短 hash（通常为 7 位）。源码 HASH 留空时跟随分支最新提交，因此不同次构建的前缀通常不同；固定 `WRT_SOURCE_HASH_INFO` 后，前缀中的短 hash 对应该提交。

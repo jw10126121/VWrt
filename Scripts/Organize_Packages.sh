@@ -4,6 +4,8 @@
 # 1. 按手工维护的 PACKAGE_OVERRIDES 维度整理编译产出的 ipk/apk。
 # 2. 不再根据 .config 或外部生成规则自动补齐插件/主题分组。
 # 3. 输入目录会被直接复制与清理，适合在打包阶段使用。
+# 4. 已随固件内置（.config 中为 =y）的依赖不再整理进分组目录，分组里只保留
+#    还需要上传安装的包；插件主包与语言包始终保留。
 
 ### --- 取参 --- ###
 
@@ -36,6 +38,16 @@ package_group_enabled() {
 	grep -Eq "^CONFIG_PACKAGE_${anchor_package}=(y|m)$" "$CONFIG_PATH"
 }
 
+# 判断某个包是否已随固件安装：
+# 最终 .config 里为 =y 表示编译进镜像，=m 才是需要单独上传的安装包。
+package_in_firmware() {
+
+	local package_name=$1
+
+	[ -n "$package_name" ] && [ -f "$CONFIG_PATH" ] || return 1
+	grep -qxF "CONFIG_PACKAGE_${package_name}=y" "$CONFIG_PATH"
+}
+
 # 整理依赖包列表
 UPDATE_PACKAGE_LIST() {
 
@@ -57,15 +69,39 @@ UPDATE_PACKAGE_LIST() {
 
 	PACKAGE_DIRNAME="$ACTION_DIR/$PACKAGE_NAME"
 	mkdir -p "$PACKAGE_DIRNAME"
+	# 插件本身（主包）与其语言包不属于依赖，始终留在插件目录里。
+	local primary_package
+	primary_package=$(echo "$PACKAGE_PRE_LIST" | awk '{print $1}' | sed 's/_$//')
+	local skipped_packages=""
+
 	# 将同一功能需要的 ipk/apk 聚合到一个目录，便于上传与安装。
 	# ipk 用 _ 做版本分隔符，apk 用 -，用 [-_] 兼容两种命名。
+	# 已经内置进固件的依赖不再整理进分组，稍后由 DELETE_PACKAGE_LIST 从根目录清理。
 	for pkg in $PACKAGE_PRE_LIST; do
 	    local find_name
 	    find_name=$(echo "$pkg" | sed 's/_$//')
+
+	    case "$find_name" in
+	    	# 插件主包与翻译包永远保留。
+	    	"$primary_package"|luci-i18n-*)
+	    		;;
+	    	*)
+	    		# 已经随固件（含其他插件带入）安装的依赖，无需再打包。
+	    		if package_in_firmware "$find_name"; then
+	    			skipped_packages="$skipped_packages $find_name"
+	    			continue
+	    		fi
+	    		;;
+	    esac
+
 	    for ext in ipk apk; do
 	    	find "$ACTION_DIR" -name "${find_name}[-_]*.${ext}" 2>/dev/null -exec cp -r {} "$PACKAGE_DIRNAME" \;
 	    done
 	done
+
+	if [ -n "$skipped_packages" ]; then
+		echo "【Lin】${PACKAGE_NAME}：已随固件安装，跳过${skipped_packages}"
+	fi
 
 }
 

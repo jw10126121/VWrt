@@ -134,6 +134,14 @@ touch "$TMPDIR/kmod-tcp-bbr_1_aarch64.ipk"
 touch "$TMPDIR/luci-app-vsftpd_1_all.ipk"
 touch "$TMPDIR/luci-i18n-vsftpd-zh-cn_1_all.ipk"
 touch "$TMPDIR/vsftpd-alt_1_aarch64.ipk"
+touch "$TMPDIR/luci-app-nikki_1_all.ipk"
+touch "$TMPDIR/luci-i18n-nikki-zh-cn_1_all.ipk"
+touch "$TMPDIR/nikki_1_aarch64.ipk"
+touch "$TMPDIR/mihomo_1_aarch64.ipk"
+touch "$TMPDIR/yq_1_aarch64.ipk"
+touch "$TMPDIR/firewall4_1_aarch64.ipk"
+touch "$TMPDIR/kmod-nft-socket_1_aarch64.ipk"
+touch "$TMPDIR/kmod-dummy_1_aarch64.ipk"
 touch "$TMPDIR/kmod-usb-core_6.6.1-r1_aarch64.ipk"
 touch "$TMPDIR/kmod-usb2_6.6.1-r1_aarch64.apk"
 touch "$TMPDIR/usbutils_017-r1_aarch64.ipk"
@@ -143,6 +151,7 @@ cat > "$CONFIG_FILE" <<'EOF'
 CONFIG_PACKAGE_luci-app-ssr-plus=m
 CONFIG_PACKAGE_luci-app-openclash=y
 CONFIG_PACKAGE_luci-app-3cat=y
+CONFIG_PACKAGE_luci-i18n-3cat-zh-cn=y
 CONFIG_PACKAGE_luci-app-socat=m
 CONFIG_PACKAGE_luci-app-easytier=y
 CONFIG_PACKAGE_luci-app-openvpn=m
@@ -152,6 +161,10 @@ CONFIG_PACKAGE_luci-app-onliner=y
 CONFIG_PACKAGE_luci-app-turboacc=y
 CONFIG_PACKAGE_luci-app-basic=m
 CONFIG_PACKAGE_luci-app-rclone_INCLUDE_rclone-webui=y
+CONFIG_PACKAGE_luci-app-nikki=m
+CONFIG_PACKAGE_luci-i18n-nikki-zh-cn=m
+CONFIG_PACKAGE_firewall4=y
+CONFIG_PACKAGE_kmod-nft-socket=y
 EOF
 
 cat > "$GENERATED_OVERRIDES" <<'EOF'
@@ -336,6 +349,50 @@ for filename in $openclash_required_files; do
 		exit 1
 	fi
 done
+
+# nikki 场景：插件本身是 =m，需要上传；firewall4、kmod-nft-socket 是 =y，
+# 已随固件内置，不再整理进插件目录。
+NIKKI_DIR="$TMPDIR/luci-app-nikki"
+nikki_required_files="
+luci-app-nikki_1_all.ipk
+luci-i18n-nikki-zh-cn_1_all.ipk
+nikki_1_aarch64.ipk
+mihomo_1_aarch64.ipk
+yq_1_aarch64.ipk
+ca-bundle_1_all.ipk
+curl_1_aarch64.ipk
+ip-full_1_aarch64.ipk
+kmod-inet-diag_1_aarch64.ipk
+kmod-nft-tproxy_1_aarch64.ipk
+kmod-tun_1_aarch64.ipk
+kmod-dummy_1_aarch64.ipk
+"
+
+for filename in $nikki_required_files; do
+	if [ ! -f "$NIKKI_DIR/$filename" ]; then
+		echo "Missing expected nikki file: $filename" >&2
+		exit 1
+	fi
+done
+
+# 已随固件安装（=y）的依赖不复制到插件目录，根目录副本也会被统一清理。
+nikki_skipped_files="
+firewall4_1_aarch64.ipk
+kmod-nft-socket_1_aarch64.ipk
+"
+
+for filename in $nikki_skipped_files; do
+	if [ -e "$NIKKI_DIR/$filename" ] || [ -e "$NIKKI_DIR/installed/$filename" ] || [ -e "$TMPDIR/$filename" ]; then
+		echo "Built-in dependency should be skipped entirely: $filename" >&2
+		exit 1
+	fi
+done
+
+# 不再生成 installed/ 子目录。
+[ -z "$(find "$TMPDIR" -maxdepth 2 -type d -name installed -print -quit)" ] || {
+	echo "Unexpected installed/ directory created" >&2
+	exit 1
+}
 
 [ ! -d "$TMPDIR/luci-app-unmanaged" ] || {
 	echo "Unexpected auto-grouped directory created: luci-app-unmanaged" >&2

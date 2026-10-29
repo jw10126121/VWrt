@@ -58,7 +58,9 @@ test -f "$OPENWRT_PATH/upload/readme_lean_abc1234_cmiot_ax18_nowifi_fw3_ipk_frpc
 PACKAGES_DIR="$OPENWRT_PATH/upload/lean_abc1234_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000_Packages"
 PACKAGES_ZIP="$OPENWRT_PATH/upload/lean_abc1234_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000_Packages.zip"
 test -d "$PACKAGES_DIR"
-test -f "$PACKAGES_DIR/luci-app-accesscontrol_1.0.0_all.apk"
+# 插件主包即使 =y 也留在分组目录顶层，不进入 installed/。
+test -f "$PACKAGES_DIR/luci-app-accesscontrol/luci-app-accesscontrol_1.0.0_all.apk"
+test ! -d "$PACKAGES_DIR/luci-app-accesscontrol/installed"
 test -f "$PACKAGES_ZIP"
 unzip -Z1 "$PACKAGES_ZIP" | grep -q '^lean_abc1234_cmiot_ax18_nowifi_fw3_ipk_frpc_D260419_T120000_Packages/'
 if unzip -Z1 "$PACKAGES_ZIP" | grep -q '\.tar\.gz$'; then
