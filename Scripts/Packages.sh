@@ -648,6 +648,10 @@ apply_iwrt_package_overrides() {
     # update_package_list "luci-app-adguardhome adguardhome" "kenzok8/openwrt-packages" "master"
 
     update_package_list "luci-app-homeproxy sing-box" "XiaoHaiSly/luci-app-homeproxy" "main"
+
+    update_package_list "runc luci-lib-docker luci-app-dockerman dockerd docker docker-compose containerd" "XiaoHaiSly/openwrt-packages" "main"
+
+
 }
 
 # OpenWrt 25.12 的 LuCI 菜单机制与语言包状态和旧分支不同，这里统一补一层兼容：

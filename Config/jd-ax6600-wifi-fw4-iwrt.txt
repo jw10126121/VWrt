@@ -94,6 +94,7 @@ CONFIG_PACKAGE_luci-app-usb-printer=m       # USB 打印服务
 CONFIG_PACKAGE_luci-app-vsftpd=m            # FTP 服务
 CONFIG_PACKAGE_luci-app-verysync=m          # 微力同步（暂时不编译）
 CONFIG_PACKAGE_verysync=m                   # 微力同步后端
+CONFIG_PACKAGE_luci-app-dockerman=y			# dockerman
 
 # ------------------------------------------------------------------------
 #  科学上网 / VPN / 内网穿透
