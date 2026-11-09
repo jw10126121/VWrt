@@ -238,6 +238,61 @@ update_package_list() {
     rm -rf "${repo_name}"
 }
 
+update_dockerman_packages() {
+    local package_repo=$1
+    local package_ref=$2
+    local docker_feed_dir='../feeds/packages/utils'
+    local repo_name full_repo clone_status package_name found package_destination
+    local docker_cli_version dockerd_version
+
+    if [ ! -d "${docker_feed_dir}" ]; then
+        echo "【Lin】未找到 ${docker_feed_dir}，跳过 Dockerman 包替换，保留现有包"
+        return 0
+    fi
+
+    full_repo=$(normalize_repo_url "${package_repo}")
+    repo_name=$(mktemp -d ./pkglist_dockerman.XXXXXX) || return
+    echo "【Lin】下载 Dockerman 包库：【${package_ref}】${full_repo}"
+    if clone_repo_shallow "${full_repo}" "${package_ref}" "${repo_name}"; then
+        :
+    else
+        clone_status=$?
+        rm -rf "${repo_name}"
+        echo "【Lin】下载 Dockerman 包库失败：${full_repo}，保留现有包" >&2
+        return "${clone_status}"
+    fi
+
+    for package_name in docker dockerd containerd runc docker-compose luci-lib-docker luci-app-dockerman; do
+        found=$(find "${repo_name}" -mindepth 1 -maxdepth 2 -type d -iname "${package_name}" -print | head -n 1)
+        if [ -n "${found}" ] && [ -f "${found}/Makefile" ]; then
+            case "${package_name}" in
+                luci-*) package_destination="./${package_name}" ;;
+                *) package_destination="${docker_feed_dir}/${package_name}" ;;
+            esac
+            DELETE_PACKAGE "${package_name}"
+            mv -f "${found}" "${package_destination}" || {
+                rm -rf "${repo_name}"
+                return 1
+            }
+            echo "【Lin】替换 Dockerman 包：${package_destination}"
+        else
+            echo "【Lin】Dockerman 包库未找到有效的 ${package_name}，保留现有包"
+        fi
+    done
+
+    rm -rf "${repo_name}"
+
+    if [ -f "${docker_feed_dir}/dockerd/git-short-commit.sh" ]; then
+        chmod +x "${docker_feed_dir}/dockerd/git-short-commit.sh" || return
+    fi
+
+    docker_cli_version=$(awk -F ':=' '/^PKG_VERSION:=/ { gsub(/[[:space:]]/, "", $2); print $2; exit }' "${docker_feed_dir}/docker/Makefile" 2>/dev/null)
+    dockerd_version=$(awk -F ':=' '/^PKG_VERSION:=/ { gsub(/[[:space:]]/, "", $2); print $2; exit }' "${docker_feed_dir}/dockerd/Makefile" 2>/dev/null)
+    if [ -n "${docker_cli_version}" ] && [ -n "${dockerd_version}" ] && [ "${docker_cli_version}" != "${dockerd_version}" ]; then
+        echo "WARNING: docker (${docker_cli_version}) and dockerd (${dockerd_version}) versions differ, dockerd build will fail!" >&2
+    fi
+}
+
 # luci-app-lanspeed 仓库同时维护 LuCI 前端与后端守护进程，
 # 这里按上游目录结构分别拷出 applications/ 与 net/ 下的两个目标包。
 UPDATE_LANSPEED() {
@@ -649,7 +704,7 @@ apply_iwrt_package_overrides() {
 
     update_package_list "luci-app-homeproxy sing-box" "XiaoHaiSly/luci-app-homeproxy" "main"
 
-    update_package_list "runc luci-lib-docker luci-app-dockerman dockerd docker docker-compose containerd" "XiaoHaiSly/openwrt-packages" "main"
+    update_dockerman_packages "XiaoHaiSly/openwrt-packages" "main"
 
 
 }
