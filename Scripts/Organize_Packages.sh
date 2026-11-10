@@ -215,7 +215,7 @@ cpufreq|luci-app-cpufreq_ luci-i18n-cpufreq-zh-cn_ cpufreq_
 ddns|luci-app-ddns_ luci-i18n-ddns-zh-cn_ ddns-scripts_ ddns-scripts-aliyun_ resolveip_ ip_
 ddns-go|luci-app-ddns-go_ luci-i18n-ddns-go-zh-cn_ ddns-go_ ca-bundle_
 docker|luci-app-docker_ luci-i18n-docker-zh-cn_ luci-compat_ docker_ dockerd_ e2fsprogs_ fdisk_
-dockerman|luci-app-dockerman_ luci-i18n-dockerman-zh-cn_ luci-base_ docker_ ttyd_ dockerd_ docker-compose_ ucode-mod-socket_
+dockerman|luci-app-dockerman_ luci-i18n-dockerman-zh-cn_ luci-base_ luci-lib-docker_ docker_ ttyd_ dockerd_ docker-compose_ containerd_ runc_ libseccomp_ kmod-veth_ ucode-mod-socket_
 easymesh|luci-app-easymesh_ luci-i18n-easymesh-zh-cn_ kmod-cfg80211_ batctl-default_ kmod-batman-adv_ wpad-mesh-openssl_ dawn_
 guest-wifi|luci-app-guest-wifi_ luci-i18n-guest-wifi-zh-cn_
 minidiskmanager|luci-app-mini-diskmanager_ luci-i18n-mini-diskmanager-zh-cn_ block-mount_ fdisk_ parted_ lsblk_

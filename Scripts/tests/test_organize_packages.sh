@@ -146,6 +146,18 @@ touch "$TMPDIR/kmod-usb-core_6.6.1-r1_aarch64.ipk"
 touch "$TMPDIR/kmod-usb2_6.6.1-r1_aarch64.apk"
 touch "$TMPDIR/usbutils_017-r1_aarch64.ipk"
 touch "$TMPDIR/kmod-usb2aaaa_1_aarch64.ipk"
+touch "$TMPDIR/luci-app-dockerman_1_all.apk"
+touch "$TMPDIR/luci-i18n-dockerman-zh-cn_1_all.apk"
+touch "$TMPDIR/luci-lib-docker_1_all.apk"
+touch "$TMPDIR/docker_1_aarch64.apk"
+touch "$TMPDIR/ttyd_1_aarch64.apk"
+touch "$TMPDIR/dockerd_1_aarch64.apk"
+touch "$TMPDIR/docker-compose_1_aarch64.apk"
+touch "$TMPDIR/containerd_1_aarch64.apk"
+touch "$TMPDIR/runc_1_aarch64.apk"
+touch "$TMPDIR/libseccomp_1_aarch64.apk"
+touch "$TMPDIR/kmod-veth_1_aarch64.apk"
+touch "$TMPDIR/ucode-mod-socket_1_all.apk"
 
 cat > "$CONFIG_FILE" <<'EOF'
 CONFIG_PACKAGE_luci-app-ssr-plus=m
@@ -165,6 +177,7 @@ CONFIG_PACKAGE_luci-app-nikki=m
 CONFIG_PACKAGE_luci-i18n-nikki-zh-cn=m
 CONFIG_PACKAGE_firewall4=y
 CONFIG_PACKAGE_kmod-nft-socket=y
+CONFIG_PACKAGE_luci-app-dockerman=m
 EOF
 
 cat > "$GENERATED_OVERRIDES" <<'EOF'
@@ -463,6 +476,36 @@ done
 for filename in $usb_required_files; do
 	if [ -e "$TMPDIR/$filename" ]; then
 		echo "USB package should have been moved into usb directory: $filename" >&2
+		exit 1
+	fi
+done
+
+DOCKERMAN_DIR="$TMPDIR/luci-app-dockerman"
+dockerman_required_files="
+luci-app-dockerman_1_all.apk
+luci-i18n-dockerman-zh-cn_1_all.apk
+luci-lib-docker_1_all.apk
+docker_1_aarch64.apk
+ttyd_1_aarch64.apk
+dockerd_1_aarch64.apk
+docker-compose_1_aarch64.apk
+containerd_1_aarch64.apk
+runc_1_aarch64.apk
+libseccomp_1_aarch64.apk
+kmod-veth_1_aarch64.apk
+ucode-mod-socket_1_all.apk
+"
+
+for filename in $dockerman_required_files; do
+	if [ ! -f "$DOCKERMAN_DIR/$filename" ]; then
+		echo "Missing expected Dockerman file: $filename" >&2
+		exit 1
+	fi
+done
+
+for filename in $dockerman_required_files; do
+	if [ -e "$TMPDIR/$filename" ]; then
+		echo "Dockerman package should have been moved into its directory: $filename" >&2
 		exit 1
 	fi
 done
