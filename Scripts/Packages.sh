@@ -702,7 +702,8 @@ apply_iwrt_package_overrides() {
     # 在通用模块中已经导入了 luci-app-adguardhome，所以不再重复导入
     # update_package_list "luci-app-adguardhome adguardhome" "kenzok8/openwrt-packages" "master"
 
-    update_package_list "luci-app-homeproxy sing-box" "XiaoHaiSly/luci-app-homeproxy" "main"
+    # update_package_list "luci-app-homeproxy sing-box" "XiaoHaiSly/luci-app-homeproxy" "main"
+    update_package_list "luci-app-homeproxy hiddify-core" "XiaoHaiSly/luci-app-homeproxy-hiddify" "main"
 
     update_dockerman_packages "XiaoHaiSly/openwrt-packages" "main"
 
