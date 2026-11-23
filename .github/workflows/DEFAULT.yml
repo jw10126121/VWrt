@@ -1,6 +1,6 @@
 #CI项目
 name: DEFAULT
-run-name: ${{ inputs.WRT_DEVICE }}-${{ inputs.SOURCE_TYPE }}-${{ inputs.WRT_FIREWALL == 'auto' && (inputs.SOURCE_TYPE == 'lean' && 'fw3' || 'fw4') || inputs.WRT_FIREWALL }}-${{ inputs.WRT_FRP_MODE }}-${{ inputs.WRT_USB_MODE == 'nousb' && 'nousb' || 'usb' }}-${{ inputs.WRT_PACKAGE_MANAGER == 'auto' && (inputs.SOURCE_TYPE == 'vikingyfy' && 'apk' || 'ipk') || inputs.WRT_PACKAGE_MANAGER }}${{ inputs.WRT_OVERLAYS != '' && format('-{0}', inputs.WRT_OVERLAYS) || '' }}
+run-name: ${{ inputs.WRT_DEVICE }}-${{ inputs.SOURCE_TYPE }}-${{ inputs.WRT_FIREWALL == 'auto' && (inputs.SOURCE_TYPE == 'lean' && 'fw3' || 'fw4') || inputs.WRT_FIREWALL }}-${{ inputs.WRT_FRP_MODE }}-${{ inputs.WRT_USB_MODE == 'nousb' && 'nousb' || 'usb' }}-${{ inputs.WRT_PACKAGE_MANAGER }}${{ inputs.WRT_OVERLAYS != '' && format('-{0}', inputs.WRT_OVERLAYS) || '' }}
 
 on:
   workflow_call:
@@ -27,7 +27,7 @@ on:
       WRT_PACKAGE_MANAGER:
         required: false
         type: string
-        default: 'auto'
+        default: 'apk'
       WRT_OVERLAYS:
         required: false
         type: string
@@ -122,14 +122,14 @@ on:
         default: 'default'
       # 包管理器：- auto = 按源码默认选择，- apk / ipk = 显式指定
       WRT_PACKAGE_MANAGER:
-        description: '包管理器'
+        description: '包管理器（auto 跟随上游源码）'
         required: false
         type: choice
+        default: 'apk'
         options:
-          - auto
           - apk
+          - auto
           - ipk
-        default: 'auto'
       # 高级兜底 overlays：- 逗号分隔，- 会追加在结构化选项之后
       WRT_OVERLAYS:
         description: '高级 overlays'
@@ -192,7 +192,6 @@ jobs:
     runs-on: ubuntu-22.04
     outputs:
       firewall: ${{ steps.resolve.outputs.firewall }}
-      package_manager: ${{ steps.resolve.outputs.package_manager }}
       frp_mode: ${{ steps.resolve.outputs.frp_mode }}
       usb_mode: ${{ steps.resolve.outputs.usb_mode }}
       usb_label: ${{ steps.resolve.outputs.usb_label }}
@@ -205,13 +204,11 @@ jobs:
 
           source_type="${{ inputs.SOURCE_TYPE }}"
           firewall="${{ inputs.WRT_FIREWALL }}"
-          package_manager_input="${{ inputs.WRT_PACKAGE_MANAGER }}"
-          resolved_package_manager="$package_manager_input"
           frp_mode="${{ inputs.WRT_FRP_MODE }}"
           usb_mode="${{ inputs.WRT_USB_MODE }}"
           usb_label='usb'
 
-          # 配置防火墙版本：vikingyfy → fw4 / apk，libwrt → fw4 / ipk，lean → fw3 / ipk
+          # 配置防火墙版本：vikingyfy / libwrt → fw4，lean → fw3
           if [ "$firewall" = "auto" ]; then
             if [ "$source_type" = "vikingyfy" ] || [ "$source_type" = "libwrt" ]; then
               firewall="fw4"
@@ -220,32 +217,22 @@ jobs:
             fi
           fi
 
-          # 配置包管理器：vikingyfy → apk，libwrt → ipk，lean → ipk
-          if [ "$package_manager_input" = "auto" ]; then
-            if [ "$source_type" = "vikingyfy" ]; then
-              resolved_package_manager="apk"
-            else
-              resolved_package_manager="ipk"
-            fi
-          fi
-
           if [ "$usb_mode" = "nousb" ]; then
             usb_label='nousb'
           fi
 
           echo "firewall=$firewall" >> $GITHUB_OUTPUT
-          echo "package_manager=$resolved_package_manager" >> $GITHUB_OUTPUT
           echo "frp_mode=$frp_mode" >> "$GITHUB_OUTPUT"
           echo "usb_mode=$usb_mode" >> "$GITHUB_OUTPUT"
           echo "usb_label=$usb_label" >> "$GITHUB_OUTPUT"
           echo "【Lin】源码类型：${source_type}"
           echo "【Lin】FRP 模式：${frp_mode:-none}"
           echo "【Lin】USB 模式：${usb_mode:-default}（标签：${usb_label}）"
-          echo "【Lin】解析结果：fw=${firewall}, pkg=${resolved_package_manager}"
+          echo "【Lin】解析结果：fw=${firewall}"
 
   config:
     needs: resolve
-    name: ${{ inputs.WRT_DEVICE }}-${{ needs.resolve.outputs.firewall }}-${{ needs.resolve.outputs.frp_mode }}-${{ needs.resolve.outputs.usb_label }}-${{ needs.resolve.outputs.package_manager }}${{ inputs.WRT_OVERLAYS != '' && format('-{0}', inputs.WRT_OVERLAYS) || '' }}
+    name: ${{ inputs.WRT_DEVICE }}-${{ needs.resolve.outputs.firewall }}-${{ needs.resolve.outputs.frp_mode }}-${{ needs.resolve.outputs.usb_label }}-${{ inputs.WRT_PACKAGE_MANAGER }}${{ inputs.WRT_OVERLAYS != '' && format('-{0}', inputs.WRT_OVERLAYS) || '' }}
     # 调用公用编译核心ALL-CORE.yml
     uses: ./.github/workflows/CORE-ALL.yml
     with:
@@ -257,8 +244,7 @@ jobs:
       WRT_SOURCE_HASH_INFO: ${{ inputs.WRT_SOURCE_HASH_INFO }}
       # 防火墙栈：fw3 或 fw4，从SOURCE_TYPE获取
       WRT_FIREWALL: ${{ needs.resolve.outputs.firewall }}
-      # 包管理器：apk 或 ipk，从SOURCE_TYPE获取
-      WRT_PACKAGE_MANAGER: ${{ needs.resolve.outputs.package_manager }}
+      WRT_PACKAGE_MANAGER: ${{ inputs.WRT_PACKAGE_MANAGER }}
       # FRP 模式：结构化参数透传给 CORE-ALL
       WRT_FRP_MODE: ${{ needs.resolve.outputs.frp_mode }}
       # USB 模式：结构化参数透传给 CORE-ALL

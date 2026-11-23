@@ -107,7 +107,7 @@
 - `WRT_DIYPackages` 默认 `auto`：优先使用 `Scripts/Packages-<设备名>.sh` 或短名脚本；填 `Packages.sh` 可强制使用通用包脚本
 - `WRT_FRP_MODE` 默认 `frpc`；`frp` 表示同时启用 `frpc` 与 `frps`，日常切换不再需要手输 overlay
 - `WRT_USB_MODE` 默认 `default`，表示保持设备主配置中的 USB 能力；选 `usb/nousb` 时才额外叠加 overlay
-- `WRT_PACKAGE_MANAGER` 默认 `auto`：按源码类型解析，`vikingyfy` → `apk`，`lean` / `libwrt` → `ipk`；预设 iwrt 工作流会对 `libwrt` 显式传入 `apk`
+- `WRT_PACKAGE_MANAGER` 默认 `apk`；显式选 `auto` 时，核心工作流检出源码后读取上游 Kconfig 的 `USE_APK` 默认值（启用则用 `apk`，未启用或没有该选项则用 `ipk`）。手动指定 `apk` 或 `ipk` 优先；`CUSTOM-LWRT` 预设继续使用 `ipk`。
 - `WRT_OVERLAYS` 保留为自定义 overlay 的高级兜底输入，会追加在结构化选项之后
 - `WRT_EXTRA_CONFIGS` 用于临时追加 Kconfig 配置，支持 `luci-app-wol`、`luci-app-wol=y`、`CONFIG_PACKAGE_xxx=y` 等写法，可用空格、逗号或换行分隔
 - `WHAT_MY_SAY` 会写入编译说明文件和开始/结果通知，便于标记本次构建用途

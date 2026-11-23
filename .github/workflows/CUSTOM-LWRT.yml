@@ -54,6 +54,7 @@ jobs:
       WRT_DEVICE: cmiot-ax18-nowifi
       SOURCE_TYPE: 'lean'
       WRT_FIREWALL: auto
+      WRT_PACKAGE_MANAGER: ipk
       WRT_OVERLAYS: frps
       WRT_DIY_SETTING: diy_config.sh
       WRT_DIYPackages: Packages.sh
@@ -71,6 +72,7 @@ jobs:
       WRT_DEVICE: gl-mt6000-wifi
       SOURCE_TYPE: 'lean'
       WRT_FIREWALL: auto
+      WRT_PACKAGE_MANAGER: ipk
       WRT_OVERLAYS: ''
       WRT_DIY_SETTING: diy_config.sh
       WRT_DIYPackages: Packages.sh
@@ -88,6 +90,7 @@ jobs:
       WRT_DEVICE: jd-ax6600-wifi
       SOURCE_TYPE: 'lean'
       WRT_FIREWALL: auto
+      WRT_PACKAGE_MANAGER: ipk
       WRT_OVERLAYS: ''
       WRT_DIY_SETTING: diy_config.sh
       WRT_DIYPackages: Packages.sh

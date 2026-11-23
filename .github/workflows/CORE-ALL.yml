@@ -79,7 +79,7 @@ on:
       WRT_PACKAGE_MANAGER:
         required: false
         type: string
-        default: 'auto'
+        default: 'apk'
     secrets:
       WEBHOOK_DINGDING:
         required: false
@@ -134,7 +134,7 @@ permissions: write-all
 
 jobs:
   build:
-    name: ${{ inputs.WRT_DEVICE }}-${{ inputs.WRT_FIREWALL == 'auto' && (inputs.SOURCE_TYPE == 'lean' && 'fw3' || 'fw4') || inputs.WRT_FIREWALL }}-${{ inputs.WRT_PACKAGE_MANAGER == 'auto' && (inputs.SOURCE_TYPE == 'lean' && 'ipk' || 'apk') || inputs.WRT_PACKAGE_MANAGER }}-${{ inputs.WRT_OVERLAYS != '' && inputs.WRT_OVERLAYS || 'base' }}
+    name: ${{ inputs.WRT_DEVICE }}-${{ inputs.WRT_FIREWALL == 'auto' && (inputs.SOURCE_TYPE == 'lean' && 'fw3' || 'fw4') || inputs.WRT_FIREWALL }}-${{ inputs.WRT_PACKAGE_MANAGER }}-${{ inputs.WRT_OVERLAYS != '' && inputs.WRT_OVERLAYS || 'base' }}
     runs-on: ubuntu-24.04
     if: github.repository_owner == github.event.sender.login || github.event_name == 'schedule'
     steps:
@@ -340,16 +340,9 @@ jobs:
         fi
         echo "SOURCE_TYPE=$SOURCE_TYPE" >> $GITHUB_ENV
         echo "【Lin】源码类型：${SOURCE_TYPE}"
-        # 包管理器和防火墙：auto 时根据源码类型自动选择
-        # vikingyfy → fw4 / apk，libwrt → fw4 / ipk，lean → fw3 / ipk
-        WRT_PACKAGE_MANAGER="${{ inputs.WRT_PACKAGE_MANAGER }}"
-        WRT_FIREWALL="${{ inputs.WRT_FIREWALL }}"
         if [ "${WRT_PACKAGE_MANAGER}" = "auto" ]; then
-          if [ "$SOURCE_TYPE" = "vikingyfy" ]; then
-            WRT_PACKAGE_MANAGER="apk"
-          else
-            WRT_PACKAGE_MANAGER="ipk"
-          fi
+          WRT_PACKAGE_MANAGER=$(bash "$GITHUB_WORKSPACE/$WRT_DIR_SCRIPTS/resolve_source_package_manager.sh" "$OPENWRT_PATH")
+          echo "【Lin】包管理器 auto：上游 Kconfig 默认使用 ${WRT_PACKAGE_MANAGER}"
         fi
         # vikingyfy/libwrt 强制使用 fw4（nftables），不支持 fw3
         if [ "$SOURCE_TYPE" = "vikingyfy" ] || [ "$SOURCE_TYPE" = "libwrt" ]; then
