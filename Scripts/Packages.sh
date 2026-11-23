@@ -703,7 +703,7 @@ apply_iwrt_package_overrides() {
     # update_package_list "luci-app-adguardhome adguardhome" "kenzok8/openwrt-packages" "master"
 
     # update_package_list "luci-app-homeproxy sing-box" "XiaoHaiSly/luci-app-homeproxy" "main"
-    update_package_list "luci-app-homeproxy hiddify-core" "XiaoHaiSly/luci-app-homeproxy-hiddify" "main"
+    update_package_list "luci-app-homeproxy hiddify-core" "XiaoHaiSly/luci-app-homeproxy" "main"
 
     update_dockerman_packages "XiaoHaiSly/openwrt-packages" "main"
 
