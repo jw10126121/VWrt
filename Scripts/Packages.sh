@@ -754,6 +754,22 @@ apply_lang_node_prebuilt_fix() {
     return 0
 }
 
+fix_hiddify_core_go_toolchain() {
+    local hiddify_makefile='./hiddify-core/Makefile'
+    local golang_dir='../feeds/packages/lang/golang'
+
+    [ -f "${hiddify_makefile}" ] || return 0
+    grep -Fxq 'PKG_BUILD_DEPENDS:=golang/host' "${hiddify_makefile}" || return 0
+
+    if [ ! -f "${golang_dir}/golang1.27/Makefile" ]; then
+        echo "【Lin】packages feed 未提供 golang1.27/host，保留 hiddify-core 原有 Go 依赖"
+        return 0
+    fi
+
+    perl -pi -e 's{^PKG_BUILD_DEPENDS:=golang/host$}{PKG_BUILD_DEPENDS:=golang1.27/host}' "${hiddify_makefile}" || return
+    echo "【Lin】hiddify-core 使用 golang1.27/host 编译"
+}
+
 # 下列函数都属于“后置修补链”：
 # 前提是包已经通过前面的覆盖流程存在于 package/ 或 feeds 中，
 # 然后再对 Makefile、脚本、资源文件做最小修补，使其更适配当前源码与设备配置。
@@ -954,6 +970,7 @@ fix_athena_led_makefile() {
 apply_post_update_fixes() {
     ensure_luci_app_ddns_acl
     fix_quickfile_makefile
+    fix_hiddify_core_go_toolchain || return
     apply_lang_node_prebuilt_fix
     update_openvpn_easy_rsa_version
     fix_tailscale_makefile
