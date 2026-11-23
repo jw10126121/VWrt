@@ -688,8 +688,8 @@ apply_iwrt_package_overrides() {
     UPDATE_PACKAGE "qmodem" "FUjr/QModem" "main"
     UPDATE_PACKAGE "luci-app-quickfile" "sbwml/luci-app-quickfile" "main"
     UPDATE_PACKAGE "timecontrol" "sirpdboy/luci-app-timecontrol" "main"
-    UPDATE_PACKAGE "viking" "VIKINGYFY/packages" "main" "" "gecoosac luci-app-timewol luci-app-wolplus"
-    # UPDATE_PACKAGE "vnt" "lmq8267/luci-app-vnt" "main"
+    
+    update_package_list "gecoosac luci-app-gecoosac luci-app-wolultra" "VIKINGYFY/packages" "main"
 
     update_package_list "luci-app-verysync verysync" "immortalwrt/luci" "openwrt-23.05"
     # update_package_list "luci-app-quickstart quickstart" "sbwml/package_new_istore" "main"
